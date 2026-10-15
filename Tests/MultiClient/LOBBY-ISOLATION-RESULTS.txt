@@ -1,0 +1,38 @@
+MULTIPROCESS PASS: three actual catalog lobbies start empty with no running workers
+MULTIPROCESS PASS: each catalog lobby creates its own distinct room
+MULTIPROCESS PASS: isolated player 0 retains its room and sole participant
+MULTIPROCESS PASS: isolated player 1 retains its room and sole participant
+MULTIPROCESS PASS: isolated player 2 retains its room and sole participant
+MULTIPROCESS PASS: lobby 0 API room list contains only its own connected room
+MULTIPROCESS PASS: lobby 1 API room list contains only its own connected room
+MULTIPROCESS PASS: lobby 2 API room list contains only its own connected room
+MULTIPROCESS PASS: three lobby workers and three Netcode room servers use separate processes and room endpoints
+MULTIPROCESS PASS: player 0 automatically receives correct global counts and only local room and participant lists
+MULTIPROCESS PASS: player 1 automatically receives correct global counts and only local room and participant lists
+MULTIPROCESS PASS: player 2 automatically receives correct global counts and only local room and participant lists
+MULTIPROCESS PASS: cross-lobby room join is rejected without opening a reservation
+MULTIPROCESS PASS: one pending Netcode admission appears only in its own lobby room
+MULTIPROCESS PASS: pending admission is automatically shown in the matching lobby participant and room lists
+MULTIPROCESS PASS: canceling pending admission restores only the matching lobby counts
+MULTIPROCESS PASS: readiness and running phase do not leak to other lobbies
+MULTIPROCESS PASS: crashed lobby worker restarts while its room is running
+MULTIPROCESS PASS: isolated player 0 retains its room and sole participant
+MULTIPROCESS PASS: room server 0 survives another lobby worker crash
+MULTIPROCESS PASS: isolated player 1 retains its room and sole participant
+MULTIPROCESS PASS: room server 1 survives another lobby worker crash
+MULTIPROCESS PASS: isolated player 2 retains its room and sole participant
+MULTIPROCESS PASS: room server 2 survives another lobby worker crash
+MULTIPROCESS PASS: other lobby workers and original running phase survive lobby crash
+MULTIPROCESS PASS: room crash returns only affected client to its lobby while preserving login
+MULTIPROCESS PASS: isolated player 0 retains its room and sole participant
+MULTIPROCESS PASS: unaffected room server 0 remains unchanged after other room crash
+MULTIPROCESS PASS: isolated player 2 retains its room and sole participant
+MULTIPROCESS PASS: unaffected room server 2 remains unchanged after other room crash
+MULTIPROCESS PASS: affected room restarts independently without replacing its lobby worker
+MULTIPROCESS PASS: last departure stops only its lobby and room programs while retaining catalog entry
+MULTIPROCESS PASS: isolated player 1 retains its room and sole participant
+MULTIPROCESS PASS: remaining client 1 automatically sees empty other lobby while keeping its own room list
+MULTIPROCESS PASS: isolated player 2 retains its room and sole participant
+MULTIPROCESS PASS: remaining client 2 automatically sees empty other lobby while keeping its own room list
+MULTIPROCESS PASS: final logout stops all owned workers and preserves three empty catalog lobbies
+LOBBY ISOLATION COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\lobby-isolation\20261014-232049

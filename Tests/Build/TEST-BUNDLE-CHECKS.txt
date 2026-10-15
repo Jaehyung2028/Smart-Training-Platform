@@ -1,0 +1,6 @@
+﻿Dedicated server build: passed
+Development client build: passed
+Required player files and completed manifest: present
+New bundle client, lobby server and room server: verified
+Two-client runtime checks: 33 passed
+ASP.NET settings: no original project changes

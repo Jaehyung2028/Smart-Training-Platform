@@ -1,0 +1,12 @@
+CATALOG PASS: catalog roots listed without launching Unity workers
+CATALOG PASS: production API rejects player-created lobby
+CATALOG PASS: concurrent joins share one real Unity lobby process
+CATALOG PASS: two catalog lobbies run distinct Unity processes
+CATALOG PASS: room can be created inside catalog lobby without starting empty room server
+CATALOG PASS: crashed lobby worker restarts and preserves participants
+CATALOG PASS: worker stays alive while one participant remains
+CATALOG PASS: last departure stops only its lobby worker
+CATALOG PASS: empty catalog lobbies remain visible after all workers stop
+CATALOG PASS: idle catalog lobby starts again on next entry
+CATALOG PASS: logout stops final occupied lobby worker
+CATALOG COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\catalog-evidence\20261014-224254

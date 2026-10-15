@@ -1,0 +1,21 @@
+MULTIPROCESS PASS: login and catalog uGUI hand off to interior Canvas with live participant rows
+MULTIPROCESS PASS: maintenance and scheduled countdown update without clearing chat draft
+MULTIPROCESS PASS: lobby chat button delivers Korean text and literal markup to both clients
+MULTIPROCESS PASS: invalid capacity stays in modal without creating a room
+MULTIPROCESS PASS: create modal posts name capacity content and password then selects created room
+MULTIPROCESS PASS: second client receives new rooms without manual refresh
+MULTIPROCESS PASS: search public and protected filters reset and sorting remain connected to room browser
+MULTIPROCESS PASS: join button connects Netcode and disables hidden Canvas input for existing room screen
+MULTIPROCESS PASS: available-only filter responds to room running state
+MULTIPROCESS PASS: participant button finds actual room clears conflicting filters and blocks running admission
+MULTIPROCESS PASS: wrong password shows server error without leaving a reservation
+MULTIPROCESS PASS: uGUI cancellation clears accepted connection while preserving existing room member
+MULTIPROCESS PASS: password retry connects second client to original Netcode room
+MULTIPROCESS PASS: transport loss returns to interior reconnect controls and reconnect button restores room
+MULTIPROCESS PASS: empty room disappears live and participants return to lobby waiting state
+MULTIPROCESS PASS: interior controls keep unblocked raycasts at actual 960 by 720 resolution
+MULTIPROCESS PASS: closing create modal restores lobby controls without submitting
+MULTIPROCESS PASS: interior logout returns to login and removes owned empty room and participant on other client
+MULTIPROCESS PASS: lobby exit button returns to catalog Canvas
+MULTIPROCESS PASS: both clients complete without UI runtime exceptions
+INTERIOR COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\interior-evidence\20261015-104601

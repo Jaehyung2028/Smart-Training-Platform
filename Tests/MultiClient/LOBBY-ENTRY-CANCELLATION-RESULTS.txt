@@ -1,0 +1,11 @@
+MULTIPROCESS PASS: cold lobby entry shows preparation progress with active cancel control
+MULTIPROCESS PASS: cancel returns logged-in client to lobby list and resets controls
+MULTIPROCESS PASS: last canceled request leaves no reservation or running lobby worker
+MULTIPROCESS PASS: same client can retry canceled entry and complete normally
+MULTIPROCESS PASS: approval progress is displayed after server commits membership
+MULTIPROCESS PASS: late cancel removes already committed lobby membership
+MULTIPROCESS PASS: late cancel preserves other participant and occupied lobby worker
+MULTIPROCESS PASS: launch failure clears progress and preserves login with actionable error
+MULTIPROCESS PASS: client can enter another lobby immediately after failed launch
+MULTIPROCESS PASS: last normal departure still stops lobby worker after cancellation and retries
+LOBBY CANCELLATION COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\independent-clients\20261015-000317

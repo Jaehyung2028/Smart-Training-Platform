@@ -1,0 +1,10 @@
+MULTIPROCESS PASS: missing executable displays specific failure with retry target and preserves login
+MULTIPROCESS PASS: failure does not expose local paths or retain admission state
+MULTIPROCESS PASS: retrying before repair shows same clear error without duplicate reservations
+MULTIPROCESS PASS: same lobby retry succeeds after repair and clears failure panel
+MULTIPROCESS PASS: readiness timeout has distinct retryable message and stops empty worker
+MULTIPROCESS PASS: startup process loss has connection-specific message and cleans pending admission
+MULTIPROCESS PASS: failed lobby startup and retries preserve another occupied lobby
+MULTIPROCESS PASS: choosing another successful lobby clears previous failure and retry target
+MULTIPROCESS PASS: logout clears failure and retry state for subsequent sessions
+LOBBY FAILURE COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\lobby-failure\20261015-000133

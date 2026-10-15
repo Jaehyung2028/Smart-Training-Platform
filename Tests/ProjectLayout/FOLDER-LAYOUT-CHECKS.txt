@@ -1,0 +1,6 @@
+﻿Moved asset count: 131
+Original GUIDs preserved in staged assets: 131
+Editor scene checks: 29 passed
+Development client build: passed
+Two-client runtime checks: 33 passed
+Resources and Scenes paths: unchanged

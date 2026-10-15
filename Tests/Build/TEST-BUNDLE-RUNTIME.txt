@@ -1,0 +1,34 @@
+MULTIPROCESS PASS: client 0 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: client 1 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: room Canvas replaces other screens with master and participant state
+MULTIPROCESS PASS: participant cannot start room through disabled master controls
+MULTIPROCESS PASS: ready buttons synchronize and start requires everyone ready
+MULTIPROCESS PASS: running phase blocks room name and capacity edits
+MULTIPROCESS PASS: master start and waiting return synchronize and reset readiness
+MULTIPROCESS PASS: capacity below occupied users is rejected inside settings modal
+MULTIPROCESS PASS: room name and capacity changes use existing server validation and synchronize
+MULTIPROCESS PASS: password updates and entry lock remain available in master settings
+MULTIPROCESS PASS: room chat delivers Korean literal markup to both room clients
+MULTIPROCESS PASS: room and lobby chat channels keep messages separate and restore history
+MULTIPROCESS PASS: chat input focus is detected by movement keyboard guard
+MULTIPROCESS PASS: position map uses synchronized players and held movement releases when closed
+MULTIPROCESS PASS: room and settings controls stay clickable at 960 by 720
+MULTIPROCESS PASS: master transfer requires explicit confirmation before changing authority
+MULTIPROCESS PASS: cancel leaves master authority unchanged
+MULTIPROCESS PASS: client 0 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: client 1 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: confirmed transfer updates master controls on both clients
+MULTIPROCESS PASS: cancelled kick preserves participant connection
+MULTIPROCESS PASS: confirmed kick returns target to lobby and updates room roster
+MULTIPROCESS PASS: target leaving automatically cancels stale master confirmation
+MULTIPROCESS PASS: client 0 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: client 1 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: master loss delegates authority and reconnect restores room Canvas as participant
+MULTIPROCESS PASS: close room uses confirmation overlay above blocked settings
+MULTIPROCESS PASS: confirmed room close removes room and cleans all room screens
+MULTIPROCESS PASS: room leave button returns to lobby Canvas
+MULTIPROCESS PASS: client 0 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: client 1 uses exactly three scene UI instances and one EventSystem
+MULTIPROCESS PASS: room logout returns to login and clears room UI
+MULTIPROCESS PASS: both clients complete without UI runtime exceptions
+SCENE UI RUNTIME COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\test-bundle-flow\20261015-191815

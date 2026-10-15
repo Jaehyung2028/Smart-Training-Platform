@@ -1,0 +1,15 @@
+MULTIPROCESS PASS: three distinct Unity player processes logged in
+MULTIPROCESS PASS: owner receives confirmed Netcode identity and completed join screen
+MULTIPROCESS PASS: only one of two competing real clients enters last free slot
+MULTIPROCESS PASS: rejected client displays capacity error and clears pending admission
+MULTIPROCESS PASS: both processes receive identical two-person roster
+MULTIPROCESS PASS: ready state and running phase reach both independent clients
+MULTIPROCESS PASS: running room rejects third client without residual reservation
+MULTIPROCESS PASS: returning to waiting resets readiness in both processes
+MULTIPROCESS PASS: transport loss cleans room while preserving login and reconnect target
+MULTIPROCESS PASS: reconnected process retains identity and appears exactly once
+MULTIPROCESS PASS: missing heartbeat marks crashed master as checking while preserving current authority before timeout
+MULTIPROCESS PASS: forced master process termination transfers authority to surviving client
+MULTIPROCESS PASS: new arrival and survivor agree on reassigned master
+MULTIPROCESS PASS: final logout removes empty room from API list
+MULTIPROCESS COMPLETE: evidence saved to C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\independent-clients\20261014-224215

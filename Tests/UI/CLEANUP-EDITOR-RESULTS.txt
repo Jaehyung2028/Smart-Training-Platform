@@ -1,0 +1,1 @@
+CANVAS GROUP REGRESSION PASSED: all three prefabs, repeated binding, destroyed cache recovery, hidden input blocking

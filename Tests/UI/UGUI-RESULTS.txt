@@ -1,0 +1,14 @@
+MULTIPROCESS PASS: login Canvas has working input raycasts and Korean font
+MULTIPROCESS PASS: uGUI input fields and login button reach actual ASP.NET login and three catalog rows
+MULTIPROCESS PASS: dynamic lobby row button selects existing content API and enables entry
+MULTIPROCESS PASS: live maintenance disables uGUI entry and displays reason
+MULTIPROCESS PASS: live operating resume re-enables entry without manual refresh
+MULTIPROCESS PASS: uGUI progress remains visible and cancel button has unblocked raycast during admission
+MULTIPROCESS PASS: uGUI cancel cleans accepted membership and returns to catalog
+MULTIPROCESS PASS: successful uGUI admission hands off to existing room management screen
+MULTIPROCESS PASS: leaving legacy lobby returns to uGUI catalog
+MULTIPROCESS PASS: catalog controls retain input raycasts at compact resolution
+MULTIPROCESS PASS: uGUI logout returns to editable login fields at compact resolution
+MULTIPROCESS PASS: second uGUI login succeeds without duplicated action listeners
+MULTIPROCESS PASS: client has no UI runtime exceptions
+UGUI COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\ugui-evidence\20261015-021413

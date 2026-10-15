@@ -1,0 +1,32 @@
+MULTIPROCESS PASS: 100 login clicks send exactly one request for client 0
+MULTIPROCESS PASS: login locks immediately and names the current operation
+MULTIPROCESS PASS: 100 login clicks send exactly one request for client 1
+MULTIPROCESS PASS: login locks immediately and names the current operation
+MULTIPROCESS PASS: 100 create clicks create one protected room with one HTTP request
+MULTIPROCESS PASS: create locks immediately and shows creation progress
+MULTIPROCESS PASS: 100 join clicks reserve and connect once
+MULTIPROCESS PASS: join locks immediately and names admission progress
+MULTIPROCESS PASS: room entry clears hidden admission windows and password widgets
+MULTIPROCESS PASS: 100 settings saves send one validated update
+MULTIPROCESS PASS: settings lock immediately and show saving progress
+MULTIPROCESS PASS: 100 ready clicks keep one transition and block repeated toggling
+MULTIPROCESS PASS: 100 phase clicks start once without toggling back
+MULTIPROCESS PASS: 100 leave clicks send one cleanup request
+MULTIPROCESS PASS: room exit clears passwords modal state and keyboard focus
+MULTIPROCESS PASS: admission blocks background interaction while preserving cancellation
+MULTIPROCESS PASS: callbacks behind busy UI cannot create a room or logout
+MULTIPROCESS PASS: 100 cancel clicks lock immediately and show cancellation cleanup
+MULTIPROCESS PASS: paused burst admission still issues only one reservation request
+MULTIPROCESS PASS: 100 cancellation clicks send one cleanup request
+MULTIPROCESS PASS: cancelled entry clears sensitive inputs without disconnecting the other participant
+MULTIPROCESS PASS: transport loss closes settings clears passwords and removes field focus
+MULTIPROCESS PASS: password-protected reconnect survives cleanup and leaves no password draft
+MULTIPROCESS PASS: kick closes open map and clears room passwords and focus
+MULTIPROCESS PASS: kick does not leave an automatic reconnect target
+MULTIPROCESS PASS: auth revocation clears open create window passwords and selected UI
+MULTIPROCESS PASS: 100 room logout clicks send one logout request
+MULTIPROCESS PASS: room logout clears hidden windows password widgets and focus
+MULTIPROCESS PASS: fresh login cannot reuse old room membership or selection
+MULTIPROCESS PASS: lobby exit clears unsubmitted admission passwords and hidden selection focus
+MULTIPROCESS PASS: both clients finish without UI runtime exceptions
+UI STATE COMPLETE: C:\Users\yafa7\.codex\.chatgpt-projects\g-p-6ac792e6ddec81918d83905c0cb6d6be\work\ui-state-evidence\20261015-135753

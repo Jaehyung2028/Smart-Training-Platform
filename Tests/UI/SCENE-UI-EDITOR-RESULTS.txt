@@ -1,0 +1,30 @@
+SCENE UI PASS: saved scene has all view and input references
+SCENE UI PASS: LobbyUI retains its editable prefab connection
+SCENE UI PASS: LobbyInteriorUI retains its editable prefab connection
+SCENE UI PASS: RoomUI retains its editable prefab connection
+SCENE UI PASS: repeated placement reuses existing UI without duplication
+SCENE UI PASS: only one Canvas is visible for Login
+SCENE UI PASS: only one Canvas is visible for LobbyList
+SCENE UI PASS: only one Canvas is visible for LobbyJoin
+SCENE UI PASS: only one Canvas is visible for LobbyInterior
+SCENE UI PASS: only one Canvas is visible for CreateRoom
+SCENE UI PASS: only one Canvas is visible for RoomJoin
+SCENE UI PASS: only one Canvas is visible for Room
+SCENE UI PASS: only one Canvas is visible for RoomSettings
+SCENE UI PASS: only one Canvas is visible for RoomConfirmation
+SCENE UI PASS: only one Canvas is visible for Movement
+SCENE UI PASS: preview restores Canvas state and original font references
+SCENE UI PASS: previews do not create an API session or bind network actions
+SCENE UI PASS: design edits made during preview survive restoration
+SCENE UI PASS: saving exits preview and restores modal visibility
+SCENE UI PASS: preview-only text is excluded from saved scene
+SCENE UI PASS: saved scene preserves design override and valid prefab references
+SCENE UI PASS: missing button reports its exact field name
+SCENE UI PASS: build validation rejects missing required UI wiring
+SCENE UI PASS: cross-screen button wiring is detected
+SCENE UI PASS: missing array element reports its exact index
+SCENE UI PASS: duplicate room screens are detected
+SCENE UI PASS: build preparation removes transient preview state
+SCENE UI PASS: closing preview window restores original display
+SCENE UI PASS: editor checks leave the actual client scene asset untouched
+SCENE UI CHECKS COMPLETE: 29 checks
