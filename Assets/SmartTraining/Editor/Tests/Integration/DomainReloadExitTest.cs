@@ -13,7 +13,11 @@ namespace SmartTraining.Editor
         private static readonly Stack<IEnumerator> stack = new Stack<IEnumerator>();
         private static TrainingApiClient api;
         private static double deadline;
-        static DomainReloadExitTest() { EditorApplication.update += Tick; deadline = EditorApplication.timeSinceStartup + 90; }
+        static DomainReloadExitTest()
+        {
+            EditorApplication.update += Tick;
+            deadline = EditorApplication.timeSinceStartup + 90;
+        }
         public static void Run()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/SmartTraining/Scenes/ApiLobby.unity");
@@ -27,7 +31,8 @@ namespace SmartTraining.Editor
         }
         private static void Check(bool value, string label)
         {
-            if (!value) throw new Exception(label);
+            if (!value)
+                throw new Exception(label);
             Debug.Log("UNITY PASS: " + label);
         }
         private static IEnumerator Prepare()
@@ -39,10 +44,10 @@ namespace SmartTraining.Editor
             typeof(ApiLobbyScreen).GetField("api", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(screen, api);
             yield return api.Login(SessionState.GetString(Key + "name", ""), () => { }, fail);
             string lobbyId = null;
-            yield return api.CreateLobby("dr-" + Guid.NewGuid().ToString("N").Substring(0, 6), id => lobbyId = id, fail);
+            yield return CatalogLobbyTestSupport.Select(api, id => lobbyId = id, fail);
             SessionState.SetString(Key + "lobby", lobbyId);
             yield return api.JoinLobby(lobbyId, () => { }, fail);
-            yield return api.CreateRoom(lobbyId, "reload-room", "sample-training", 2, _ => { }, fail);
+            yield return api.CreateRoom(lobbyId, "reload-room", lobbyId, 2, _ => { }, fail);
             SessionState.SetString(Key + "phase", "exit");
             EditorApplication.ExitPlaymode();
         }
@@ -54,26 +59,45 @@ namespace SmartTraining.Editor
             yield return api.Login(SessionState.GetString(Key + "name", ""), () => { }, fail);
             Check(api.IsLoggedIn, "nickname reusable after default domain reload stop");
             var lobbyId = SessionState.GetString(Key + "lobby", "");
-            yield return api.GetLobbies(items => Check(!Array.Exists(items, item => item.id == lobbyId), "default reload stop removes owned room and lobby"), fail);
+            yield return api.GetLobbies(items => Check(Array.Exists(items, item => item.id == lobbyId && item.roomCount == 0 && item.userCount == 0), "default reload stop cleans owned room and retains catalog lobby"), fail);
             yield return api.Logout(() => { }, fail);
         }
         private static void Tick()
         {
             var phase = SessionState.GetString(Key + "phase", "");
-            if (string.IsNullOrEmpty(phase)) return;
+            if (string.IsNullOrEmpty(phase))
+                return;
             try
             {
-                if (EditorApplication.timeSinceStartup > deadline) throw new TimeoutException("Domain reload verification timed out");
+                if (EditorApplication.timeSinceStartup > deadline)
+                    throw new TimeoutException("Domain reload verification timed out");
                 if (phase == "enter" && EditorApplication.isPlaying)
-                { SessionState.SetString(Key + "phase", "prepare"); stack.Push(Prepare()); }
+                {
+                    SessionState.SetString(Key + "phase", "prepare");
+                    stack.Push(Prepare());
+                }
                 if (phase == "exit" && !EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
-                { SessionState.SetString(Key + "phase", "verify"); stack.Clear(); stack.Push(Verify()); }
+                {
+                    SessionState.SetString(Key + "phase", "verify");
+                    stack.Clear();
+                    stack.Push(Verify());
+                }
                 if (stack.Count == 0)
-                { if (phase == "verify") Finish(0); return; }
+                {
+                    if (phase == "verify")
+                        Finish(0);
+                    return;
+                }
                 var routine = stack.Peek();
-                if (routine.Current is AsyncOperation pending && !pending.isDone) return;
-                if (!routine.MoveNext()) { stack.Pop(); return; }
-                if (routine.Current is IEnumerator nested) stack.Push(nested);
+                if (routine.Current is AsyncOperation pending && !pending.isDone)
+                    return;
+                if (!routine.MoveNext())
+                {
+                    stack.Pop();
+                    return;
+                }
+                if (routine.Current is IEnumerator nested)
+                    stack.Push(nested);
             }
             catch (Exception error) { Debug.LogError("UNITY CHECK FAILED: " + error.Message); Finish(1); }
         }
@@ -82,7 +106,9 @@ namespace SmartTraining.Editor
             SessionState.SetString(Key + "phase", "");
             EditorSettings.enterPlayModeOptionsEnabled = SessionState.GetBool(Key + "enabled", false);
             EditorSettings.enterPlayModeOptions = (EnterPlayModeOptions)SessionState.GetInt(Key + "options", 0);
-            EditorApplication.update -= Tick; api?.Dispose(); EditorApplication.Exit(code);
+            EditorApplication.update -= Tick;
+            api?.Dispose();
+            EditorApplication.Exit(code);
         }
     }
 }

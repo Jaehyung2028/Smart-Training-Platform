@@ -40,13 +40,14 @@ ASP.NET에서 사용자·입장 권한을 확인하고, 전용 서버에서 실�
 ## 현재 구현 기능
 
 - 닉네임 로그인, 토큰 갱신, 종료·인증 만료 시 세션 정리
-- 서버 `catalog.json` 기반 콘텐츠 로비 목록, 입장 요청에 따른 로비 서버 실행
+- 서버 `catalog.json` 기반 콘텐츠 로비 목록과 ASP.NET 직접 입장 처리
 - 로비 안의 방 생성·검색·필터·정렬, 비밀번호와 정원 확인
 - 접속 예약·검증·연결 확정, 입장 취소와 연결 실패 정리
 - 플레이어 생성·이동 동기화, 연결 지연·준비 상태 표시
 - 방장 자동·수동 위임, 강퇴, 입장 잠금, 방 설정·비밀번호 변경, 방 닫기
 - 전원 준비 후 방장 시작, 대기 복귀와 준비 상태 초기화
 - 로비·방 채팅, 참가자 목록, 방 목록과 운영 상태 자동 갱신
+- 로비·방별 SignalR 그룹 전송과 재입장 시 이전 방 채팅 메시지 제외
 - 연결 끊김 감지와 사용자 요청에 따른 이전 방 재접속
 - 로그인·콘텐츠 로비·로비 내부·방 내부의 UGUI 화면과 공통 테마
 - 씬 UI 편집·미리보기, 해상도 대응, 중복 입력 차단과 화면 전환 시 입력값 정리
@@ -90,7 +91,7 @@ API 예약 후 UDP 연결에 실패하면 예약만 남을 수 있습니다. 실
 
 1. Unity Hub에서 `6000.4.7f1`과 Windows Dedicated Server 빌드 모듈을 설치합니다.
 2. 프로젝트를 열고 패키지 가져오기가 끝나면 `Smart Training > Build > Build Windows Test Bundle`을 실행합니다.
-3. `Builds/TestBundles/날짜-고유번호`의 `RoomServer` 폴더 전체를 API 실행 폴더에 배치하거나 API의 실행 경로를 지정합니다. `catalog.json`의 `lobbyServerExecutablePath`가 있으면 해당 로비별 경로가 우선합니다.
+3. `Builds/TestBundles/날짜-고유번호`의 `RoomServer` 폴더 전체를 API 실행 폴더에 배치하거나 API의 실행 경로를 지정합니다. 방 서버의 실행 경로는 `Room:ServerExecutablePath`로 지정합니다.
 4. [백엔드 실행 안내](https://github.com/Jaehyung2028/Smart-Training-Server#실행-방법)에 따라 ASP.NET을 실행합니다.
 5. `Client/Smart Training Client.exe`를 실행하거나 `Assets/SmartTraining/Scenes/ApiLobby.unity`에서 Play합니다.
 6. 서버 주소를 입력하고 로그인 → 콘텐츠 로비 선택 → 입장 → 방 생성 또는 선택 → 방 참가 순서로 확인합니다.
@@ -100,29 +101,6 @@ API 예약 후 UDP 연결에 실패하면 예약만 남을 수 있습니다. 실
 [통합 빌드 안내](Assets/SmartTraining/Documentation/Guides/BUILD-TEST-BUNDLE.md) · [폴더 구조](Assets/SmartTraining/Documentation/README.md)
 
 `Library`, `Temp`, `Logs`, `Builds`는 Git에서 제외합니다. 기존 개별 서버·클라이언트 빌드 메뉴도 유지합니다.
-## 검증과 확인 방법
-
-2026-10-15 통합 빌드에서 생성한 새 클라이언트·로비 서버·방 서버로 멀티 접속 검사 **33개 항목**을 통과했습니다. 폴더 정리에서는 씬 연결 검사 29개와 실제 멀티 흐름 33개를 별도로 확인했습니다. 각 수치는 해당 실행의 확인 항목이며 서로 다른 독립 테스트 수로 합산하지 않습니다. 기록은 Tests/Build, Tests/ProjectLayout, Tests/UI에 있습니다.
-
-
-2026-10-13 기준 실제 ASP.NET HTTPS 서버와 별도 전용 서버를 사용하는 통합 검증에서 **114개 검증 항목**을 통과했습니다. 상태 대기·동기화 확인의 반복 항목을 포함한 수치이며, 114개의 독립 테스트 시나리오를 뜻하지 않습니다. Windows 전용 서버와 클라이언트 빌드도 통과했습니다.
-
-검증 코드 `RoomServerEndToEndTest.Run`은 실행 중인 테스트용 API가 필요합니다. `SMART_TRAINING_TEST_URL`에 해당 주소를 지정하고 Unity의 `-executeMethod SmartTraining.Editor.RoomServerEndToEndTest.Run`으로 실행합니다. 테스트가 임시 사용자·로비·방을 생성하므로 개인 테스트 환경에서 실행합니다. 예:
-
-```powershell
-$env:SMART_TRAINING_TEST_URL = "http://localhost:5229"
-& "<Unity.exe 경로>" -batchmode -nographics -projectPath "$PWD" -executeMethod SmartTraining.Editor.RoomServerEndToEndTest.Run -logFile "multiplayer-checks.log"
-```
-
-테스트 전 API 설정의 전용 서버 실행 경로가 준비되어 있어야 합니다. API 카탈로그는 저장소 기본 `sample-training` 항목을 사용합니다.
-
-수동 확인 문서:
-
-- [방장 표시·자동 위임](Assets/SmartTraining/Documentation/History/STEP10-방장표시와자동위임.md)
-- [수동 위임](Assets/SmartTraining/Documentation/History/STEP11-방장수동위임.md)
-- [강퇴](Assets/SmartTraining/Documentation/History/STEP12-방장강퇴.md)
-- [입장 잠금](Assets/SmartTraining/Documentation/History/STEP13-방입장잠금.md)
-- [연결 끊김·재접속](Assets/SmartTraining/Documentation/History/STEP14-연결끊김과재접속.md)
 
 ## 화면
 
@@ -141,3 +119,5 @@ $env:SMART_TRAINING_TEST_URL = "http://localhost:5229"
 ## 변경 기록과 업로드 방식
 
 첫 업로드는 현재 멀티 접속 기반을 하나의 커밋으로 정리합니다. 이후에는 업로드 요청 시 변경 파일과 검증 결과를 확인하고 README를 갱신한 뒤 커밋·푸시합니다. 개발 중 변경을 자동으로 공개하지 않습니다. 서버 API가 바뀌면 두 저장소의 연결 방식과 실행 안내도 함께 확인합니다.
+
+- 방 생성 후 생성자의 초기 예약을 이어받아 자동 접속합니다. 접속 실패·취소 시 예약을 해제하고, 빈 방 정리는 서버가 담당합니다.

@@ -31,7 +31,7 @@ namespace SmartTraining
             public bool running; public bool ready; public bool allReady; public bool canCancel; public bool cancelRequested; public string userId; public string roomId;
             public string pendingRoomId; public string reconnectRoomId; public string masterId; public string status;
             public string progress; public string error; public string endpoint; public string[] participants; public string[] checkingParticipants;
-            public string lobbyId; public string pendingLobbyId; public string lobbyProgress; public bool canCancelLobby;
+            public string lobbyId; public string lobbyProgress; public bool canCancelLobby;
             public string selectedLobbyId; public LobbySummary[] lobbies; public RoomSummary[] rooms; public LobbyParticipant[] lobbyParticipants;
             public string lobbyRetryId; public string lobbyError;
             public bool uiVisible, uiLoginVisible, uiProgressVisible, uiEnterEnabled, uiLayoutValid;
@@ -217,7 +217,7 @@ namespace SmartTraining
             {
                 completed = completed, processId = System.Diagnostics.Process.GetCurrentProcess().Id, busy = Busy,
                 loggedIn = api?.IsLoggedIn == true, connected = client?.IsConnected == true,
-                lobbyId = api?.User?.currentLobbyId ?? "", pendingLobbyId = api?.User?.pendingLobbyId ?? "",
+                lobbyId = api?.User?.currentLobbyId ?? "",
                 lobbyProgress = (string)Get("lobbyJoinProgress"), canCancelLobby = (bool)Get("lobbyJoinCanCancel"),
                 lobbyRetryId = (string)Get("lobbyJoinRetryId"), lobbyError = (string)Get("lobbyJoinError"),
                 selectedLobbyId = (string)Get("selectedLobbyId"), lobbies = (LobbySummary[])Get("lobbies"),

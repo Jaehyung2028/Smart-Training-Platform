@@ -21,9 +21,19 @@ namespace SmartTraining.Editor
         private static IEnumerator Wait(Func<bool> predicate, string name)
         {
             double until = Time.realtimeSinceStartupAsDouble + 20;
-            while (!predicate()) { if (Time.realtimeSinceStartupAsDouble > until) throw new InvalidOperationException(name); yield return null; }
+            while (!predicate())
+            {
+                if (Time.realtimeSinceStartupAsDouble > until)
+                    throw new InvalidOperationException(name);
+                yield return null;
+            }
         }
-        private static void Check(bool ok, string name) { if (!ok) throw new InvalidOperationException(name); Debug.Log("ROOM PASS: " + name); }
+        private static void Check(bool ok, string name)
+        {
+            if (!ok)
+                throw new InvalidOperationException(name);
+            Debug.Log("ROOM PASS: " + name);
+        }
         private static void Clean(ApiLobbyScreen screen, TrainingApiClient user, string lobby, string name)
         {
             Check(user.IsLoggedIn && user.User.currentLobbyId == lobby && user.User.currentRoomId == "" && user.User.pendingRoomId == "" && Get(screen, "network") == null,
@@ -33,8 +43,10 @@ namespace SmartTraining.Editor
         }
         public static IEnumerator Run(string url)
         {
-            var anchor = new TrainingApiClient(url); var user = new TrainingApiClient(url);
-            var anchorNetwork = new RoomNetworkClient(); ApiLobbyScreen screen = null;
+            var anchor = new TrainingApiClient(url);
+            var user = new TrainingApiClient(url);
+            var anchorNetwork = new RoomNetworkClient();
+            ApiLobbyScreen screen = null;
             Action<string> fail = message => throw new InvalidOperationException(message);
             try
             {
@@ -42,19 +54,23 @@ namespace SmartTraining.Editor
                 yield return anchor.Login("jc-a-" + suffix, () => { }, fail);
                 yield return user.Login("jc-u-" + suffix, () => { }, fail);
                 string lobby = null, room = null;
-                yield return anchor.CreateLobby("jc-" + suffix, id => lobby = id, fail);
+                yield return CatalogLobbyTestSupport.Select(anchor, id => lobby = id, fail);
                 yield return anchor.JoinLobby(lobby, () => { }, fail);
                 yield return user.JoinLobby(lobby, () => { }, fail);
-                yield return anchor.CreateRoom(lobby, "cancel-room", "sample-training", 2, id => room = id, fail);
+                yield return anchor.CreateRoom(lobby, "cancel-room", lobby, 2, id => room = id, fail);
                 JoinRoomResponse admission = null;
                 yield return anchor.JoinRoom(lobby, room, value => admission = value, fail);
                 yield return anchorNetwork.Connect(anchor.User.id, admission, () => { }, fail, url);
                 yield return Wait(() => anchorNetwork.LocalPlayer != null, "anchor player missing");
                 screen = new GameObject("room-join-cancellation-check").AddComponent<ApiLobbyScreen>();
-                Set(screen, "testPauseLobbyUpdates", true); Set(screen, "api", user); Set(screen, "serverUrl", url); Set(screen, "selectedLobbyId", lobby);
+                Set(screen, "testPauseLobbyUpdates", true);
+                Set(screen, "api", user);
+                Set(screen, "serverUrl", url);
+                Set(screen, "selectedLobbyId", lobby);
 
                 Start(screen, "JoinRoom", room, null);
-                Cancel(screen); Cancel(screen);
+                Cancel(screen);
+                Cancel(screen);
                 Check((bool)Get(screen, "roomJoinCancelRequested"), "repeat cancel clicks record one cancellation request");
                 yield return Wait(() => Idle(screen), "immediate join cancellation stuck");
                 Clean(screen, user, lobby, "immediate cancellation");
@@ -87,11 +103,14 @@ namespace SmartTraining.Editor
                 Cancel(screen);
                 Check(!(bool)Get(screen, "roomJoinCancelRequested") && user.User.currentRoomId == room, "cancel command after completed admission does not remove established participant");
 
-                Start(screen, "LeaveRoom", "test leave"); yield return Wait(() => Idle(screen), "reconnect fixture leave stuck");
-                Set(screen, "reconnectRoomId", room); Set(screen, "reconnectLobbyId", lobby);
+                Start(screen, "LeaveRoom", "test leave");
+                yield return Wait(() => Idle(screen), "reconnect fixture leave stuck");
+                Set(screen, "reconnectRoomId", room);
+                Set(screen, "reconnectLobbyId", lobby);
                 Start(screen, "ReconnectRoom");
                 yield return Wait(() => (bool)Get(screen, "roomJoinCanCancel"), "reconnect join stage not observed");
-                Cancel(screen); yield return Wait(() => Idle(screen), "reconnect cancellation stuck");
+                Cancel(screen);
+                yield return Wait(() => Idle(screen), "reconnect cancellation stuck");
                 Clean(screen, user, lobby, "reconnect cancellation");
                 yield return user.Logout(() => { }, fail);
                 anchorNetwork.Dispose();
@@ -101,10 +120,17 @@ namespace SmartTraining.Editor
             {
                 if (screen != null)
                 {
-                    ((RoomNetworkClient)Get(screen, "network"))?.Dispose(); Set(screen, "network", null); Set(screen, "api", null);
-                    screen.enabled = false; UnityEngine.Object.DestroyImmediate(screen.gameObject);
+                    ((RoomNetworkClient)Get(screen, "network"))?.Dispose();
+                    Set(screen, "network", null);
+                    Set(screen, "api", null);
+                    screen.enabled = false;
+                    UnityEngine.Object.DestroyImmediate(screen.gameObject);
                 }
-                anchorNetwork.Dispose(); user.LogoutOnShutdown(); user.Dispose(); anchor.LogoutOnShutdown(); anchor.Dispose();
+                anchorNetwork.Dispose();
+                user.LogoutOnShutdown();
+                user.Dispose();
+                anchor.LogoutOnShutdown();
+                anchor.Dispose();
             }
         }
     }

@@ -12,7 +12,12 @@ namespace SmartTraining.Editor
         private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
         private static IEnumerator View(ApiLobbyScreen screen, string id) => (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ViewParticipantRoom", Flags).Invoke(screen, new object[] { id });
         private static RoomSummary Selected(ApiLobbyScreen screen) => (RoomSummary)Get(screen, "selectedRoom");
-        private static void Check(bool ok, string name) { if (!ok) throw new InvalidOperationException(name); Debug.Log("ROOM PASS: " + name); }
+        private static void Check(bool ok, string name)
+        {
+            if (!ok)
+                throw new InvalidOperationException(name);
+            Debug.Log("ROOM PASS: " + name);
+        }
         public static IEnumerator Run(TrainingApiClient first, string lobby, string room)
         {
             Action<string> fail = error => throw new InvalidOperationException(error);
@@ -23,11 +28,15 @@ namespace SmartTraining.Editor
                 yield return observer.Login("prv-" + Guid.NewGuid().ToString("N").Substring(0, 6), () => { }, fail);
                 yield return observer.JoinLobby(lobby, () => { }, fail);
                 string foreign = null;
-                yield return observer.CreateLobby("pr-" + Guid.NewGuid().ToString("N").Substring(0, 6), id => foreign = id, fail);
-                screen = new GameObject("participant-room-test").AddComponent<ApiLobbyScreen>(); screen.enabled = false;
-                Set(screen, "api", observer); Set(screen, "selectedLobbyId", foreign);
-                Set(screen, "roomSearch", "cannot-match"); Set(screen, "availableRoomsOnly", true);
-                Set(screen, "roomProtectionFilter", RoomProtectionFilter.Protected); Set(screen, "joinRoomPassword", "old-input");
+                yield return CatalogLobbyTestSupport.Select(observer, id => foreign = id, fail, lobby);
+                screen = new GameObject("participant-room-test").AddComponent<ApiLobbyScreen>();
+                screen.enabled = false;
+                Set(screen, "api", observer);
+                Set(screen, "selectedLobbyId", foreign);
+                Set(screen, "roomSearch", "cannot-match");
+                Set(screen, "availableRoomsOnly", true);
+                Set(screen, "roomProtectionFilter", RoomProtectionFilter.Protected);
+                Set(screen, "joinRoomPassword", "old-input");
                 yield return View(screen, first.User.id);
                 Check(Selected(screen)?.id == room && (string)Get(screen, "selectedLobbyId") == lobby, "participant room shortcut selects current-lobby room while browsing another lobby");
                 Check((string)Get(screen, "roomSearch") == "" && !(bool)Get(screen, "availableRoomsOnly") &&
@@ -61,8 +70,13 @@ namespace SmartTraining.Editor
             }
             finally
             {
-                if (screen != null) { Set(screen, "api", null); UnityEngine.Object.DestroyImmediate(screen.gameObject); }
-                observer.LogoutOnShutdown(); observer.Dispose();
+                if (screen != null)
+                {
+                    Set(screen, "api", null);
+                    UnityEngine.Object.DestroyImmediate(screen.gameObject);
+                }
+                observer.LogoutOnShutdown();
+                observer.Dispose();
             }
         }
     }

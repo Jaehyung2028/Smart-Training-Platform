@@ -17,9 +17,18 @@ namespace SmartTraining
         private NetworkManager manager;
         private bool failed;
         public bool IsConnected => manager != null && manager.IsConnectedClient;
-        public bool WasDisconnected { get; private set; }
-        public string DisconnectReason { get; private set; }
-        internal string AdmissionToken { get; private set; }
+        public bool WasDisconnected
+        {
+            get; private set;
+        }
+        public string DisconnectReason
+        {
+            get; private set;
+        }
+        internal string AdmissionToken
+        {
+            get; private set;
+        }
         private float nextInputAt;
         public string ServerEndpoint { get; private set; } = "";
         public RoomPlayer LocalPlayer => manager != null && manager.IsConnectedClient && manager.LocalClient?.PlayerObject != null
@@ -29,7 +38,8 @@ namespace SmartTraining
         public bool SetReady(bool value)
         {
             var player = LocalPlayer;
-            if (player == null || !player.IsSpawned || !player.IsOwner || player.RoomIsRunning || player.PhasePending) return false;
+            if (player == null || !player.IsSpawned || !player.IsOwner || player.RoomIsRunning || player.PhasePending)
+                return false;
             player.SetReadyRpc(value);
             return true;
         }
@@ -43,67 +53,140 @@ namespace SmartTraining
         public void SendMovement(Vector2 direction)
         {
             var player = LocalPlayer;
-            if (player == null || !player.IsOwner || Time.unscaledTime < nextInputAt) return;
+            if (player == null || !player.IsOwner || Time.unscaledTime < nextInputAt)
+                return;
             nextInputAt = Time.unscaledTime + 0.05f;
             player.MoveRpc(direction);
         }
 
         public IEnumerator Connect(string userId, JoinRoomResponse reservation, Action success, Action<string> failure, string apiBaseUrl = null, Func<bool> cancellationRequested = null)
         {
-            if (cancellationRequested?.Invoke() == true) { failure("입장을 취소했습니다."); yield break; }
-            if (manager != null) { failure("기존 방 연결을 먼저 종료해주세요."); yield break; }
+            if (cancellationRequested?.Invoke() == true)
+            {
+                failure("입장을 취소했습니다.");
+                yield break;
+            }
+            if (manager != null)
+            {
+                failure("기존 방 연결을 먼저 종료해주세요.");
+                yield break;
+            }
             if (reservation?.room == null || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(reservation.admissionToken) ||
                 reservation.room.port < 1 || reservation.room.port > 65535 || string.IsNullOrEmpty(reservation.room.ipAddress) ||
                 !DateTimeOffset.TryParse(reservation.expiresAtUtc, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expires) ||
                 expires <= DateTimeOffset.UtcNow)
-            { failure("유효한 접속 예약이 없습니다. 다시 참가해주세요."); yield break; }
+            {
+                failure("유효한 접속 예약이 없습니다. 다시 참가해주세요.");
+                yield break;
+            }
             string address = reservation.room.ipAddress;
             if (!RoomEndpoint.TryValidate(address, reservation.room.port, apiBaseUrl, out var endpointError))
-            { failure(endpointError); yield break; }
+            {
+                failure(endpointError);
+                yield break;
+            }
             if (!IPAddress.TryParse(address, out _))
             {
                 var lookup = Dns.GetHostAddressesAsync(address);
                 double deadline = Time.realtimeSinceStartupAsDouble + 5;
-                while (!lookup.IsCompleted && cancellationRequested?.Invoke() != true && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
-                if (cancellationRequested?.Invoke() == true) { failure("입장을 취소했습니다."); yield break; }
+                while (!lookup.IsCompleted && cancellationRequested?.Invoke() != true && Time.realtimeSinceStartupAsDouble < deadline)
+                    yield return null;
+                if (cancellationRequested?.Invoke() == true)
+                {
+                    failure("입장을 취소했습니다.");
+                    yield break;
+                }
                 if (!lookup.IsCompleted || lookup.IsFaulted || lookup.IsCanceled)
-                { failure("방 서버 주소를 확인하지 못했습니다."); yield break; }
+                {
+                    failure("방 서버 주소를 확인하지 못했습니다.");
+                    yield break;
+                }
                 var resolved = lookup.Result.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork) ?? lookup.Result.FirstOrDefault();
-                if (resolved == null) { failure("방 서버 주소를 확인하지 못했습니다."); yield break; }
+                if (resolved == null)
+                {
+                    failure("방 서버 주소를 확인하지 못했습니다.");
+                    yield break;
+                }
                 address = resolved.ToString();
             }
             if (!RoomEndpoint.TryValidate(address, reservation.room.port, apiBaseUrl, out endpointError))
-            { failure(endpointError); yield break; }
+            {
+                failure(endpointError);
+                yield break;
+            }
             ServerEndpoint = new IPEndPoint(IPAddress.Parse(address), reservation.room.port).ToString();
-            WasDisconnected = false; DisconnectReason = null; failed = false;
+            WasDisconnected = false;
+            DisconnectReason = null;
+            failed = false;
             AdmissionToken = reservation.admissionToken;
             root = new GameObject("SmartTrainingNetworkClient");
             manager = root.AddComponent<NetworkManager>();
             var transport = root.AddComponent<UnityTransport>();
             transport.SetConnectionData(address, (ushort)reservation.room.port);
-            transport.ConnectTimeoutMS = 1000; transport.MaxConnectAttempts = 8;
-            transport.HeartbeatTimeoutMS = 1000; transport.DisconnectTimeoutMS = 10000;
+            transport.ConnectTimeoutMS = 1000;
+            transport.MaxConnectAttempts = 8;
+            transport.HeartbeatTimeoutMS = 1000;
+            transport.DisconnectTimeoutMS = 10000;
             manager.NetworkConfig = new NetworkConfig
             {
-                NetworkTransport = transport, EnableSceneManagement = false, ConnectionApproval = true,
+                NetworkTransport = transport,
+                EnableSceneManagement = false,
+                ConnectionApproval = true,
                 ConnectionData = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new RoomConnectionData
-                { roomId = reservation.room.id, userId = userId, admissionToken = reservation.admissionToken }))
+                {
+                    roomId = reservation.room.id,
+                    userId = userId,
+                    admissionToken = reservation.admissionToken
+                }))
             };
             string prefabError = null;
-            try { RoomPlayerPrefab.Register(manager); }
+            try
+            {
+                RoomPlayerPrefab.Register(manager);
+            }
             catch (InvalidOperationException error) { prefabError = error.Message; }
-            if (prefabError != null) { Dispose(); failure(prefabError); yield break; }
+            if (prefabError != null)
+            {
+                Dispose();
+                failure(prefabError);
+                yield break;
+            }
             manager.OnClientDisconnectCallback += OnDisconnected;
             manager.OnTransportFailure += OnTransportFailure;
-            if (!manager.StartClient()) { Dispose(); failure("방 연결을 시작하지 못했습니다."); yield break; }
+            if (!manager.StartClient())
+            {
+                Dispose();
+                failure("방 연결을 시작하지 못했습니다.");
+                yield break;
+            }
             double limit = Time.realtimeSinceStartupAsDouble + Math.Min(15, Math.Max(0, (expires - DateTimeOffset.UtcNow).TotalSeconds));
-            while (!IsConnected && !failed && cancellationRequested?.Invoke() != true && Time.realtimeSinceStartupAsDouble < limit) yield return null;
-            if (cancellationRequested?.Invoke() == true) { Dispose(); failure("입장을 취소했습니다."); yield break; }
-            if (IsConnected) success();
-            else { Dispose(); failure("방 서버에 접속하지 못했습니다. 예약을 정리하고 다시 참가해주세요."); }
+            while (!IsConnected && !failed && cancellationRequested?.Invoke() != true && Time.realtimeSinceStartupAsDouble < limit)
+                yield return null;
+            if (cancellationRequested?.Invoke() == true)
+            {
+                Dispose();
+                failure("입장을 취소했습니다.");
+                yield break;
+            }
+            if (IsConnected)
+                success();
+            else
+            {
+                Dispose();
+                failure("방 서버에 접속하지 못했습니다. 예약을 정리하고 다시 참가해주세요.");
+            }
         }
-        private void OnDisconnected(ulong id) { failed = true; WasDisconnected = true; DisconnectReason = manager?.DisconnectReason; }
-        private void OnTransportFailure() { failed = true; WasDisconnected = true; }
+        private void OnDisconnected(ulong id)
+        {
+            failed = true;
+            WasDisconnected = true;
+            DisconnectReason = manager?.DisconnectReason;
+        }
+        private void OnTransportFailure()
+        {
+            failed = true;
+            WasDisconnected = true;
+        }
         public void Dispose()
         {
             if (manager != null)
@@ -113,19 +196,36 @@ namespace SmartTraining
                 manager.NetworkConfig.ConnectionData = Array.Empty<byte>();
                 root.AddComponent<NetworkShutdownCleanup>().Begin(manager);
             }
-            else if (root != null) UnityEngine.Object.Destroy(root);
-            manager = null; root = null; ServerEndpoint = ""; WasDisconnected = false; DisconnectReason = null; AdmissionToken = null; nextInputAt = 0;
+            else if (root != null)
+                UnityEngine.Object.Destroy(root);
+            manager = null;
+            root = null;
+            ServerEndpoint = "";
+            WasDisconnected = false;
+            DisconnectReason = null;
+            AdmissionToken = null;
+            nextInputAt = 0;
         }
     }
 
     public readonly struct RoomReadinessSummary
     {
-        public int ParticipantCount { get; }
-        public int ReadyCount { get; }
-        public bool AllReady { get; }
+        public int ParticipantCount
+        {
+            get;
+        }
+        public int ReadyCount
+        {
+            get;
+        }
+        public bool AllReady
+        {
+            get;
+        }
         public RoomReadinessSummary(int participants, int ready, bool confirmed)
         {
-            ParticipantCount = participants; ReadyCount = ready;
+            ParticipantCount = participants;
+            ReadyCount = ready;
             AllReady = confirmed && participants > 0 && ready == participants;
         }
     }

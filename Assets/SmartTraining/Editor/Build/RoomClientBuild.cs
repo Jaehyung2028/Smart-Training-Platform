@@ -17,14 +17,18 @@ namespace SmartTraining.Editor
             LobbyInteriorUguiBuilder.EnsureAssets();
             RoomUguiBuilder.EnsureAssets();
             var output = Environment.GetEnvironmentVariable("SMART_TRAINING_CLIENT_BUILD");
-            if (string.IsNullOrEmpty(output)) output = System.IO.Path.GetFullPath("Builds/Client/Smart Training Client.exe");
+            if (string.IsNullOrEmpty(output))
+                output = System.IO.Path.GetFullPath("Builds/Client/Smart Training Client.exe");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { "Assets/SmartTraining/Scenes/ApiLobby.unity" }, locationPathName = output,
-                target = BuildTarget.StandaloneWindows64, subtarget = (int)StandaloneBuildSubtarget.Player,
+                scenes = new[] { "Assets/SmartTraining/Scenes/ApiLobby.unity" },
+                locationPathName = output,
+                target = BuildTarget.StandaloneWindows64,
+                subtarget = (int)StandaloneBuildSubtarget.Player,
                 options = BuildOptions.Development
             });
-            if (report.summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Room client build failed.");
+            if (report.summary.result != BuildResult.Succeeded)
+                throw new InvalidOperationException("Room client build failed.");
             Debug.Log("ROOM CLIENT BUILD PASSED (DevelopmentOnly HTTP)");
         }
     }

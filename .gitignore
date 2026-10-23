@@ -39,3 +39,8 @@
 *.original
 Thumbs.db
 .DS_Store
+
+# Standalone connection regression checks
+!/Tests/HubConnectionChecks/*.csproj
+/Tests/HubConnectionChecks/bin/
+/Tests/HubConnectionChecks/obj/

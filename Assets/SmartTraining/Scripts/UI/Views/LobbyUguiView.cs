@@ -18,7 +18,7 @@ namespace SmartTraining
         public Text connectionText, statusText, addressNotice, userText, selectedDetail, progressText, failureText, emptyText;
         [Header("Actions")]
         public Button healthButton, loginButton, saveButton, resetButton, refreshButton, logoutButton, enterButton;
-        public Button cancelButton, retryButton, closeFailureButton, reconnectButton, clearPendingButton;
+        public Button cancelButton, retryButton, closeFailureButton, reconnectButton;
         private ApiLobbyScreen screen;
         private bool wired;
         private string rowsKey = "";
@@ -33,7 +33,8 @@ namespace SmartTraining
         {
             screen = controller;
             EnsureComponents();
-            if (wired) return;
+            if (wired)
+                return;
             wired = true;
             UguiViewUtility.EnsureEventSystem(transform);
             runtimeFont = UguiViewUtility.ApplyFont(gameObject, fontOverride);
@@ -50,7 +51,6 @@ namespace SmartTraining
             retryButton.onClick.AddListener(() => screen.UiRetry());
             closeFailureButton.onClick.AddListener(() => screen.UiCloseFailure());
             reconnectButton.onClick.AddListener(() => screen.UiReconnectNotifications());
-            clearPendingButton.onClick.AddListener(() => screen.UiClearPending());
             nicknameInput.onEndEdit.AddListener(_ => { if (UnityEngine.InputSystem.Keyboard.current?.enterKey.wasPressedThisFrame == true) screen.UiLogin(); });
             Refresh();
         }
@@ -58,28 +58,41 @@ namespace SmartTraining
             => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
 
         private void LateUpdate() => Refresh();
-        internal void RefreshState() { if (wired) Refresh(); }
+        internal void RefreshState()
+        {
+            if (wired)
+                Refresh();
+        }
         internal void ResetTransientState()
         {
             UguiViewUtility.ClearSelection(transform);
-            progressPanel.SetActive(false); failurePanel.SetActive(false);
+            progressPanel.SetActive(false);
+            failurePanel.SetActive(false);
             displayedFailure = "";
             displayedDetailLobby = "";
             progressText.text = failureText.text = "";
-            foreach (var row in rows) { row.gameObject.SetActive(false); Destroy(row.gameObject); }
-            rows.Clear(); rowsKey = "";
+            foreach (var row in rows)
+            {
+                row.gameObject.SetActive(false);
+                Destroy(row.gameObject);
+            }
+            rows.Clear();
+            rowsKey = "";
             emptyText.gameObject.SetActive(true);
         }
         private void Refresh()
         {
-            if (screen == null) return;
+            if (screen == null)
+                return;
             EnsureComponents();
             bool visible = screen.UseUgui;
             UguiViewUtility.SetVisible(this, canvas, interaction, raycaster, visible);
             if (!visible)
             {
-                loginPanel.SetActive(false); lobbyPanel.SetActive(false);
-                progressPanel.SetActive(false); failurePanel.SetActive(false);
+                loginPanel.SetActive(false);
+                lobbyPanel.SetActive(false);
+                progressPanel.SetActive(false);
+                failurePanel.SetActive(false);
                 progressText.text = failureText.text = "";
                 return;
             }
@@ -94,8 +107,6 @@ namespace SmartTraining
             addressInput.interactable = nicknameInput.interactable = !processing && !loggedIn;
             healthButton.interactable = loginButton.interactable = saveButton.interactable = resetButton.interactable = !processing;
             refreshButton.interactable = logoutButton.interactable = reconnectButton.interactable = !processing;
-            clearPendingButton.gameObject.SetActive(screen.UiHasPending);
-            clearPendingButton.interactable = !processing;
             enterButton.interactable = screen.UiCanEnter;
             cancelButton.interactable = screen.UiCanCancel;
             retryButton.interactable = screen.UiCanRetry;
@@ -109,7 +120,8 @@ namespace SmartTraining
             {
                 Canvas.ForceUpdateCanvases();
                 var details = selectedDetail.GetComponentInParent<ScrollRect>(true);
-                if (details != null) details.verticalNormalizedPosition = 1;
+                if (details != null)
+                    details.verticalNormalizedPosition = 1;
                 displayedDetailLobby = screen.UiSelectedLobby;
             }
             progressText.text = screen.UiProgressTitle + "\n" + screen.UiProgress;
@@ -121,16 +133,22 @@ namespace SmartTraining
                 lobbyContent.GetComponentInParent<ScrollRect>().verticalNormalizedPosition = 1;
             }
             displayedFailure = failurePanel.activeInHierarchy ? screen.UiFailure : "";
-            foreach (var row in rows) row.interactable = !processing;
+            foreach (var row in rows)
+                row.interactable = !processing;
         }
         private void UpdateRows()
         {
             string key = screen.UiSelectedLobby;
             foreach (var lobby in screen.UiLobbies)
                 key += "|" + JsonUtility.ToJson(lobby);
-            if (key == rowsKey) return;
+            if (key == rowsKey)
+                return;
             rowsKey = key;
-            foreach (var row in rows) { row.gameObject.SetActive(false); Destroy(row.gameObject); }
+            foreach (var row in rows)
+            {
+                row.gameObject.SetActive(false);
+                Destroy(row.gameObject);
+            }
             rows.Clear();
             emptyText.gameObject.SetActive(screen.UiLobbies.Length == 0);
             foreach (var lobby in screen.UiLobbies)
@@ -140,17 +158,22 @@ namespace SmartTraining
                 row.name = "Lobby - " + id;
                 row.gameObject.SetActive(true);
                 var card = row.GetComponent<LobbyCardView>();
-                if (card != null) card.Render(lobby, id == screen.UiSelectedLobby);
+                if (card != null)
+                    card.Render(lobby, id == screen.UiSelectedLobby);
                 else
                 {
                     var text = row.GetComponentInChildren<Text>();
                     string state = lobby.operatingMode == "scheduled" ? "종료 예정" : lobby.isMaintenance ? "점검 중" : "입장 가능";
-                    text.text = (id == screen.UiSelectedLobby ? "● " : "") + lobby.name + "\n" + state + "  ·  사용자 " + lobby.userCount + "  ·  입장 대기 " + lobby.pendingUsers + "  ·  방 " + lobby.roomCount;
+                    text.text = (id == screen.UiSelectedLobby ? "● " : "") + lobby.name + "\n" + state + "  ·  사용자 " + lobby.userCount + "  ·  방 " + lobby.roomCount;
                 }
                 row.onClick.AddListener(() => screen.UiSelect(id));
                 rows.Add(row);
             }
         }
-        private void OnDestroy() { if (runtimeFont != null) Destroy(runtimeFont); }
+        private void OnDestroy()
+        {
+            if (runtimeFont != null)
+                Destroy(runtimeFont);
+        }
     }
 }

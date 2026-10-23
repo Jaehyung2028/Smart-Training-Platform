@@ -10,7 +10,7 @@ SmartTraining/
 │  │  ├─ Api/           ASP.NET 요청과 응답 모델
 │  │  └─ Networking/    접속·실시간 알림·연결 상태·주소 설정
 │  ├─ Gameplay/         네트워크 플레이어와 이동 입력
-│  ├─ Servers/          Unity 전용 로비·방 서버 실행 코드
+│  ├─ Servers/          Unity 전용 방 서버 실행 코드
 │  ├─ Domain/           방 검색·정렬과 알림 기록
 │  ├─ UI/
 │  │  ├─ Views/         로그인·로비·방 화면과 카드
@@ -55,6 +55,8 @@ SmartTraining/
 - [방 내부](History/STEP55-ROOM-DESIGN.md)
 
 ## 실행 파일 만들기
+
+다른 PC에서 실행할 때는 [LAN 접속 안내](Guides/LAN-CONNECTION.md)를 참고합니다.
 
 `Smart Training → Build → Build Windows Test Bundle`로 클라이언트와 전용 서버를 함께 만듭니다. 자세한 순서는 [Windows 테스트 빌드 안내](Guides/BUILD-TEST-BUNDLE.md)를 참고하세요.
 

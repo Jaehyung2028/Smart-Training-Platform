@@ -1,4 +1,4 @@
-﻿# File move map
+# File move map
 
 The .meta GUID of every existing asset is preserved.
 
@@ -24,7 +24,6 @@ The .meta GUID of every existing asset is preserved.
 | Assets/SmartTraining/Scripts/ApiModels.cs | Assets/SmartTraining/Scripts/Client/Api/ApiModels.cs |
 | Assets/SmartTraining/Scripts/EditorSessionCleanup.cs | Assets/SmartTraining/Scripts/Diagnostics/EditorSessionCleanup.cs |
 | Assets/SmartTraining/Scripts/LobbyCardView.cs | Assets/SmartTraining/Scripts/UI/Views/LobbyCardView.cs |
-| Assets/SmartTraining/Scripts/LobbyDedicatedServer.cs | Assets/SmartTraining/Scripts/Servers/LobbyDedicatedServer.cs |
 | Assets/SmartTraining/Scripts/LobbyInteriorUguiView.cs | Assets/SmartTraining/Scripts/UI/Views/LobbyInteriorUguiView.cs |
 | Assets/SmartTraining/Scripts/LobbyUguiView.cs | Assets/SmartTraining/Scripts/UI/Views/LobbyUguiView.cs |
 | Assets/SmartTraining/Scripts/MultiClientProbe.cs | Assets/SmartTraining/Scripts/Diagnostics/MultiClientProbe.cs |

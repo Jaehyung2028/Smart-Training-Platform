@@ -8,7 +8,12 @@ namespace SmartTraining.Editor
     {
         public static void Run()
         {
-            void Check(bool ok, string name) { if (!ok) throw new Exception(name); Debug.Log("UNITY PASS: " + name); }
+            void Check(bool ok, string name)
+            {
+                if (!ok)
+                    throw new Exception(name);
+                Debug.Log("UNITY PASS: " + name);
+            }
             var source = new[]
             {
                 new RoomSummary { id = "cold", name = "Alpha 훈련", availableSlots = 3, state = 0, createdAt = "2026-10-01T00:00:00Z" },

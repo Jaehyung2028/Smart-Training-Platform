@@ -17,10 +17,13 @@ namespace SmartTraining.Editor
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/SmartTraining/Scenes/RoomServer.unity" },
-                locationPathName = output, target = BuildTarget.StandaloneWindows64,
-                subtarget = (int)StandaloneBuildSubtarget.Server, options = BuildOptions.None
+                locationPathName = output,
+                target = BuildTarget.StandaloneWindows64,
+                subtarget = (int)StandaloneBuildSubtarget.Server,
+                options = BuildOptions.None
             });
-            if (report.summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Room server build failed.");
+            if (report.summary.result != BuildResult.Succeeded)
+                throw new InvalidOperationException("Room server build failed.");
             Debug.Log("ROOM SERVER BUILD PASSED");
         }
     }

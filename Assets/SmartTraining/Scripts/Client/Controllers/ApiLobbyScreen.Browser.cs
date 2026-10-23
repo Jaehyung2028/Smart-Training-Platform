@@ -8,6 +8,11 @@ namespace SmartTraining
         private RoomSortOrder roomSort;
         private RoomSummary[] GetDisplayedRooms() => RoomBrowser.Apply(rooms, roomSearch, availableRoomsOnly, roomProtectionFilter, roomSort);
         private void ResetRoomBrowser()
-        { roomSearch = ""; availableRoomsOnly = false; roomProtectionFilter = RoomProtectionFilter.All; roomSort = RoomSortOrder.Newest; }
+        {
+            roomSearch = "";
+            availableRoomsOnly = false;
+            roomProtectionFilter = RoomProtectionFilter.All;
+            roomSort = RoomSortOrder.Newest;
+        }
     }
 }

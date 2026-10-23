@@ -27,12 +27,15 @@ namespace SmartTraining
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void HeartbeatRpc()
         {
-            if (!IsServer || !IsSpawned) return;
-            heartbeatReceivedAt = Time.realtimeSinceStartupAsDouble; heartbeatReceived = true;
+            if (!IsServer || !IsSpawned)
+                return;
+            heartbeatReceivedAt = Time.realtimeSinceStartupAsDouble;
+            heartbeatReceived = true;
         }
         public void SampleConnectionHealthServer(ulong milliseconds)
         {
-            if (!IsServer || !IsSpawned) return;
+            if (!IsServer || !IsSpawned)
+                return;
             SetLatencyServer(milliseconds);
             connectionHealth.Value = (byte)ParticipantConnectionHealth.Evaluate(
                 Time.realtimeSinceStartupAsDouble - heartbeatReceivedAt, heartbeatReceived, RoundTripMilliseconds);
@@ -43,7 +46,8 @@ namespace SmartTraining
         public string LatencyLabel => RoundTripMilliseconds < 0 ? "측정 중" : RoundTripMilliseconds + " ms";
         public void SetLatencyServer(ulong milliseconds)
         {
-            if (!IsServer || !IsSpawned || milliseconds == 0) return;
+            if (!IsServer || !IsSpawned || milliseconds == 0)
+                return;
             roundTripMilliseconds.Value = milliseconds > int.MaxValue ? int.MaxValue : (int)milliseconds;
         }
 
@@ -71,41 +75,56 @@ namespace SmartTraining
         public int PhaseReply => phaseReply.Value;
         public string PhaseMessage => phaseMessage.Value.ToString();
         private Action<RoomPlayer, bool> phaseHandler;
-        public void SetPhaseHandlerServer(Action<RoomPlayer, bool> handler) { phaseHandler = handler; }
+        public void SetPhaseHandlerServer(Action<RoomPlayer, bool> handler)
+        {
+            phaseHandler = handler;
+        }
         public void SetRoomPhaseServer(bool running, bool pending, bool resetReady = false)
         {
-            if (!IsServer || !IsSpawned) return;
-            roomRunning.Value = running; phasePending.Value = pending;
-            if (resetReady) ready.Value = false;
+            if (!IsServer || !IsSpawned)
+                return;
+            roomRunning.Value = running;
+            phasePending.Value = pending;
+            if (resetReady)
+                ready.Value = false;
         }
         public void ReplyPhaseServer(string message)
         {
-            if (!IsServer || !IsSpawned) return;
-            phaseMessage.Value = new FixedString512Bytes(message ?? ""); phaseReply.Value++;
+            if (!IsServer || !IsSpawned)
+                return;
+            phaseMessage.Value = new FixedString512Bytes(message ?? "");
+            phaseReply.Value++;
         }
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestPhaseRpc(bool running)
         {
-            if (IsServer && IsSpawned) phaseHandler?.Invoke(this, running);
+            if (IsServer && IsSpawned)
+                phaseHandler?.Invoke(this, running);
         }
         public void SetRoomSettingsServer(string name, int capacity)
         {
             if (IsServer && IsSpawned)
-            { roomName.Value = new FixedString512Bytes(name ?? ""); roomCapacity.Value = capacity; }
+            {
+                roomName.Value = new FixedString512Bytes(name ?? "");
+                roomCapacity.Value = capacity;
+            }
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void SetReadyRpc(bool value)
         {
-            if (IsServer && IsSpawned && !RoomIsRunning && !PhasePending) ready.Value = value;
+            if (IsServer && IsSpawned && !RoomIsRunning && !PhasePending)
+                ready.Value = value;
         }
         public void SetRoomEntryLockServer(bool value)
         {
-            if (IsServer && IsSpawned) roomEntryLocked.Value = value;
+            if (IsServer && IsSpawned)
+                roomEntryLocked.Value = value;
         }
         public void SetRoomMasterServer(string masterId)
         {
-            if (IsServer && IsSpawned) roomMasterId.Value = new FixedString64Bytes(masterId ?? "");
+            if (IsServer && IsSpawned)
+                roomMasterId.Value = new FixedString64Bytes(masterId ?? "");
         }
 
         // Only called by RoomDedicatedServer after ASP.NET has confirmed membership.
@@ -117,7 +136,9 @@ namespace SmartTraining
         private static Vector3 SpawnPosition(int index) => new Vector3((index % 4 - 1.5f) * 3, 1, (index / 4 - 0.5f) * 3);
         public override void OnNetworkSpawn()
         {
-            heartbeatReceivedAt = Time.realtimeSinceStartupAsDouble; heartbeatReceived = false; nextHeartbeatAt = 0;
+            heartbeatReceivedAt = Time.realtimeSinceStartupAsDouble;
+            heartbeatReceived = false;
+            nextHeartbeatAt = 0;
             if (IsServer && initialParticipant != null)
             {
                 userId.Value = new FixedString64Bytes(initialParticipant.userId);
@@ -127,28 +148,34 @@ namespace SmartTraining
                 initialParticipant = null;
             }
             transform.position = position.Value;
-            if (IsServer) NetworkManager.NetworkTickSystem.Tick += ServerTick;
-            #if !UNITY_SERVER
-            if (IsClient) CreateVisual();
-            #endif
+            if (IsServer)
+                NetworkManager.NetworkTickSystem.Tick += ServerTick;
+#if !UNITY_SERVER
+            if (IsClient)
+                CreateVisual();
+#endif
         }
         public override void OnNetworkDespawn()
         {
-            if (IsServer && NetworkManager.NetworkTickSystem != null) NetworkManager.NetworkTickSystem.Tick -= ServerTick;
+            if (IsServer && NetworkManager.NetworkTickSystem != null)
+                NetworkManager.NetworkTickSystem.Tick -= ServerTick;
             input = Vector2.zero;
         }
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner, Delivery = RpcDelivery.Unreliable)]
         public void MoveRpc(Vector2 direction)
         {
-            if (!IsServer || !Finite(direction.x) || !Finite(direction.y)) return;
+            if (!IsServer || !Finite(direction.x) || !Finite(direction.y))
+                return;
             input = Vector2.ClampMagnitude(direction, 1);
             inputReceivedAt = Time.realtimeSinceStartupAsDouble;
         }
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
         private void ServerTick()
         {
-            if (!IsSpawned) return;
-            if (Time.realtimeSinceStartupAsDouble - inputReceivedAt > InputTimeout) input = Vector2.zero;
+            if (!IsSpawned)
+                return;
+            if (Time.realtimeSinceStartupAsDouble - inputReceivedAt > InputTimeout)
+                input = Vector2.zero;
             var next = position.Value + new Vector3(input.x, 0, input.y) * (MoveSpeed / NetworkManager.NetworkConfig.TickRate);
             next.x = Mathf.Clamp(next.x, -ArenaHalfSize, ArenaHalfSize);
             next.z = Mathf.Clamp(next.z, -ArenaHalfSize, ArenaHalfSize);
@@ -168,14 +195,23 @@ namespace SmartTraining
         private void CreateVisual()
         {
             var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            visual.name = "PlayerVisual"; visual.transform.SetParent(transform, false);
-            var collider = visual.GetComponent<Collider>(); if (collider != null) Destroy(collider);
+            visual.name = "PlayerVisual";
+            visual.transform.SetParent(transform, false);
+            var collider = visual.GetComponent<Collider>();
+            if (collider != null)
+                Destroy(collider);
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+                return;
             material = new Material(shader) { color = IsOwner ? new Color(0.2f, 0.85f, 0.45f) : new Color(0.25f, 0.6f, 1f) };
             visual.GetComponent<Renderer>().sharedMaterial = material;
         }
-        public override void OnDestroy() { if (material != null) Destroy(material); base.OnDestroy(); }
+        public override void OnDestroy()
+        {
+            if (material != null)
+                Destroy(material);
+            base.OnDestroy();
+        }
     }
 }
 

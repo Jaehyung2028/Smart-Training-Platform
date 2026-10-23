@@ -29,42 +29,65 @@ namespace SmartTraining
         {
             Application.runInBackground = true;
             var args = Environment.GetCommandLineArgs();
-            if (Array.IndexOf(args, "-lobby") >= 0) { enabled = false; yield break; }
             roomId = Argument(args, "-Id");
             var token = Environment.GetEnvironmentVariable("SMART_TRAINING_SERVER_TOKEN");
             var apiUrl = Argument(args, "-apiUrl");
             if (string.IsNullOrEmpty(roomId) || string.IsNullOrEmpty(token) ||
                 !ushort.TryParse(Argument(args, "-port"), out var port) || port == 0 ||
                 !Uri.TryCreate(apiUrl, UriKind.Absolute, out var uri) || (uri.Scheme != "http" && uri.Scheme != "https"))
-            { StopServer("방 서버 실행 설정이 올바르지 않습니다."); yield break; }
+            {
+                StopServer("방 서버 실행 설정이 올바르지 않습니다.");
+                yield break;
+            }
 
             var root = new GameObject("SmartTrainingRoomNetwork");
             manager = root.AddComponent<NetworkManager>();
             var transport = root.AddComponent<UnityTransport>();
             transport.SetConnectionData("127.0.0.1", port, "0.0.0.0");
-            transport.HeartbeatTimeoutMS = 1000; transport.DisconnectTimeoutMS = 10000;
-            manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, EnableSceneManagement = false,
-                ConnectionApproval = true, ClientConnectionBufferTimeout = 20 };
+            transport.HeartbeatTimeoutMS = 1000;
+            transport.DisconnectTimeoutMS = 10000;
+            manager.NetworkConfig = new NetworkConfig
+            {
+                NetworkTransport = transport,
+                EnableSceneManagement = false,
+                ConnectionApproval = true,
+                ClientConnectionBufferTimeout = 20
+            };
             string prefabError = null;
-            try { playerPrefab = RoomPlayerPrefab.Register(manager); }
+            try
+            {
+                playerPrefab = RoomPlayerPrefab.Register(manager);
+            }
             catch (InvalidOperationException error) { prefabError = error.Message; }
-            if (prefabError != null) { StopServer(prefabError); yield break; }
+            if (prefabError != null)
+            {
+                StopServer(prefabError);
+                yield break;
+            }
             manager.ConnectionApprovalCallback += Approve;
             manager.OnClientConnectedCallback += Connected;
             manager.OnClientDisconnectCallback += Disconnected;
             manager.OnTransportFailure += TransportFailed;
-            if (!manager.StartServer()) { StopServer("방 서버 포트를 열지 못했습니다."); yield break; }
-            hub = new RoomHubConnection(); hub.DisconnectUser += DisconnectUser;
+            if (!manager.StartServer())
+            {
+                StopServer("방 서버 포트를 열지 못했습니다.");
+                yield break;
+            }
+            hub = new RoomHubConnection();
+            hub.DisconnectUser += DisconnectUser;
             hub.KickUser += KickUser;
             hub.CloseRoom += id => { if (id == roomId && !stopping) StartCoroutine(CloseByMaster()); };
             var connect = hub.Connect(apiUrl);
             yield return Await(connect);
-            if (!Succeeded(connect)) yield break;
+            if (!Succeeded(connect))
+                yield break;
             var register = hub.Invoke("Register", roomId, token);
             token = null;
             yield return Await(register);
-            if (!Succeeded(register)) yield break;
-            registered = true; Debug.Log("ROOM SERVER READY");
+            if (!Succeeded(register))
+                yield break;
+            registered = true;
+            Debug.Log("ROOM SERVER READY");
             StartCoroutine(SynchronizeRoomMaster());
         }
         private IEnumerator SynchronizeRoomMaster()
@@ -73,8 +96,13 @@ namespace SmartTraining
             {
                 var query = hub.Invoke("GetRoomMaster");
                 yield return Await(query);
-                if (!Succeeded(query)) yield break;
-                if (!query.Result.success) { StopServer("방장 정보를 조회하지 못했습니다."); yield break; }
+                if (!Succeeded(query))
+                    yield break;
+                if (!query.Result.success)
+                {
+                    StopServer("방장 정보를 조회하지 못했습니다.");
+                    yield break;
+                }
                 masterUserId = query.Result.masterUserId ?? "";
                 entryLocked = query.Result.isEntryLocked;
                 currentRoomName = query.Result.roomName ?? "";
@@ -95,26 +123,40 @@ namespace SmartTraining
             .Where(value => value != null).ToArray();
         private void PublishRoomPhase(bool resetReady = false)
         {
-            foreach (var player in ServerPlayers()) player.SetRoomPhaseServer(roomRunning, phasePending, resetReady);
+            foreach (var player in ServerPlayers())
+                player.SetRoomPhaseServer(roomRunning, phasePending, resetReady);
         }
         private void ApplyRoomPhase(RoomHubResult result)
         {
-            if (result.phaseRevision < phaseRevision) return;
+            if (result.phaseRevision < phaseRevision)
+                return;
             bool resetReady = result.phaseRevision > phaseRevision && roomRunning && !result.isRunning;
-            phaseRevision = result.phaseRevision; roomRunning = result.isRunning;
+            phaseRevision = result.phaseRevision;
+            roomRunning = result.isRunning;
             PublishRoomPhase(resetReady);
         }
         private void RequestRoomPhase(RoomPlayer caller, bool running)
         {
             if (stopping || !registered || phasePending || !caller.IsRoomMaster ||
                 !clients.TryGetValue(caller.OwnerClientId, out var admission))
-            { caller.ReplyPhaseServer("현재 방장만 상태를 변경할 수 있습니다. 처리 중이면 잠시 기다려주세요."); return; }
+            {
+                caller.ReplyPhaseServer("현재 방장만 상태를 변경할 수 있습니다. 처리 중이면 잠시 기다려주세요.");
+                return;
+            }
             var players = ServerPlayers();
             if (running && (roomRunning || players.Length == 0 || players.Length != manager.ConnectedClients.Count ||
                 players.Any(player => !player.IsReady || !Guid.TryParse(player.UserId, out _))))
-            { caller.ReplyPhaseServer("모든 참가자가 접속을 완료하고 준비해야 시작할 수 있습니다."); return; }
-            if (!running && !roomRunning) { caller.ReplyPhaseServer("이미 대기 중입니다."); return; }
-            phasePending = true; PublishRoomPhase();
+            {
+                caller.ReplyPhaseServer("모든 참가자가 접속을 완료하고 준비해야 시작할 수 있습니다.");
+                return;
+            }
+            if (!running && !roomRunning)
+            {
+                caller.ReplyPhaseServer("이미 대기 중입니다.");
+                return;
+            }
+            phasePending = true;
+            PublishRoomPhase();
             StartCoroutine(ChangeRoomPhase(caller, admission, running, players));
         }
         private IEnumerator ChangeRoomPhase(RoomPlayer caller, RoomConnectionData admission, bool running, RoomPlayer[] players)
@@ -123,30 +165,45 @@ namespace SmartTraining
             string roster = running ? "[" + string.Join(",", players.Select(player => "\"" + player.UserId + "\"")) + "]" : "[]";
             var change = hub.Invoke("SetRoomPhase", admission.userId, admission.admissionToken, running.ToString(), roster, phaseRevision.ToString(System.Globalization.CultureInfo.InvariantCulture));
             double until = Time.realtimeSinceStartupAsDouble + 12;
-            while (!change.IsCompleted && !stopping && Time.realtimeSinceStartupAsDouble < until) yield return null;
-            if (stopping) yield break;
+            while (!change.IsCompleted && !stopping && Time.realtimeSinceStartupAsDouble < until)
+                yield return null;
+            if (stopping)
+                yield break;
             if (!change.IsCompleted)
-            { StopServer("방 진행 상태 변경을 확인하지 못했습니다."); yield break; }
+            {
+                StopServer("방 진행 상태 변경을 확인하지 못했습니다.");
+                yield break;
+            }
             if (!change.IsCompletedSuccessfully)
-            { StopServer("방 진행 상태 통신이 끊겼습니다."); yield break; }
-            if (change.IsCompletedSuccessfully && change.Result.success) ApplyRoomPhase(change.Result);
-            phasePending = false; PublishRoomPhase();
-            if (caller != null) caller.ReplyPhaseServer(change.IsCompletedSuccessfully ? change.Result.message : "방 상태 변경을 확인하지 못했습니다.");
+            {
+                StopServer("방 진행 상태 통신이 끊겼습니다.");
+                yield break;
+            }
+            if (change.IsCompletedSuccessfully && change.Result.success)
+                ApplyRoomPhase(change.Result);
+            phasePending = false;
+            PublishRoomPhase();
+            if (caller != null)
+                caller.ReplyPhaseServer(change.IsCompletedSuccessfully ? change.Result.message : "방 상태 변경을 확인하지 못했습니다.");
         }
 
         private static string Argument(string[] args, string name)
         {
-            for (int i = 0; i + 1 < args.Length; i++) if (args[i] == name) return args[i + 1];
+            for (int i = 0; i + 1 < args.Length; i++)
+            if (args[i] == name)
+                return args[i + 1];
             return null;
         }
         private float nextLatencySampleAt;
         private void SampleParticipantLatency()
         {
-            if (!registered || manager == null || !manager.IsListening || Time.unscaledTime < nextLatencySampleAt) return;
+            if (!registered || manager == null || !manager.IsListening || Time.unscaledTime < nextLatencySampleAt)
+                return;
             nextLatencySampleAt = Time.unscaledTime + 1f;
             foreach (var connection in manager.ConnectedClients.Values)
             {
-                if (connection.PlayerObject == null) continue;
+                if (connection.PlayerObject == null)
+                    continue;
                 var player = connection.PlayerObject.GetComponent<RoomPlayer>();
                 if (player != null)
                     player.SampleConnectionHealthServer(manager.NetworkConfig.NetworkTransport.GetCurrentRtt(connection.ClientId));
@@ -154,16 +211,22 @@ namespace SmartTraining
         }
         private void Update()
         {
-            if (stopping || hub == null) return;
+            if (stopping || hub == null)
+                return;
             SampleParticipantLatency();
             hub.Tick();
-            if (hub.Failure != null) StopServer(hub.Failure);
+            if (hub.Failure != null)
+                StopServer(hub.Failure);
         }
         private IEnumerator Await(Task task)
-        { while (!task.IsCompleted && !stopping) yield return null; }
+        {
+            while (!task.IsCompleted && !stopping)
+                yield return null;
+        }
         private bool Succeeded(Task task)
         {
-            if (!stopping && task.IsCompletedSuccessfully) return true;
+            if (!stopping && task.IsCompletedSuccessfully)
+                return true;
             if (!stopping)
             {
                 var cause = task.Exception?.GetBaseException();
@@ -174,13 +237,21 @@ namespace SmartTraining
         }
         private void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
         {
-            response.CreatePlayerObject = false; response.Approved = false;
+            response.CreatePlayerObject = false;
+            response.Approved = false;
             RoomConnectionData data = null;
-            try { if (request.Payload != null && request.Payload.Length <= 2048) data = JsonUtility.FromJson<RoomConnectionData>(Encoding.UTF8.GetString(request.Payload)); }
+            try
+            {
+                if (request.Payload != null && request.Payload.Length <= 2048)
+                    data = JsonUtility.FromJson<RoomConnectionData>(Encoding.UTF8.GetString(request.Payload));
+            }
             catch (Exception) { }
             if (!registered || data == null || data.roomId != roomId || string.IsNullOrEmpty(data.userId) ||
                 string.IsNullOrEmpty(data.admissionToken) || !claimedUsers.Add(data.userId))
-            { response.Reason = "유효한 방 참가 예약이 필요합니다."; return; }
+            {
+                response.Reason = "유효한 방 참가 예약이 필요합니다.";
+                return;
+            }
             clients.Add(request.ClientNetworkId, data);
             response.Pending = true;
             StartCoroutine(Validate(request.ClientNetworkId, data, response));
@@ -189,9 +260,11 @@ namespace SmartTraining
         {
             var validation = hub.Invoke("ValidateConnection", data.userId, data.admissionToken);
             yield return Await(validation);
-            if (stopping) yield break;
+            if (stopping)
+                yield break;
             bool approved = validation.IsCompletedSuccessfully && validation.Result.success && clients.ContainsKey(id);
-            response.Approved = approved; response.Pending = false;
+            response.Approved = approved;
+            response.Pending = false;
             if (!approved)
             {
                 response.Reason = "접속 예약이 만료되었거나 유효하지 않습니다.";
@@ -199,19 +272,30 @@ namespace SmartTraining
             }
         }
         private void Connected(ulong id)
-        { if (clients.TryGetValue(id, out var data)) StartCoroutine(Confirm(id, data)); }
+        {
+            if (clients.TryGetValue(id, out var data))
+                StartCoroutine(Confirm(id, data));
+        }
         private IEnumerator Confirm(ulong id, RoomConnectionData data)
         {
             var confirmation = hub.Invoke("ConfirmConnection", data.userId, data.admissionToken);
             yield return Await(confirmation);
-            if (stopping) yield break;
+            if (stopping)
+                yield break;
             if (!confirmation.IsCompletedSuccessfully || !confirmation.Result.success)
-            { manager.DisconnectClient(id); yield break; }
+            {
+                manager.DisconnectClient(id);
+                yield break;
+            }
             // The connection may have closed while ASP.NET was confirming it.
-            if (!clients.ContainsKey(id) || !manager.ConnectedClients.TryGetValue(id, out var client) || client.PlayerObject != null) yield break;
+            if (!clients.ContainsKey(id) || !manager.ConnectedClients.TryGetValue(id, out var client) || client.PlayerObject != null)
+                yield break;
             var participant = confirmation.Result;
             if (participant.userId != data.userId || string.IsNullOrEmpty(participant.userName) || participant.roomIndex < 0)
-            { manager.DisconnectClient(id); yield break; }
+            {
+                manager.DisconnectClient(id);
+                yield break;
+            }
             var player = Instantiate(playerPrefab).GetComponent<RoomPlayer>();
             player.InitializeServer(participant);
             player.SetPhaseHandlerServer(RequestRoomPhase);
@@ -224,7 +308,8 @@ namespace SmartTraining
         private void Disconnected(ulong id)
         {
             var data = RemoveClient(id);
-            if (!stopping && data != null) StartCoroutine(NotifyDisconnected(data));
+            if (!stopping && data != null)
+                StartCoroutine(NotifyDisconnected(data));
         }
         private IEnumerator NotifyDisconnected(RoomConnectionData data)
         {
@@ -234,13 +319,17 @@ namespace SmartTraining
         }
         private RoomConnectionData RemoveClient(ulong id)
         {
-            if (!clients.TryGetValue(id, out var data)) return null;
-            clients.Remove(id); claimedUsers.Remove(data.userId); return data;
+            if (!clients.TryGetValue(id, out var data))
+                return null;
+            clients.Remove(id);
+            claimedUsers.Remove(data.userId);
+            return data;
         }
         private void DisconnectUser(string userId, string token)
         {
             foreach (var pair in new List<KeyValuePair<ulong, RoomConnectionData>>(clients))
-                if (pair.Value.userId == userId && pair.Value.admissionToken == token) manager.DisconnectClient(pair.Key);
+                if (pair.Value.userId == userId && pair.Value.admissionToken == token)
+                    manager.DisconnectClient(pair.Key);
         }
         private void TransportFailed() => StopServer("방 서버 네트워크가 종료되었습니다.");
         private void KickUser(string userId, string token)
@@ -252,19 +341,27 @@ namespace SmartTraining
         private IEnumerator CloseByMaster()
         {
             stopping = true;
-            foreach (var id in new List<ulong>(clients.Keys)) manager.DisconnectClient(id, "방장이 방을 닫았습니다.");
+            foreach (var id in new List<ulong>(clients.Keys))
+                manager.DisconnectClient(id, "방장이 방을 닫았습니다.");
             yield return new WaitForSecondsRealtime(0.5f);
-            hub?.Dispose(); manager?.Shutdown(); Application.Quit(0);
+            hub?.Dispose();
+            manager?.Shutdown();
+            Application.Quit(0);
         }
         private void StopServer(string reason)
         {
-            if (stopping) return;
-            Debug.LogError(reason); stopping = true;
-            hub?.Dispose(); manager?.Shutdown(true); Application.Quit(1);
+            if (stopping)
+                return;
+            Debug.LogError(reason);
+            stopping = true;
+            hub?.Dispose();
+            manager?.Shutdown(true);
+            Application.Quit(1);
         }
         private void OnDestroy()
         {
-            stopping = true; hub?.Dispose();
+            stopping = true;
+            hub?.Dispose();
             if (manager != null)
             {
                 manager.ConnectionApprovalCallback -= Approve;

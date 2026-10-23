@@ -11,7 +11,7 @@ namespace SmartTraining
         public void SetSelected(bool selected)
         {
             border.effectColor = selected ? selectedColor : normalColor;
-            border.effectDistance = selected ? new Vector2(2,-2) : new Vector2(1,-1);
+            border.effectDistance = selected ? new Vector2(2, -2) : new Vector2(1, -1);
         }
     }
 }

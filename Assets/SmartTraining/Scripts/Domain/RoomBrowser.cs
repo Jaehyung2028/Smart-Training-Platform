@@ -4,8 +4,14 @@ using System.Linq;
 
 namespace SmartTraining
 {
-    public enum RoomProtectionFilter { All, Public, Protected }
-    public enum RoomSortOrder { Newest, Vacancies }
+    public enum RoomProtectionFilter
+    {
+        All, Public, Protected
+    }
+    public enum RoomSortOrder
+    {
+        Newest, Vacancies
+    }
     public static class RoomBrowser
     {
         // A room without a running process can still accept admission and launch its server.

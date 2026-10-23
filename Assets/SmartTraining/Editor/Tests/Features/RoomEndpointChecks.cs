@@ -7,16 +7,21 @@ namespace SmartTraining.Editor
 {
     public static class RoomEndpointChecks
     {
-        public static bool ExpectHttpStartFailure { get; private set; }
+        public static bool ExpectHttpStartFailure
+        {
+            get; private set;
+        }
         public static IEnumerator RunRequestStartFailure()
         {
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SMART_TRAINING_TEST_LAN_ADDRESS"))) yield break;
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SMART_TRAINING_TEST_LAN_ADDRESS")))
+                yield break;
             var previous = PlayerSettings.insecureHttpOption;
             var api = new TrainingApiClient(Environment.GetEnvironmentVariable("SMART_TRAINING_TEST_URL"));
             try
             {
                 PlayerSettings.insecureHttpOption = InsecureHttpOption.NotAllowed;
-                string message = null; int failures = 0;
+                string message = null;
+                int failures = 0;
                 ExpectHttpStartFailure = true;
                 yield return api.CheckHealth(() => throw new Exception("Restricted remote HTTP was accepted"), error => { message = error; failures++; });
                 ExpectHttpStartFailure = false;
@@ -30,7 +35,12 @@ namespace SmartTraining.Editor
             }
             finally { ExpectHttpStartFailure = false; PlayerSettings.insecureHttpOption = previous; api.Dispose(); }
         }
-        private static void Check(bool ok, string name) { if (!ok) throw new InvalidOperationException(name); Debug.Log("ROOM PASS: " + name); }
+        private static void Check(bool ok, string name)
+        {
+            if (!ok)
+                throw new InvalidOperationException(name);
+            Debug.Log("ROOM PASS: " + name);
+        }
         public static void RunPure()
         {
             foreach (var host in new[] { "192.168.1.20", "training.example.com", "127.0.0.1", "::1" })
@@ -45,11 +55,14 @@ namespace SmartTraining.Editor
         public static IEnumerator Run(TrainingApiClient api, JoinRoomResponse reservation)
         {
             string lanAddress = Environment.GetEnvironmentVariable("SMART_TRAINING_TEST_LAN_ADDRESS");
-            if (string.IsNullOrEmpty(lanAddress)) yield break;
+            if (string.IsNullOrEmpty(lanAddress))
+                yield break;
             Check(reservation.room.ipAddress == lanAddress && new Uri(api.BaseUrl).Host == lanAddress,
                 "LAN API and advertised Unity room address use selected server interface");
-            var wrong = JsonUtility.FromJson<JoinRoomResponse>(JsonUtility.ToJson(reservation)); wrong.room.ipAddress = "127.0.0.1";
-            var network = new RoomNetworkClient(); string message = null;
+            var wrong = JsonUtility.FromJson<JoinRoomResponse>(JsonUtility.ToJson(reservation));
+            wrong.room.ipAddress = "127.0.0.1";
+            var network = new RoomNetworkClient();
+            string message = null;
             try
             {
                 yield return network.Connect(api.User.id, wrong, () => throw new Exception("Wrong LAN room endpoint accepted"), error => message = error, api.BaseUrl);
