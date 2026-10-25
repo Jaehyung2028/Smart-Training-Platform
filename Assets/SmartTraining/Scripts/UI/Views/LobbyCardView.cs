@@ -6,8 +6,11 @@ namespace SmartTraining
     public sealed class LobbyCardView : MonoBehaviour
     {
         public Text title, state, metrics, selection;
+
         public Image accent;
+
         public Outline border;
+
         public Color ink, muted, highlight, line;
 
         public void Render(LobbySummary lobby, bool selected)

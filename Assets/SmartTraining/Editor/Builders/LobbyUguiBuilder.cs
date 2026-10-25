@@ -9,13 +9,16 @@ namespace SmartTraining.Editor
     public static class LobbyUguiBuilder
     {
         public const string AssetPath = "Assets/SmartTraining/Resources/SmartTraining/LobbyUI.prefab";
+
         private static readonly Color Ink = new Color(.12f, .18f, .29f), Blue = new Color(.15f, .36f, .77f);
+
         [MenuItem("Smart Training/UI/Open Login and Lobby Prefab")]
         public static void OpenPrefab()
         {
             EnsureAssets();
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(AssetPath));
         }
+
         [MenuItem("Smart Training/UI/Create Login and Lobby UI (if missing)")]
         public static void EnsureAssets()
         {
@@ -24,8 +27,16 @@ namespace SmartTraining.Editor
                 EnsureRootInteraction(AssetPath);
                 return;
             }
+
             Directory.CreateDirectory(Path.GetDirectoryName(AssetPath));
-            var root = new GameObject("LobbyUI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(LobbyUguiView));
+            var root = new GameObject(
+                "LobbyUI",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(GraphicRaycaster),
+                typeof(LobbyUguiView)
+            );
             try
             {
                 var view = root.GetComponent<LobbyUguiView>();
@@ -121,8 +132,12 @@ namespace SmartTraining.Editor
                 AssetDatabase.SaveAssets();
                 Debug.Log("UGUI PREFAB CREATED: " + AssetPath);
             }
-            finally { UnityEngine.Object.DestroyImmediate(root); }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
         }
+
         internal static void EnsureRootInteraction(string path)
         {
             var root = PrefabUtility.LoadPrefabContents(path);
@@ -131,25 +146,31 @@ namespace SmartTraining.Editor
                 if (root.GetComponent<CanvasGroup>() == null)
                 {
                     root.AddComponent<CanvasGroup>();
-
                 }
+
                 // RequireComponent may already have restored it while loading the old prefab.
                 PrefabUtility.SaveAsPrefabAsset(root, path);
             }
-            finally { PrefabUtility.UnloadPrefabContents(root); }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
+
         internal static RectTransform Node(string name, Transform parent)
         {
             var node = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
             node.SetParent(parent, false);
             return node;
         }
+
         internal static void Stretch(RectTransform node)
         {
             node.anchorMin = Vector2.zero;
             node.anchorMax = Vector2.one;
             node.offsetMin = node.offsetMax = Vector2.zero;
         }
+
         internal static void Height(GameObject node, float value)
         {
             var layout = node.AddComponent<LayoutElement>();
@@ -157,12 +178,14 @@ namespace SmartTraining.Editor
             layout.preferredHeight = value;
             layout.flexibleHeight = 0;
         }
+
         internal static void Flex(GameObject node)
         {
             var layout = node.AddComponent<LayoutElement>();
             layout.minHeight = 100;
             layout.flexibleHeight = 1;
         }
+
         internal static void Vertical(Transform node, int padding, int spacing)
         {
             var layout = node.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -173,7 +196,9 @@ namespace SmartTraining.Editor
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
         }
+
         internal static GameObject Panel(string name, Transform parent) => Node(name, parent).gameObject;
+
         internal static Transform Row(string name, Transform parent)
         {
             var row = Node(name, parent);
@@ -185,6 +210,7 @@ namespace SmartTraining.Editor
             layout.childForceExpandWidth = true;
             return row;
         }
+
         internal static Text Label(string text, Transform parent, int size, int height)
         {
             var node = Node(text.Length > 30 ? "Label" : text, parent);
@@ -200,6 +226,7 @@ namespace SmartTraining.Editor
             Height(node.gameObject, height);
             return label;
         }
+
         internal static Button Button(string title, Transform parent)
         {
             var node = Node(title, parent);
@@ -220,6 +247,7 @@ namespace SmartTraining.Editor
             text.color = Color.white;
             return button;
         }
+
         internal static InputField Input(string name, Transform parent, string hint, int limit)
         {
             var node = Node(name, parent);
@@ -228,13 +256,20 @@ namespace SmartTraining.Editor
             var input = node.gameObject.AddComponent<InputField>();
             var text = Label("", node, 20, 40);
             var placeholder = Label(hint, node, 18, 40);
-            foreach (var label in new[] { text, placeholder })
+            foreach (var label in new[]
+            {
+                text,
+                placeholder
+            }
+
+            )
             {
                 UnityEngine.Object.DestroyImmediate(label.GetComponent<LayoutElement>());
                 Stretch(label.rectTransform);
                 label.rectTransform.offsetMin = new Vector2(12, 5);
                 label.rectTransform.offsetMax = new Vector2(-12, -5);
             }
+
             placeholder.color = new Color(.45f, .5f, .6f);
             input.textComponent = text;
             input.placeholder = placeholder;

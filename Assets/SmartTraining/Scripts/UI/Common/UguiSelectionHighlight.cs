@@ -6,6 +6,7 @@ namespace SmartTraining
     public sealed class UguiSelectionHighlight : MonoBehaviour
     {
         public Outline border;
+
         public Color normalColor, selectedColor;
 
         public void SetSelected(bool selected)

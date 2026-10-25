@@ -12,7 +12,10 @@ namespace SmartTraining.Editor
         {
             const string path = "Assets/SmartTraining/Resources/SmartTraining/RoomPlayer.prefab";
             if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+            {
                 return;
+            }
+
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             AssetDatabase.Refresh();
             var root = new GameObject("RoomPlayer");
@@ -23,8 +26,10 @@ namespace SmartTraining.Editor
                 PrefabUtility.SaveAsPrefabAsset(root, path);
                 AssetDatabase.SaveAssets();
             }
-            finally { Object.DestroyImmediate(root); }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
     }
 }
-

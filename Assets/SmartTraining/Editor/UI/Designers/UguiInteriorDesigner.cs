@@ -10,14 +10,21 @@ namespace SmartTraining.Editor
         public static void ApplyInteriorTheme()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
                 return;
+            }
+
             var root = PrefabUtility.LoadPrefabContents(LobbyInteriorUguiBuilder.InteriorPath);
             try
             {
                 Apply(root, UguiLoginDesigner.LoadTheme());
                 PrefabUtility.SaveAsPrefabAsset(root, LobbyInteriorUguiBuilder.InteriorPath);
             }
-            finally { PrefabUtility.UnloadPrefabContents(root); }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
             AssetDatabase.SaveAssets();
             Debug.Log("INTERIOR THEME APPLIED: existing room and chat actions preserved");
         }
@@ -28,11 +35,27 @@ namespace SmartTraining.Editor
             root.transform.Find("Background").GetComponent<Image>().color = theme.background;
             ui.mainInteraction.GetComponent<Image>().color = theme.surface;
             foreach (var text in root.GetComponentsInChildren<Text>(true))
+            {
                 text.color = theme.ink;
+            }
+
             ui.heading.fontStyle = FontStyle.Bold;
             ui.heading.fontSize = 24;
-            foreach (var text in new[] { ui.connection, ui.status, ui.chatStatus, ui.emptyRooms, ui.emptyParticipants, ui.emptyChat })
+            foreach (var text in new[]
+            {
+                ui.connection,
+                ui.status,
+                ui.chatStatus,
+                ui.emptyRooms,
+                ui.emptyParticipants,
+                ui.emptyChat
+            }
+
+            )
+            {
                 text.color = theme.muted;
+            }
+
             ui.participantTitle.fontStyle = ui.roomCount.fontStyle = FontStyle.Bold;
             ui.notice.color = new Color32(146, 64, 14, 255);
             foreach (var button in root.GetComponentsInChildren<Button>(true))
@@ -51,8 +74,11 @@ namespace SmartTraining.Editor
                 var text = button.GetComponentInChildren<Text>();
                 text.color = primary ? Color.white : theme.ink;
                 if (!row)
+                {
                     text.fontStyle = primary ? FontStyle.Bold : FontStyle.Normal;
+                }
             }
+
             foreach (var input in root.GetComponentsInChildren<InputField>(true))
             {
                 input.GetComponent<Image>().color = theme.field;
@@ -60,17 +86,22 @@ namespace SmartTraining.Editor
                 input.textComponent.color = theme.ink;
                 ((Text)input.placeholder).color = theme.muted;
             }
+
             foreach (var scroll in root.GetComponentsInChildren<ScrollRect>(true))
             {
                 scroll.GetComponent<Image>().color = theme.field;
                 var viewport = scroll.viewport.GetComponent<Image>();
                 if (viewport != null)
+                {
                     viewport.color = theme.field;
+                }
+
                 Border(scroll.gameObject, theme.line);
                 var group = scroll.content.GetComponent<VerticalLayoutGroup>();
                 group.padding = new RectOffset(8, 8, 8, 8);
                 group.spacing = 8;
             }
+
             var selection = ui.roomTemplate.GetComponent<UguiSelectionHighlight>() ?? ui.roomTemplate.gameObject.AddComponent<UguiSelectionHighlight>();
             selection.border = Border(ui.roomTemplate.gameObject, theme.line);
             selection.normalColor = theme.line;
@@ -80,14 +111,32 @@ namespace SmartTraining.Editor
             var height = ui.roomTemplate.GetComponent<LayoutElement>();
             height.minHeight = height.preferredHeight = 76;
             ui.roomTemplate.GetComponentInChildren<Text>().fontSize = 16;
-            foreach (var filter in new[] { ui.available, ui.protection, ui.sort, ui.resetFilters })
+            foreach (var filter in new[]
+            {
+                ui.available,
+                ui.protection,
+                ui.sort,
+                ui.resetFilters
+            }
+
+            )
+            {
                 filter.GetComponentInChildren<Text>().fontSize = 14;
-            foreach (var modal in new[] { ui.createModal, ui.progressModal })
+            }
+
+            foreach (var modal in new[]
+            {
+                ui.createModal,
+                ui.progressModal
+            }
+
+            )
             {
                 modal.GetComponent<Image>().color = new Color(0.03f, .06f, .12f, .72f);
                 modal.transform.Find("Card").GetComponent<Image>().color = theme.surface;
             }
         }
+
         private static Outline Border(GameObject root, Color color)
         {
             var outline = root.GetComponent<Outline>() ?? root.AddComponent<Outline>();

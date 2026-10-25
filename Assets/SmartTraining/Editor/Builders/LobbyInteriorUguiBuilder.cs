@@ -3,17 +3,20 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using static SmartTraining.Editor.LobbyUguiBuilder;
+
 namespace SmartTraining.Editor
 {
     public static class LobbyInteriorUguiBuilder
     {
         public const string InteriorPath = "Assets/SmartTraining/Resources/SmartTraining/LobbyInteriorUI.prefab";
+
         [MenuItem("Smart Training/UI/Open Lobby Interior Prefab")]
         public static void OpenPrefab()
         {
             EnsureAssets();
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(InteriorPath));
         }
+
         [MenuItem("Smart Training/UI/Create Lobby Interior UI (if missing)")]
         public static void EnsureAssets()
         {
@@ -22,8 +25,16 @@ namespace SmartTraining.Editor
                 EnsureRootInteraction(InteriorPath);
                 return;
             }
+
             Directory.CreateDirectory(Path.GetDirectoryName(InteriorPath));
-            var root = new GameObject("LobbyInteriorUI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(LobbyInteriorUguiView));
+            var root = new GameObject(
+                "LobbyInteriorUI",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(GraphicRaycaster),
+                typeof(LobbyInteriorUguiView)
+            );
             try
             {
                 var ui = root.GetComponent<LobbyInteriorUguiView>();
@@ -85,7 +96,10 @@ namespace SmartTraining.Editor
                 ui.sort = SmallButton("최근 생성순", filters);
                 ui.resetFilters = SmallButton("초기화", filters);
                 foreach (var text in filters.GetComponentsInChildren<Text>())
+                {
                     text.fontSize = 15;
+                }
+
                 ui.roomCount = Label("방 목록", left, 17, 24);
                 var roomScroll = Scroll("Room List", left, out ui.roomsContent);
                 Flex(roomScroll.gameObject);
@@ -156,7 +170,13 @@ namespace SmartTraining.Editor
                 ui.submitCreate = Button("방 생성", createActions);
                 ui.closeCreate = Button("닫기", createActions);
                 ui.createModal.SetActive(false);
-                ui.progressModal = Overlay("Room Join Progress", root.transform, out var progressCard, new Vector2(.14f, .30f), new Vector2(.86f, .70f));
+                ui.progressModal = Overlay(
+                    "Room Join Progress",
+                    root.transform,
+                    out var progressCard,
+                    new Vector2(.14f, .30f),
+                    new Vector2(.86f, .70f)
+                );
                 Label("방 입장 중", progressCard, 24, 36);
                 ui.progress = Label("방 서버와 연결을 확인하고 있습니다…", progressCard, 18, 110);
                 ui.cancelJoin = Button("방 입장 취소", progressCard);
@@ -167,27 +187,35 @@ namespace SmartTraining.Editor
                 AssetDatabase.SaveAssets();
                 Debug.Log("UGUI INTERIOR PREFAB CREATED: " + InteriorPath);
             }
-            finally { Object.DestroyImmediate(root); }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
+
         private static void Anchors(RectTransform rect, Vector2 min, Vector2 max)
         {
             rect.anchorMin = min;
             rect.anchorMax = max;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
         }
+
         private static void SetHeight(GameObject node, float height)
         {
             var layout = node.GetComponent<LayoutElement>();
             layout.minHeight = layout.preferredHeight = height;
             layout.flexibleHeight = 0;
         }
+
         private static void Compact(GameObject node) => SetHeight(node, 36);
+
         private static Transform CompactRow(string name, Transform parent)
         {
             var row = Row(name, parent);
             Compact(row.gameObject);
             return row;
         }
+
         private static Button SmallButton(string name, Transform parent)
         {
             var button = Button(name, parent);
@@ -195,12 +223,14 @@ namespace SmartTraining.Editor
             button.GetComponentInChildren<Text>().fontSize = 16;
             return button;
         }
+
         private static void Width(GameObject node, float width)
         {
             var layout = node.GetComponent<LayoutElement>();
             layout.minWidth = layout.preferredWidth = width;
             layout.flexibleWidth = 0;
         }
+
         private static ScrollRect Scroll(string name, Transform parent, out RectTransform content)
         {
             var node = Node(name, parent);
@@ -224,6 +254,7 @@ namespace SmartTraining.Editor
             scroll.scrollSensitivity = 28;
             return scroll;
         }
+
         private static GameObject Overlay(string name, Transform parent, out RectTransform card, Vector2 min, Vector2 max)
         {
             var overlay = Node(name, parent);

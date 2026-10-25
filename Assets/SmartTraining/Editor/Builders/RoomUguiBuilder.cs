@@ -9,19 +9,32 @@ namespace SmartTraining.Editor
     public static class RoomUguiBuilder
     {
         public const string AssetPath = "Assets/SmartTraining/Resources/SmartTraining/RoomUI.prefab";
+
         [MenuItem("Smart Training/UI/Open Room Prefab")]
         public static void OpenPrefab()
         {
             EnsureAssets();
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(AssetPath));
         }
+
         [MenuItem("Smart Training/UI/Create Room UI (if missing)")]
         public static void EnsureAssets()
         {
             if (AssetDatabase.LoadAssetAtPath<RoomUguiView>(AssetPath) != null)
+            {
                 return;
+            }
+
             Directory.CreateDirectory(Path.GetDirectoryName(AssetPath));
-            var root = new GameObject("RoomUI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup), typeof(RoomUguiView));
+            var root = new GameObject(
+                "RoomUI",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(GraphicRaycaster),
+                typeof(CanvasGroup),
+                typeof(RoomUguiView)
+            );
             try
             {
                 var ui = root.GetComponent<RoomUguiView>();
@@ -140,7 +153,13 @@ namespace SmartTraining.Editor
                 var back = Move("뒤 ↓", bottom, Vector2.down);
                 var west = Move("←", bottom, Vector2.left);
                 var east = Move("→", bottom, Vector2.right);
-                ui.movementButtons = new[] { up, back, west, east };
+                ui.movementButtons = new[]
+                {
+                    up,
+                    back,
+                    west,
+                    east
+                };
                 ui.closeMap = Button("위치 창 닫기", mapCard);
                 ui.mapModal.SetActive(false);
                 var noticeHeader = CompactRow("Notice Header", main);
@@ -177,7 +196,13 @@ namespace SmartTraining.Editor
                 ui.settingsStatus = Label("", settingsCard, 16, 66);
                 ui.closeSettings = Button("설정 창 닫기", settingsCard);
                 ui.settingsModal.SetActive(false);
-                ui.confirmationModal = Overlay("Room Action Confirmation", root.transform, out var confirmCard, new Vector2(.18f, .22f), new Vector2(.82f, .78f));
+                ui.confirmationModal = Overlay(
+                    "Room Action Confirmation",
+                    root.transform,
+                    out var confirmCard,
+                    new Vector2(.18f, .22f),
+                    new Vector2(.82f, .78f)
+                );
                 Label("방 관리 요청 확인", confirmCard, 24, 38);
                 ui.confirmationText = Label("", confirmCard, 18, 140);
                 var confirmActions = Row("Confirmation Actions", confirmCard);
@@ -189,8 +214,12 @@ namespace SmartTraining.Editor
                 AssetDatabase.SaveAssets();
                 Debug.Log("UGUI ROOM PREFAB CREATED: " + AssetPath);
             }
-            finally { Object.DestroyImmediate(root); }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
+
         private static RoomMoveButton Move(string text, Transform parent, Vector2 direction)
         {
             var button = SmallButton(text, parent);
@@ -198,26 +227,33 @@ namespace SmartTraining.Editor
             hold.direction = direction;
             return hold;
         }
+
         private static void Anchors(RectTransform node, Vector2 min, Vector2 max)
         {
             node.anchorMin = min;
             node.anchorMax = max;
             node.offsetMin = node.offsetMax = Vector2.zero;
         }
+
         private static void SetHeight(GameObject node, float height)
         {
             var layout = node.GetComponent<LayoutElement>();
             if (layout == null)
+            {
                 layout = node.AddComponent<LayoutElement>();
+            }
+
             layout.minHeight = layout.preferredHeight = height;
             layout.flexibleHeight = 0;
         }
+
         private static Transform CompactRow(string name, Transform parent)
         {
             var row = Row(name, parent);
             SetHeight(row.gameObject, 36);
             return row;
         }
+
         private static Button SmallButton(string name, Transform parent)
         {
             var button = Button(name, parent);
@@ -225,12 +261,14 @@ namespace SmartTraining.Editor
             button.GetComponentInChildren<Text>().fontSize = 16;
             return button;
         }
+
         private static void Width(GameObject node, float width)
         {
             var layout = node.GetComponent<LayoutElement>();
             layout.minWidth = layout.preferredWidth = width;
             layout.flexibleWidth = 0;
         }
+
         private static ScrollRect Scroll(string name, Transform parent, out RectTransform content)
         {
             var root = Node(name, parent);
@@ -253,6 +291,7 @@ namespace SmartTraining.Editor
             scroll.scrollSensitivity = 28;
             return scroll;
         }
+
         private static GameObject Overlay(string name, Transform parent, out RectTransform card, Vector2 min, Vector2 max)
         {
             var overlay = Node(name, parent);

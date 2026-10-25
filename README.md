@@ -56,12 +56,15 @@ ASP.NET에서 사용자·입장 권한을 확인하고, 전용 서버에서 실�
 입장 잠금과 진행 중 상태에서는 신규 입장을 제한합니다. 재접속에도 현재 정원·비밀번호·입장 조건을 다시 확인하며, 강퇴와 직접 퇴장에는 연결 복구 대상을 남기지 않습니다.
 
 Unity Transport는 프로젝트에 포함한 embedded 패키지를 사용합니다. 비정상 종료 뒤 수신 버퍼가 소진되는 문제의 수정 범위와 원본 라이선스는 [패치 안내](Packages/com.unity.transport/SMART-TRAINING-PATCH.md)와 패키지 내 `LICENSE.md`에서 확인할 수 있습니다.
+방 만들기의 콘텐츠 선택 창은 카탈로그를 부모·자식 트리로 표시합니다. 가지를 펼치거나 접고 항목을 선택한 뒤 적용할 수 있으며, 취소하면 기존 선택을 유지합니다. 서버에는 루트 ID와 노드 ID를 함께 전달합니다.
+
 ## 주요 파일과 함수
 
 | 파일 | 주요 역할 |
 |---|---|
 | `Scripts/Client/Api/TrainingApiClient.cs` | 인증된 API 요청과 세션 갱신, `LogoutOnShutdown` |
 | `Scripts/Client/Controllers/ApiLobbyScreen.cs` | 확인용 UI, `JoinRoom`, `HandleConnectionLost`, `ReconnectRoom` |
+| `Scripts/UI/Views/ContentTreePopup.cs` | 방 생성 콘텐츠 트리의 펼침·접기, 임시 선택과 적용·취소 |
 | `Scripts/Client/Networking/RoomNetworkClient.cs` | 예약 검증·Netcode 연결, `Connect`, `Dispose` |
 | `Scripts/Servers/RoomDedicatedServer.cs` | 입장 승인·ASP.NET 확인·플레이어 생성, `SynchronizeRoomMaster` |
 | `Scripts/Client/Networking/RoomHubConnection.cs` | 전용 서버의 RoomHub 연결과 요청·응답 처리 |

@@ -11,28 +11,51 @@ namespace SmartTraining
     public sealed class RoomUguiView : MonoBehaviour
     {
         public Canvas canvas;
+
         public CanvasGroup mainInteraction;
+
         public Font fontOverride;
+
         public Text heading, summary, connection, notice, status, participantTitle, emptyParticipants;
+
         public Text notices, emptyChat, chatStatus, settingsStatus, passwordStatus, confirmationText;
+
         public Button ready, phase, settings, leave, logout, roomParticipants, lobbyParticipants;
+
         public Button roomChat, lobbyChat, sendChat, clearNotices, refreshParticipants;
+
         public Button saveSettings, savePassword, clearPassword, entryLock, closeRoom, closeSettings, confirm, cancel;
+
         public Button openMap, closeMap;
+
         public InputField nameInput, capacityInput, passwordInput, chatInput;
+
         public GameObject settingsModal, confirmationModal, mapModal, operationNoticePanel;
+
         public RectTransform participantsContent, participantTemplate, chatContent, map, markerTemplate;
+
         public Text chatTemplate;
+
         public ScrollRect chatScroll;
+
         public RoomMoveButton[] movementButtons;
+
         private ApiLobbyScreen screen;
+
         private CanvasGroup interaction;
+
         private GraphicRaycaster raycaster;
+
         private Font runtimeFont;
+
         private bool wired, wasVisible, showLobbyParticipants;
+
         private string context = "", messagesContext = "";
+
         private float nextLists;
+
         private readonly Dictionary<string, RectTransform> rows = new(), markers = new();
+
         private readonly Dictionary<string, Text> messages = new();
 
         public void Bind(ApiLobbyScreen controller)
@@ -40,22 +63,62 @@ namespace SmartTraining
             screen = controller;
             EnsureComponents();
             if (wired)
+            {
                 return;
+            }
+
             UguiViewUtility.EnsureEventSystem(transform);
             runtimeFont = UguiViewUtility.ApplyFont(gameObject, fontOverride);
             ready.onClick.AddListener(() => screen.UiToggleReady());
             phase.onClick.AddListener(() => screen.UiTogglePhase());
             settings.onClick.AddListener(OpenSettings);
             closeSettings.onClick.AddListener(CloseSettings);
-            openMap.onClick.AddListener(() => { if (screen.UiRoomCanAct) { mapModal.SetActive(true); UguiViewUtility.ClearSelection(transform); } });
-            closeMap.onClick.AddListener(() => { mapModal.SetActive(false); UguiViewUtility.ClearSelection(transform); });
+            openMap.onClick.AddListener(() =>
+            {
+                if (screen.UiRoomCanAct)
+                {
+                    mapModal.SetActive(true);
+                    UguiViewUtility.ClearSelection(transform);
+                }
+            });
+            closeMap.onClick.AddListener(() =>
+            {
+                mapModal.SetActive(false);
+                UguiViewUtility.ClearSelection(transform);
+            });
             leave.onClick.AddListener(() => screen.UiLeaveRoom());
             logout.onClick.AddListener(() => screen.UiRoomLogout());
-            roomParticipants.onClick.AddListener(() => { if (screen.UiRoomCanAct) { showLobbyParticipants = false; nextLists = 0; } });
-            lobbyParticipants.onClick.AddListener(() => { if (screen.UiRoomCanAct) { showLobbyParticipants = true; nextLists = 0; } });
+            roomParticipants.onClick.AddListener(() =>
+            {
+                if (screen.UiRoomCanAct)
+                {
+                    showLobbyParticipants = false;
+                    nextLists = 0;
+                }
+            });
+            lobbyParticipants.onClick.AddListener(() =>
+            {
+                if (screen.UiRoomCanAct)
+                {
+                    showLobbyParticipants = true;
+                    nextLists = 0;
+                }
+            });
             refreshParticipants.onClick.AddListener(() => screen.UiRefreshRoomParticipants());
-            roomChat.onClick.AddListener(() => { if (screen.UiRoomCanAct) screen.UiSelectRoomChat(1); });
-            lobbyChat.onClick.AddListener(() => { if (screen.UiRoomCanAct) screen.UiSelectRoomChat(0); });
+            roomChat.onClick.AddListener(() =>
+            {
+                if (screen.UiRoomCanAct)
+                {
+                    screen.UiSelectRoomChat(1);
+                }
+            });
+            lobbyChat.onClick.AddListener(() =>
+            {
+                if (screen.UiRoomCanAct)
+                {
+                    screen.UiSelectRoomChat(0);
+                }
+            });
             chatInput.onValueChanged.AddListener(value => screen.UiChatInput = value);
             sendChat.onClick.AddListener(() => screen.UiSendRoomScreenChat());
             clearNotices.onClick.AddListener(() => screen.UiClearRoomNotices());
@@ -76,47 +139,76 @@ namespace SmartTraining
         private void OpenSettings()
         {
             if (!screen.UiRoomCanManage)
+            {
                 return;
+            }
+
             screen.UiPrepareRoomSettings();
             settingsModal.SetActive(true);
             nameInput.SetTextWithoutNotify(screen.UiEditRoomName);
             capacityInput.SetTextWithoutNotify(screen.UiEditRoomCapacity);
             passwordInput.SetTextWithoutNotify("");
         }
+
         private void CloseSettings()
         {
             if (screen.UiProcessing)
+            {
                 return;
+            }
+
             settingsModal.SetActive(false);
             screen.UiEditRoomPassword = "";
             passwordInput.SetTextWithoutNotify("");
             UguiViewUtility.ClearSelection(transform);
         }
-        internal bool BlocksMovement => !wasVisible || settingsModal.activeSelf || confirmationModal.activeSelf ||
-            screen == null || !screen.UiRoomCanAct;
+
+        internal bool BlocksMovement => !wasVisible || settingsModal.activeSelf || confirmationModal.activeSelf || screen == null || !screen.UiRoomCanAct;
+
         internal Vector2 ReadMovement()
         {
             if (BlocksMovement || RoomMovementInput.IsEditingText)
+            {
                 return Vector2.zero;
-            return Vector2.ClampMagnitude(movementButtons.Where(x => x.IsHeld).Aggregate(Vector2.zero, (value, button) => value + button.direction), 1);
+            }
+
+            return Vector2.ClampMagnitude(
+                movementButtons.Where(x => x.IsHeld).Aggregate(Vector2.zero, (value, button) => value + button.direction),
+                1
+            );
         }
-        private void EnsureComponents()
-            => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
+
+        private void EnsureComponents() => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
 
         private void LateUpdate() => Refresh();
+
         internal void RefreshState()
         {
             if (wired)
+            {
                 Refresh();
+            }
         }
+
         internal void ResetTransientState()
         {
             UguiViewUtility.ClearSelection(transform);
             settingsModal.SetActive(false);
             confirmationModal.SetActive(false);
             mapModal.SetActive(false);
-            foreach (var field in new[] { nameInput, capacityInput, passwordInput, chatInput })
+            foreach (var field in new[]
+            {
+                nameInput,
+                capacityInput,
+                passwordInput,
+                chatInput
+            }
+
+            )
+            {
                 field.SetTextWithoutNotify("");
+            }
+
             UguiViewUtility.RemoveMissing(rows, new HashSet<string>());
             UguiViewUtility.RemoveMissing(markers, new HashSet<string>());
             UguiViewUtility.RemoveMissing(messages, new HashSet<string>());
@@ -128,19 +220,27 @@ namespace SmartTraining
             showLobbyParticipants = false;
             wasVisible = false;
         }
+
         private void Refresh()
         {
             if (screen == null)
+            {
                 return;
+            }
+
             EnsureComponents();
             bool visible = screen.UseUguiRoom;
             UguiViewUtility.SetVisible(this, canvas, interaction, raycaster, visible);
             if (!visible)
             {
                 if (wasVisible)
+                {
                     ResetTransientState();
+                }
+
                 return;
             }
+
             wasVisible = true;
             string current = screen.UiSelfId + "|" + screen.UiActiveRoomId;
             if (current != context)
@@ -153,6 +253,7 @@ namespace SmartTraining
                 screen.UiSelectRoomChat(1);
                 nextLists = 0;
             }
+
             bool master = screen.UiLocalPlayer?.IsRoomMaster == true;
             if (!master && settingsModal.activeSelf)
             {
@@ -161,9 +262,13 @@ namespace SmartTraining
                 passwordInput.SetTextWithoutNotify("");
                 UguiViewUtility.ClearSelection(transform);
             }
+
             bool pending = screen.UiRoomConfirmation;
             if (pending != confirmationModal.activeSelf)
+            {
                 UguiViewUtility.ClearSelection(transform);
+            }
+
             confirmationModal.SetActive(pending);
             confirmationText.text = screen.UiRoomConfirmationText;
             mainInteraction.interactable = mainInteraction.blocksRaycasts = !screen.UiProcessing && !pending && !settingsModal.activeSelf && !mapModal.activeSelf;
@@ -207,17 +312,25 @@ namespace SmartTraining
             closeSettings.interactable = !screen.UiProcessing;
             settingsStatus.text = (screen.UiLocalPlayer?.RoomIsRunning == true ? "진행 중에는 방 이름·최대 인원을 변경할 수 없습니다.\n" : "") + screen.UiStatus;
             foreach (var move in movementButtons)
+            {
                 move.GetComponent<Button>().interactable = !BlocksMovement;
+            }
+
             UpdateParticipantActions();
             UpdateMap();
             if (Time.unscaledTime < nextLists)
+            {
                 return;
+            }
+
             nextLists = Time.unscaledTime + .15f;
             UpdateParticipants();
             UpdateParticipantActions();
             UpdateChat();
         }
+
         private static void Caption(Button button, string text) => button.GetComponentInChildren<Text>().text = text;
+
         private void UpdateParticipants()
         {
             var ids = new HashSet<string>(showLobbyParticipants ? screen.UiParticipants.Select(p => p.userId) : screen.UiRoomPlayers.Select(p => p.UserId));
@@ -227,7 +340,10 @@ namespace SmartTraining
             foreach (var id in ids)
             {
                 if (string.IsNullOrEmpty(id))
+                {
                     continue;
+                }
+
                 if (!rows.TryGetValue(id, out var row))
                 {
                     row = Instantiate(participantTemplate, participantsContent);
@@ -237,23 +353,27 @@ namespace SmartTraining
                     row.Find("Actions/Kick").GetComponent<Button>().onClick.AddListener(() => screen.UiRequestKick(id));
                     rows[id] = row;
                 }
+
                 var player = Array.Find(screen.UiRoomPlayers, p => p.UserId == id);
                 var card = row.GetComponent<RoomParticipantCard>();
                 if (card != null)
                 {
                     if (showLobbyParticipants)
+                    {
                         card.RenderLobby(screen.UiParticipantLabel(Array.Find(screen.UiParticipants, p => p.userId == id)), id == screen.UiSelfId);
+                    }
                     else
+                    {
                         card.RenderRoom(player, player.UserId == screen.UiLocalPlayer?.RoomMasterUserId);
+                    }
+
                     continue;
                 }
-                row.Find("Details").GetComponent<Text>().text = showLobbyParticipants
-                    ? screen.UiParticipantLabel(Array.Find(screen.UiParticipants, p => p.userId == id))
-                    : player.UserName + (player.IsOwner ? " (나)" : "") + (player.UserId == screen.UiLocalPlayer?.RoomMasterUserId ? " [방장]" : "") +
-                        "\n" + (player.IsReady ? "준비 완료" : "준비 전") + " · " + player.ConnectionStatusLabel + " · " + player.LatencyLabel +
-                        "\nX " + player.ServerPosition.x.ToString("F1") + " / Z " + player.ServerPosition.z.ToString("F1");
+
+                row.Find("Details").GetComponent<Text>().text = showLobbyParticipants ? screen.UiParticipantLabel(Array.Find(screen.UiParticipants, p => p.userId == id)) : player.UserName + (player.IsOwner ? " (나)" : "") + (player.UserId == screen.UiLocalPlayer?.RoomMasterUserId ? " [방장]" : "") + "\n" + (player.IsReady ? "준비 완료" : "준비 전") + " · " + player.ConnectionStatusLabel + " · " + player.LatencyLabel + "\nX " + player.ServerPosition.x.ToString("F1") + " / Z " + player.ServerPosition.z.ToString("F1");
             }
         }
+
         private void UpdateParticipantActions()
         {
             foreach (var entry in rows)
@@ -261,9 +381,12 @@ namespace SmartTraining
                 bool manage = !showLobbyParticipants && screen.UiLocalPlayer?.IsRoomMaster == true && entry.Key != screen.UiSelfId;
                 entry.Value.Find("Actions").gameObject.SetActive(manage);
                 foreach (var button in entry.Value.GetComponentsInChildren<Button>())
+                {
                     button.interactable = screen.UiRoomCanManage;
+                }
             }
         }
+
         private void UpdateMap()
         {
             var players = screen.UiRoomPlayers;
@@ -271,20 +394,27 @@ namespace SmartTraining
             foreach (var player in players)
             {
                 if (string.IsNullOrEmpty(player.UserId))
+                {
                     continue;
+                }
+
                 if (!markers.TryGetValue(player.UserId, out var marker))
                 {
                     marker = Instantiate(markerTemplate, map);
                     marker.gameObject.SetActive(true);
                     markers[player.UserId] = marker;
                 }
-                marker.anchorMin = marker.anchorMax = new Vector2(.1f + .8f * (player.ServerPosition.x / RoomPlayer.ArenaHalfSize + 1) / 2,
-                    .1f + .8f * (player.ServerPosition.z / RoomPlayer.ArenaHalfSize + 1) / 2);
+
+                marker.anchorMin = marker.anchorMax = new Vector2(
+                    .1f + .8f * (player.ServerPosition.x / RoomPlayer.ArenaHalfSize + 1) / 2,
+                    .1f + .8f * (player.ServerPosition.z / RoomPlayer.ArenaHalfSize + 1) / 2
+                );
                 marker.anchoredPosition = Vector2.zero;
                 marker.GetComponent<Image>().color = player.IsOwner ? new Color(.15f, .7f, .4f) : new Color(.2f, .5f, 1);
                 marker.GetComponentInChildren<Text>().text = player.UserName;
             }
         }
+
         private void UpdateChat()
         {
             string current = context + "|" + screen.UiRoomChatChannel;
@@ -293,6 +423,7 @@ namespace SmartTraining
                 UguiViewUtility.RemoveMissing(messages, new HashSet<string>());
                 messagesContext = current;
             }
+
             var displayed = screen.UiRoomScreenMessages;
             bool follow = messages.Count == 0 || chatScroll.verticalNormalizedPosition < .05f;
             bool changed = UguiViewUtility.RemoveMissing(messages, new HashSet<string>(displayed.Select(x => x.id)));
@@ -300,23 +431,30 @@ namespace SmartTraining
             foreach (var message in displayed)
             {
                 if (messages.ContainsKey(message.id))
+                {
                     continue;
+                }
+
                 var row = Instantiate(chatTemplate, chatContent);
                 row.gameObject.SetActive(true);
                 row.text = UguiViewUtility.ChatLabel(message);
                 messages[message.id] = row;
                 changed = true;
             }
+
             if (changed && follow)
             {
                 Canvas.ForceUpdateCanvases();
                 chatScroll.verticalNormalizedPosition = 0;
             }
         }
+
         private void OnDestroy()
         {
             if (runtimeFont != null)
+            {
                 Destroy(runtimeFont);
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 using UnityEngine;
+
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
-
 namespace SmartTraining
 {
     public static class RoomMovementInput
@@ -15,10 +15,14 @@ namespace SmartTraining
                 return selected != null && selected.TryGetComponent<UnityEngine.UI.InputField>(out var field) && field.isFocused;
             }
         }
+
         public static Vector2 Read()
         {
             if (!Application.isFocused || IsEditingText)
+            {
                 return Vector2.zero;
+            }
+
             var value = Vector2.zero;
 #if ENABLE_INPUT_SYSTEM
             var keys = Keyboard.current;

@@ -11,14 +11,21 @@ namespace SmartTraining.Editor
         public static void ApplyCatalogTheme()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
                 return;
+            }
+
             var root = PrefabUtility.LoadPrefabContents(AssetPath);
             try
             {
                 Apply(root, UguiLoginDesigner.LoadTheme());
                 PrefabUtility.SaveAsPrefabAsset(root, AssetPath);
             }
-            finally { PrefabUtility.UnloadPrefabContents(root); }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
             AssetDatabase.SaveAssets();
             Debug.Log("CATALOG THEME APPLIED: existing lobby actions and references preserved");
         }
@@ -58,8 +65,23 @@ namespace SmartTraining.Editor
                 detailScroll.movementType = ScrollRect.MovementType.Clamped;
                 detailScroll.scrollSensitivity = 24;
             }
-            foreach (var button in new[] { ui.refreshButton, ui.reconnectButton, ui.logoutButton, ui.enterButton, ui.cancelButton, ui.retryButton, ui.closeFailureButton })
+
+            foreach (var button in new[]
+            {
+                ui.refreshButton,
+                ui.reconnectButton,
+                ui.logoutButton,
+                ui.enterButton,
+                ui.cancelButton,
+                ui.retryButton,
+                ui.closeFailureButton
+            }
+
+            )
+            {
                 StyleButton(button, theme, button == ui.enterButton || button == ui.retryButton);
+            }
+
             var contentLayout = ui.lobbyContent.GetComponent<VerticalLayoutGroup>();
             contentLayout.spacing = 10;
             contentLayout.padding = new RectOffset(8, 8, 8, 8);
@@ -87,6 +109,7 @@ namespace SmartTraining.Editor
                 bar.offsetMax = new Vector2(4, 0);
                 row.border = buttonRoot.GetComponent<Outline>() ?? buttonRoot.gameObject.AddComponent<Outline>();
             }
+
             row.ink = theme.ink;
             row.muted = theme.muted;
             row.highlight = theme.accent;
@@ -123,7 +146,10 @@ namespace SmartTraining.Editor
         {
             var size = label.GetComponent<LayoutElement>();
             if (size != null)
+            {
                 Object.DestroyImmediate(size);
+            }
+
             var rect = label.rectTransform;
             rect.anchorMin = min;
             rect.anchorMax = max;
@@ -132,6 +158,7 @@ namespace SmartTraining.Editor
             label.raycastTarget = false;
             label.supportRichText = false;
         }
+
         private static void StyleButton(Button button, UguiTheme theme, bool primary)
         {
             button.GetComponent<Image>().color = Color.white;

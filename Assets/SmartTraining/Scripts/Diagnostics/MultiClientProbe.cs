@@ -9,8 +9,8 @@ using UnityEngine;
 
 namespace SmartTraining
 {
-    // Opt-in local test bridge for independently running development players.
-    // Normal launches never create this component or read test commands.
+    // 개별 Development 클라이언트를 외부 검사 도구와 연결할 때만 사용하는 로컬 진단 기능입니다.
+    // 일반 실행에서는 이 컴포넌트를 생성하거나 검사 명령 파일을 읽지 않습니다.
     [DefaultExecutionOrder(1000)]
     public sealed class MultiClientProbe : MonoBehaviour
     {
@@ -311,7 +311,7 @@ namespace SmartTraining
         }
         private static Command ReadCommand(string path)
         {
-            // The test runner replaces this file; retry next poll if replacement overlaps a read.
+            // 검사 도구가 파일을 교체하는 순간과 읽기가 겹치면 다음 주기에 다시 읽습니다.
             string json;
             try { json = File.ReadAllText(path); }
             catch (IOException) { return null; }
@@ -325,7 +325,7 @@ namespace SmartTraining
         }
         private static void CaptureCanvas(Canvas canvas, string path)
         {
-            // Render only this Canvas into a texture: hidden test windows may not present a back buffer.
+            // 숨겨진 검사 창은 화면 버퍼가 없을 수 있으므로 해당 Canvas만 텍스처로 렌더링합니다.
             var root = new GameObject("Probe UI Capture", typeof(Camera));
             var camera = root.GetComponent<Camera>(); camera.enabled = false;camera.clearFlags = CameraClearFlags.SolidColor;camera.backgroundColor = Color.black;
             var target = new RenderTexture(Screen.width, Screen.height, 24);

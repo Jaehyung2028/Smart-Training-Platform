@@ -8,11 +8,19 @@ namespace SmartTraining
     {
         private enum ServerConnectionState
         {
-            LoginRequired, Connecting, Connected, RetryWaiting, SessionEnded
+            LoginRequired,
+            Connecting,
+            Connected,
+            RetryWaiting,
+            SessionEnded
         }
+
         private ServerConnectionState serverConnectionState;
+
         private int serverReconnectAttempts;
+
         private bool connectionSessionObserved;
+
         private TrainingApiClient connectionOwnerApi;
 
         private void ResetServerConnectionStatus()
@@ -23,6 +31,7 @@ namespace SmartTraining
             connectionOwnerApi = null;
             nextLiveAttempt = 0;
         }
+
         private void ObserveConnectionSession()
         {
             if (connectionOwnerApi != api)
@@ -30,9 +39,13 @@ namespace SmartTraining
                 ResetServerConnectionStatus();
                 connectionOwnerApi = api;
             }
+
             if (api?.IsLoggedIn == true)
+            {
                 connectionSessionObserved = true;
+            }
         }
+
         private void EndServerSession()
         {
             ClearView();
@@ -40,6 +53,7 @@ namespace SmartTraining
             status = "서버 인증 세션이 종료되었습니다. 다시 로그인해주세요.";
             connectionOwnerApi = api;
         }
+
         private void ScheduleLiveRetry(string _)
         {
             if (api?.IsLoggedIn != true && connectionSessionObserved)
@@ -47,11 +61,13 @@ namespace SmartTraining
                 EndServerSession();
                 return;
             }
+
             DisposeLobbyUpdates();
             nextLiveAttempt = Time.realtimeSinceStartup + 3;
             serverConnectionState = ServerConnectionState.RetryWaiting;
             serverReconnectAttempts++;
         }
+
         private string ServerConnectionStatusText()
         {
             switch (serverConnectionState)
@@ -68,10 +84,14 @@ namespace SmartTraining
                     return "서버 알림 연결: 로그인 후 연결됩니다.";
             }
         }
+
         private IEnumerator RetryLiveConnection()
         {
             if (api?.IsLoggedIn != true)
+            {
                 yield break;
+            }
+
             DisposeLobbyUpdates();
             nextLiveAttempt = 0;
             yield return ConnectLobbyRooms(api.User.currentLobbyId ?? "");

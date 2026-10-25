@@ -13,7 +13,10 @@ namespace SmartTraining.Editor
         {
             var theme = AssetDatabase.LoadAssetAtPath<UguiTheme>(ThemePath);
             if (theme != null)
+            {
                 return theme;
+            }
+
             theme = ScriptableObject.CreateInstance<UguiTheme>();
             AssetDatabase.CreateAsset(theme, ThemePath);
             return theme;
@@ -23,14 +26,21 @@ namespace SmartTraining.Editor
         public static void ApplyLoginTheme()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
                 return;
+            }
+
             var root = PrefabUtility.LoadPrefabContents(AssetPath);
             try
             {
                 Apply(root, LoadTheme());
                 PrefabUtility.SaveAsPrefabAsset(root, AssetPath);
             }
-            finally { PrefabUtility.UnloadPrefabContents(root); }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
             AssetDatabase.SaveAssets();
             Debug.Log("LOGIN THEME APPLIED: existing inputs and action references preserved");
         }
@@ -51,7 +61,6 @@ namespace SmartTraining.Editor
             ui.connectionText.color = theme.muted;
             ui.statusText.fontSize = 14;
             ui.statusText.color = theme.muted;
-
             var panel = ui.loginPanel.transform;
             var form = panel.Find("Login Form") as RectTransform;
             if (form == null)
@@ -59,7 +68,10 @@ namespace SmartTraining.Editor
                 // Move existing controls rather than recreating them: scene wiring and serialized IDs survive.
                 var children = new System.Collections.Generic.List<Transform>();
                 foreach (Transform child in panel)
+                {
                     children.Add(child);
+                }
+
                 Object.DestroyImmediate(panel.GetComponent<VerticalLayoutGroup>());
                 var columns = panel.gameObject.AddComponent<HorizontalLayoutGroup>();
                 columns.spacing = 32;
@@ -90,14 +102,19 @@ namespace SmartTraining.Editor
                 formSize.flexibleWidth = 1;
                 form.gameObject.AddComponent<Image>().color = theme.field;
                 foreach (var child in children)
+                {
                     child.SetParent(form, false);
+                }
             }
 
             var formHeading = form.GetChild(0).GetComponent<Text>();
             form.GetComponent<Image>().color = theme.field;
             var introduction = panel.Find("Login Introduction");
             foreach (var text in introduction.GetComponentsInChildren<Text>(true))
+            {
                 text.color = theme.muted;
+            }
+
             introduction.GetChild(0).GetComponent<Text>().color = theme.accent;
             introduction.GetChild(1).GetComponent<Text>().color = theme.ink;
             formHeading.text = "서버 접속";
@@ -105,8 +122,17 @@ namespace SmartTraining.Editor
             formHeading.fontStyle = FontStyle.Bold;
             formHeading.color = theme.ink;
             foreach (var label in form.GetComponentsInChildren<Text>(true))
+            {
                 label.color = theme.ink;
-            foreach (var input in new[] { ui.addressInput, ui.nicknameInput })
+            }
+
+            foreach (var input in new[]
+            {
+                ui.addressInput,
+                ui.nicknameInput
+            }
+
+            )
             {
                 input.GetComponent<Image>().color = theme.surface;
                 var outline = input.GetComponent<Outline>() ?? input.gameObject.AddComponent<Outline>();
@@ -125,9 +151,18 @@ namespace SmartTraining.Editor
                 colors.disabledColor = new Color(.9f, .91f, .93f);
                 input.colors = colors;
             }
+
             ui.addressNotice.fontSize = 13;
             ui.addressNotice.color = theme.muted;
-            foreach (var button in new[] { ui.saveButton, ui.resetButton, ui.healthButton, ui.loginButton })
+            foreach (var button in new[]
+            {
+                ui.saveButton,
+                ui.resetButton,
+                ui.healthButton,
+                ui.loginButton
+            }
+
+            )
             {
                 bool primary = button == ui.loginButton;
                 button.GetComponent<Image>().color = Color.white;

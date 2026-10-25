@@ -6,13 +6,22 @@ namespace SmartTraining
     {
         private enum RoomAction
         {
-            None, TransferMaster, Kick, Close
+            None,
+            TransferMaster,
+            Kick,
+            Close
         }
+
         private RoomAction pendingRoomAction;
+
         private RoomNetworkClient actionNetwork;
+
         private TrainingApiClient actionApi;
+
         private string actionLobbyId = "", actionRoomId = "", actionTargetId = "", actionTargetName = "";
+
         private ulong actionOwnerId, actionTargetOwnerId;
+
         private bool HasPendingRoomAction => pendingRoomAction != RoomAction.None;
 
         private void ClearRoomAction()
@@ -27,18 +36,32 @@ namespace SmartTraining
         private void RequestRoomAction(RoomAction action, string targetId = "")
         {
             if (busy || WaitingForExitCleanup || HasPendingRoomAction || action == RoomAction.None)
+            {
                 return;
+            }
+
             var local = network?.LocalPlayer;
-            if (api?.IsLoggedIn != true || network?.IsConnected != true || local == null || !local.IsRoomMaster ||
-                local.UserId != api.User.id || string.IsNullOrEmpty(networkRoomId) || string.IsNullOrEmpty(networkLobbyId))
+            if (api?.IsLoggedIn != true ||
+                network?.IsConnected != true ||
+                local == null ||
+                !local.IsRoomMaster ||
+                local.UserId != api.User.id ||
+                string.IsNullOrEmpty(networkRoomId) ||
+                string.IsNullOrEmpty(networkLobbyId))
+            {
                 return;
+            }
+
             RoomPlayer target = null;
             if (action != RoomAction.Close)
             {
                 target = Array.Find(network.Players, p => p.UserId == targetId && p.UserId != local.UserId);
                 if (target == null)
+                {
                     return;
+                }
             }
+
             pendingRoomAction = action;
             actionNetwork = network;
             actionApi = api;
@@ -53,15 +76,22 @@ namespace SmartTraining
         private bool ValidateRoomAction()
         {
             if (!HasPendingRoomAction)
+            {
                 return false;
+            }
+
             var local = network?.LocalPlayer;
-            bool valid = network == actionNetwork && api == actionApi && api?.IsLoggedIn == true &&
-                network?.IsConnected == true && local != null && local.IsRoomMaster && local.UserId == api.User.id &&
-                local.OwnerClientId == actionOwnerId && networkLobbyId == actionLobbyId && networkRoomId == actionRoomId;
+            bool valid = network == actionNetwork && api == actionApi && api?.IsLoggedIn == true && network?.IsConnected == true && local != null && local.IsRoomMaster && local.UserId == api.User.id && local.OwnerClientId == actionOwnerId && networkLobbyId == actionLobbyId && networkRoomId == actionRoomId;
             if (valid && pendingRoomAction != RoomAction.Close)
+            {
                 valid = Array.Exists(network.Players, p => p.UserId == actionTargetId && p.OwnerClientId == actionTargetOwnerId);
+            }
+
             if (valid)
+            {
                 return true;
+            }
+
             ClearRoomAction();
             status = "방 또는 참가자 상태가 바뀌어 확인 요청을 취소했습니다. 현재 목록에서 다시 선택해주세요.";
             return false;
@@ -76,7 +106,10 @@ namespace SmartTraining
         private void ConfirmRoomAction()
         {
             if (busy || WaitingForExitCleanup || !ValidateRoomAction())
+            {
                 return;
+            }
+
             var action = pendingRoomAction;
             string targetId = actionTargetId, targetName = actionTargetName;
             ClearRoomAction();
@@ -93,6 +126,5 @@ namespace SmartTraining
                     break;
             }
         }
-
     }
 }

@@ -13,19 +13,32 @@ namespace SmartTraining.Editor
         private static void Check(bool value, string label)
         {
             if (!value)
+            {
                 throw new Exception(label);
+            }
+
             Debug.Log("UNITY PASS: " + label);
         }
+
         public static IEnumerator Run()
         {
             ushort port;
             using (var socket = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0)))
+            {
                 port = (ushort)((IPEndPoint)socket.Client.LocalEndPoint).Port;
+            }
+
             var root = new GameObject("TestNetcodeServer");
             var server = root.AddComponent<NetworkManager>();
             var transport = root.AddComponent<UnityTransport>();
             transport.SetConnectionData("127.0.0.1", port, "127.0.0.1");
-            server.NetworkConfig = new NetworkConfig { NetworkTransport = transport, EnableSceneManagement = false, ConnectionApproval = true };
+            server.NetworkConfig = new NetworkConfig
+            {
+                NetworkTransport = transport,
+                EnableSceneManagement = false,
+                ConnectionApproval = true
+
+            };
             RoomPlayerPrefab.Register(server);
             bool approvedPayload = false, reject = false;
             server.ConnectionApprovalCallback = (request, response) =>
@@ -36,11 +49,19 @@ namespace SmartTraining.Editor
                 response.CreatePlayerObject = false;
                 response.Pending = false;
                 if (!response.Approved)
+                {
                     response.Reason = "test-rejected";
+                }
             };
             var client = new RoomNetworkClient();
             string runtimeError = null;
-            Application.LogCallback log = (message, trace, kind) => { if (kind == LogType.Exception || kind == LogType.Error) runtimeError = message; };
+            Application.LogCallback log = (message, trace, kind) =>
+            {
+                if (kind == LogType.Exception || kind == LogType.Error)
+                {
+                    runtimeError = message;
+                }
+            };
             Application.logMessageReceived += log;
             try
             {
@@ -50,9 +71,24 @@ namespace SmartTraining.Editor
                     success = true,
                     admissionToken = "test-admission",
                     expiresAtUtc = DateTimeOffset.UtcNow.AddSeconds(30).ToString("O"),
-                    room = new ReservedRoom { id = "netcode-test", lobbyId = "test-lobby", ipAddress = "127.0.0.1", port = port }
+                    room = new ReservedRoom
+                    {
+                        id = "netcode-test",
+                        lobbyId = "test-lobby",
+                        ipAddress = "127.0.0.1",
+                        port = port
+
+                    }
+
                 };
-                yield return client.Connect("test-user", reservation, () => { }, message => throw new Exception(message));
+                yield return client.Connect(
+                    "test-user",
+                    reservation,
+                    () =>
+                {
+                },
+                    message => throw new Exception(message)
+                );
                 Check(client.IsConnected && approvedPayload, "Netcode UDP connects with admission payload");
                 client.Dispose();
                 yield return null;
@@ -60,16 +96,32 @@ namespace SmartTraining.Editor
                 Check(!client.IsConnected, "Netcode disconnect clears client");
                 reservation.expiresAtUtc = DateTimeOffset.UtcNow.AddSeconds(-1).ToString("O");
                 bool expiredRejected = false;
-                yield return client.Connect("test-user", reservation, () => throw new Exception("Expired reservation connected"), _ => expiredRejected = true);
+                yield return client.Connect(
+                    "test-user",
+                    reservation,
+                    () => throw new Exception("Expired reservation connected"),
+                    _ => expiredRejected = true
+                );
                 Check(expiredRejected && !client.IsConnected, "expired reservation rejected before Netcode start");
                 reject = true;
                 reservation.expiresAtUtc = DateTimeOffset.UtcNow.AddSeconds(30).ToString("O");
                 bool approvalRejected = false;
-                yield return client.Connect("test-user", reservation, () => throw new Exception("Rejected connection accepted"), _ => approvalRejected = true);
+                yield return client.Connect(
+                    "test-user",
+                    reservation,
+                    () => throw new Exception("Rejected connection accepted"),
+                    _ => approvalRejected = true
+                );
                 Check(approvalRejected && !client.IsConnected, "Netcode approval rejection cleans client");
                 Check(runtimeError == null, "Netcode lifecycle has no runtime error");
             }
-            finally { Application.logMessageReceived -= log; client.Dispose(); root.AddComponent<NetworkShutdownCleanup>().Begin(server); }
+            finally
+            {
+                Application.logMessageReceived -= log;
+                client.Dispose();
+                root.AddComponent<NetworkShutdownCleanup>().Begin(server);
+            }
+
             yield return null;
         }
     }
