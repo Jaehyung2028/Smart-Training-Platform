@@ -8,5 +8,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/SmartTraining/Scenes/TrainingContent.unity
+    guid: 2a789f1a9b4a4b4faba2bb63e0ae59f1
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 5672b7d970a707745aaaf62ad041e6bf, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

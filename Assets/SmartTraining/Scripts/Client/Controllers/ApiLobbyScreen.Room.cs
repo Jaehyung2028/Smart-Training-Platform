@@ -14,6 +14,12 @@ namespace SmartTraining
                 yield break;
             }
 
+            if (running && !network.GetReadiness().AllReady)
+            {
+                status = "방장을 제외한 참가자의 접속 완료와 준비를 기다리고 있습니다.";
+                yield break;
+            }
+
             int reply = player.PhaseReply;
             player.RequestPhaseRpc(running);
             double until = Time.realtimeSinceStartupAsDouble + 15;

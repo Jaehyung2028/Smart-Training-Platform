@@ -20,6 +20,12 @@ namespace SmartTraining
 
         private GameObject playerPrefab;
 
+        private GameObject sharedModelPrefab;
+
+        private SharedModel sharedModel;
+
+        private string contentType = "";
+
         private RoomHubConnection hub;
 
         private string roomId;
@@ -75,6 +81,7 @@ namespace SmartTraining
             try
             {
                 playerPrefab = RoomPlayerPrefab.Register(manager);
+                sharedModelPrefab = SharedModel.Register(manager);
             }
             catch (InvalidOperationException error)
             {
@@ -173,6 +180,22 @@ namespace SmartTraining
             }
         }
 
+        // 모델 콘텐츠 시작 시 서버가 하나만 스폰합니다. 대기 복귀 시 소유자와 관계없이 서버가 제거합니다.
+        private void SynchronizeSharedModel()
+        {
+            bool needsModel = roomRunning && contentType == "model";
+            if (needsModel && sharedModel == null)
+            {
+                sharedModel = Instantiate(sharedModelPrefab).GetComponent<SharedModel>();
+                sharedModel.NetworkObject.Spawn();
+            }
+            else if (!needsModel && sharedModel != null)
+            {
+                sharedModel.NetworkObject.Despawn();
+                sharedModel = null;
+            }
+        }
+
         private void ApplyRoomPhase(RoomHubResult result)
         {
             if (result.phaseRevision < phaseRevision)
@@ -182,8 +205,10 @@ namespace SmartTraining
 
             bool resetReady = result.phaseRevision > phaseRevision && roomRunning && !result.isRunning;
             phaseRevision = result.phaseRevision;
+            contentType = result.contentType ?? contentType;
             roomRunning = result.isRunning;
             PublishRoomPhase(resetReady);
+            SynchronizeSharedModel();
         }
 
         private void RequestRoomPhase(RoomPlayer caller, bool running)
@@ -199,14 +224,11 @@ namespace SmartTraining
             }
 
             var players = ServerPlayers();
-            if (running &&
-                (roomRunning ||
-                players.Length == 0 ||
-                players.Length != manager.ConnectedClients.Count ||
-                players.Any(player => !player.IsReady ||
-                !Guid.TryParse(player.UserId, out _))))
+            var readiness = RoomReadinessSummary.FromPlayers(players, caller.UserId,
+                players.Length == manager.ConnectedClients.Count);
+            if (running && (roomRunning || !readiness.AllReady))
             {
-                caller.ReplyPhaseServer("모든 참가자가 접속을 완료하고 준비해야 시작할 수 있습니다.");
+                caller.ReplyPhaseServer("방장을 제외한 참가자가 모두 접속을 완료하고 준비해야 시작할 수 있습니다.");
                 return;
             }
 
@@ -223,8 +245,8 @@ namespace SmartTraining
 
         private IEnumerator ChangeRoomPhase(RoomPlayer caller, RoomConnectionData admission, bool running, RoomPlayer[] players)
         {
-            // 사용자 ID는 서버가 확정한 GUID이며, 시작 요청 전에 위에서 검증합니다.
-            string roster = running ? "[" + string.Join(",", players.Select(player => "\"" + player.UserId + "\"")) + "]" : "[]";
+            // 문자열 인용·이스케이프를 직접 조립하지 않고 JSON 라이브러리로 참가자 배열을 만듭니다.
+            string roster = TrainingJson.Serialize(running ? players.Select(player => player.UserId).ToArray() : Array.Empty<string>());
             var change = hub.Invoke(
                 "SetRoomPhase",
                 admission.userId,

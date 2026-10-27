@@ -41,6 +41,7 @@ namespace SmartTraining
             if (player == null ||
                 !player.IsSpawned ||
                 !player.IsOwner ||
+                player.IsRoomMaster ||
                 player.RoomIsRunning ||
                 player.PhasePending)
             {
@@ -53,16 +54,13 @@ namespace SmartTraining
 
         public RoomReadinessSummary GetReadiness()
         {
-            var players = Players;
-            int readyCount = players.Count(player => player.IsSpawned && !string.IsNullOrEmpty(player.UserId) && player.IsReady);
-            bool confirmed = LocalPlayer != null && players.All(player => player.IsSpawned && !string.IsNullOrEmpty(player.UserId));
-            return new RoomReadinessSummary(players.Length, readyCount, confirmed);
+            return RoomReadinessSummary.FromPlayers(Players, LocalPlayer?.RoomMasterUserId, LocalPlayer != null);
         }
 
         public void SendMovement(Vector2 direction)
         {
             var player = LocalPlayer;
-            if (player == null || !player.IsOwner || Time.unscaledTime < nextInputAt)
+            if (player == null || !player.IsSpawned || !player.IsOwner || !player.RoomIsRunning || player.PhasePending || Time.unscaledTime < nextInputAt)
             {
                 return;
             }
@@ -167,7 +165,7 @@ namespace SmartTraining
                 NetworkTransport = transport,
                 EnableSceneManagement = false,
                 ConnectionApproval = true,
-                ConnectionData = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new RoomConnectionData {
+                ConnectionData = Encoding.UTF8.GetBytes(TrainingJson.Serialize(new RoomConnectionData {
                             roomId = reservation.room.id,
                             userId = userId,
                             admissionToken = reservation.admissionToken
@@ -178,6 +176,7 @@ namespace SmartTraining
             try
             {
                 RoomPlayerPrefab.Register(manager);
+                SharedModel.Register(manager);
             }
             catch (InvalidOperationException error)
             {
@@ -269,11 +268,26 @@ namespace SmartTraining
 
         public bool AllReady { get; }
 
-        public RoomReadinessSummary(int participants, int ready, bool confirmed)
+        // 클라이언트의 시작 버튼과 전용 서버의 시작 승인에 같은 준비 기준을 사용합니다.
+        public static RoomReadinessSummary FromPlayers(RoomPlayer[] players, string masterId, bool connectionsConfirmed)
+        {
+            var targets = players.Where(player => player.UserId != masterId).ToArray();
+            int readyCount = targets.Count(player => player.IsSpawned && player.IsReady);
+            bool confirmed = connectionsConfirmed && !string.IsNullOrEmpty(masterId) &&
+                players.Count(player => player.UserId == masterId) == 1 &&
+                players.All(player => player.IsSpawned && Guid.TryParse(player.UserId, out _) && player.RoomMasterUserId == masterId);
+            return new RoomReadinessSummary(players.Length, readyCount, confirmed, targets.Length);
+        }
+
+        // 전체 접속 인원과 준비 대상 인원을 구분합니다. 방장 혼자 있으면 준비 대상은 0명입니다.
+        public int ReadyTargetCount { get; }
+
+        public RoomReadinessSummary(int participants, int ready, bool confirmed, int readyTargets)
         {
             ParticipantCount = participants;
             ReadyCount = ready;
-            AllReady = confirmed && participants > 0 && ready == participants;
+            ReadyTargetCount = readyTargets;
+            AllReady = confirmed && participants > 0 && ready == ReadyTargetCount;
         }
     }
 }

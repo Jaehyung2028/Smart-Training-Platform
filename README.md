@@ -1,4 +1,4 @@
-# Smart Training Platform
+﻿# Smart Training Platform
 
 ASP.NET Core 백엔드와 연동해 로그인·로비·방 입장 및 실시간 멀티플레이를 처리하는 Unity 클라이언트와 전용 방 서버 프로젝트입니다.
 
@@ -16,10 +16,10 @@ ASP.NET Core 백엔드와 연동해 로그인·로비·방 입장 및 실시간 
 | Unity Transport `2.7.2` (embedded) | 클라이언트와 전용 서버 사이의 UDP 통신 |
 | Input System `1.19.0` | 이동 입력 |
 | UnityWebRequest | 로그인·로비·방 관리 API 요청 |
-| SignalR 프로토콜 / WebSocket | 전용 서버의 ASP.NET 등록·입장 검증·강퇴 요청 수신 |
+| Microsoft ASP.NET Core SignalR Client | 전용 서버 관리 통신, 로비 변경 알림과 채팅 |
 | URP `17.4.0` | 프로젝트 렌더링 환경 |
 
-전용 서버의 `RoomHubConnection`은 SignalR JSON 프로토콜을 사용하는 소규모 WebSocket 구현입니다. 범용 SignalR SDK의 모든 기능을 구현한 것은 아닙니다.
+`RoomHubConnection`은 Microsoft SignalR 클라이언트를 사용합니다. 연결·프로토콜·핑·요청 대응은 라이브러리에 맡기고, Unity 메인 스레드 이벤트 전달과 프로젝트의 요청 제한 시간을 연결합니다. HTTP·SignalR JSON은 `System.Text.Json`으로 처리합니다.
 
 ## 구조와 설계
 

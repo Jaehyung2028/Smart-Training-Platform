@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Linq;
 
@@ -157,23 +157,30 @@ namespace SmartTraining
             }
         }
 
+        // 자식이 있는 항목은 분류이고, 자식이 없는 항목만 방에서 사용할 실제 콘텐츠입니다.
+        private static bool IsSelectableContent(ContentSummary content)
+        {
+            return content != null && (content.children == null || content.children.Length == 0);
+        }
+
         internal void UiPrepareCreate()
         {
             uiCreatedRoomId = "";
             createRoomPassword = "";
-            if (!Array.Exists(contents, x => x.rootContent == selectedContentId && x.id == selectedContentNodeId))
+            if (!Array.Exists(contents, x => x.rootContent == selectedContentId && x.id == selectedContentNodeId && IsSelectableContent(x)))
             {
-                selectedContentId = contents.FirstOrDefault()?.rootContent ?? "";
-                selectedContentNodeId = contents.FirstOrDefault()?.id ?? 0;
+                var first = contents.FirstOrDefault(IsSelectableContent);
+                selectedContentId = first?.rootContent ?? "";
+                selectedContentNodeId = first?.id ?? 0;
             }
         }
 
-        // 트리에서 선택한 루트와 노드 ID가 현재 목록에 있는지 다시 확인합니다.
+        // 현재 목록에 있는 최하위 콘텐츠만 선택할 수 있습니다.
         internal void UiSelectContent(string rootContent, int nodeId)
         {
             if (!UiCanUseRooms ||
                 !Array.Exists(contents, item => item.rootContent == rootContent &&
-                item.id == nodeId))
+                item.id == nodeId && IsSelectableContent(item)))
             {
                 return;
             }
@@ -186,7 +193,7 @@ namespace SmartTraining
         {
             if (UiCanUseRooms &&
                 Array.Exists(contents, x => x.rootContent == selectedContentId &&
-                x.id == selectedContentNodeId))
+                x.id == selectedContentNodeId && IsSelectableContent(x)))
             {
                 RunOperation(CreateRoomForUi(), "방을 생성하고 있습니다.");
             }

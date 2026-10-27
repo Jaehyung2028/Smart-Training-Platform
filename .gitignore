@@ -44,3 +44,8 @@ Thumbs.db
 !/Tests/HubConnectionChecks/*.csproj
 /Tests/HubConnectionChecks/bin/
 /Tests/HubConnectionChecks/obj/
+
+# Reproducible Microsoft SignalR dependencies
+!/Tools/SignalRDependencies/SignalRDependencies.csproj
+/Tools/SignalRDependencies/bin/
+/Tools/SignalRDependencies/obj/

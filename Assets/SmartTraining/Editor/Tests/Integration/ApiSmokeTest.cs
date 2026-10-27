@@ -50,6 +50,8 @@ namespace SmartTraining.Editor
             bool healthy = false;
             yield return api.CheckHealth(() => healthy = true, fail);
             Check(healthy, "health");
+            yield return api.GetCourses(items => Check(items.Length > 0 && Array.TrueForAll(items, item => !string.IsNullOrEmpty(item.id) && !string.IsNullOrEmpty(item.name)),
+                "course catalog loads before login without a token"), fail);
             string nickname = "unity-" + Guid.NewGuid().ToString("N").Substring(0, 8);
             yield return api.Login(nickname, () =>
             {

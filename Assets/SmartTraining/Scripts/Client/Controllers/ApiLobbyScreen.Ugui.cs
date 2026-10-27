@@ -108,6 +108,10 @@ namespace SmartTraining
             {
                 if (CanEditServerAddress())
                 {
+                    if (serverUrl != value)
+                    {
+                        ClearCourses();
+                    }
                     serverUrl = value;
                 }
             }
@@ -149,13 +153,13 @@ namespace SmartTraining
 
         internal bool UiCanEnter => UiLoggedIn && !UiProcessing && string.IsNullOrEmpty(api.User.currentLobbyId) && Array.Find(lobbies, x => x.id == selectedLobbyId)is LobbySummary selected && !selected.isMaintenance && !ShutdownBlocksEntry(selected);
 
-        internal void UiHealth() => RunOperation(CheckHealth(), "서버 연결을 확인하고 있습니다.");
+        internal void UiHealth() => RunOperation(CheckHealthAndCourses(), "서버 연결과 교육과정을 확인하고 있습니다.");
 
         internal void UiLogin()
         {
-            if (!UiLoggedIn)
+            if (UiCanCourseLogin)
             {
-                RunOperation(Login(), "로그인하고 있습니다.");
+                RunOperation(LoginToCourse(), "선택한 교육과정으로 입장하고 있습니다.");
             }
         }
 

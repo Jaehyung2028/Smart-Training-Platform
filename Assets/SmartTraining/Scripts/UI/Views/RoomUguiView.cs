@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -70,12 +70,17 @@ namespace SmartTraining
             UguiViewUtility.EnsureEventSystem(transform);
             runtimeFont = UguiViewUtility.ApplyFont(gameObject, fontOverride);
             ready.onClick.AddListener(() => screen.UiToggleReady());
+            // 테마가 바뀌어도 시작 불가 상태는 버튼 자체와 색상으로 명확히 표시합니다.
+            phase.transition = Selectable.Transition.ColorTint;
+            var phaseColors = phase.colors;
+            phaseColors.disabledColor = new Color32(148, 163, 184, 255);
+            phase.colors = phaseColors;
             phase.onClick.AddListener(() => screen.UiTogglePhase());
             settings.onClick.AddListener(OpenSettings);
             closeSettings.onClick.AddListener(CloseSettings);
             openMap.onClick.AddListener(() =>
             {
-                if (screen.UiRoomCanAct)
+                if (screen.UiRoomCanMove)
                 {
                     mapModal.SetActive(true);
                     UguiViewUtility.ClearSelection(transform);
@@ -163,7 +168,7 @@ namespace SmartTraining
             UguiViewUtility.ClearSelection(transform);
         }
 
-        internal bool BlocksMovement => !wasVisible || settingsModal.activeSelf || confirmationModal.activeSelf || screen == null || !screen.UiRoomCanAct;
+        internal bool BlocksMovement => !wasVisible || settingsModal.activeSelf || confirmationModal.activeSelf || screen == null || !screen.UiRoomCanMove;
 
         internal Vector2 ReadMovement()
         {
@@ -229,7 +234,7 @@ namespace SmartTraining
             }
 
             EnsureComponents();
-            bool visible = screen.UseUguiRoom;
+            bool visible = screen.UseUguiRoom && !screen.UiContentSceneActive;
             UguiViewUtility.SetVisible(this, canvas, interaction, raycaster, visible);
             if (!visible)
             {
@@ -280,14 +285,19 @@ namespace SmartTraining
             notice.text = screen.UiOperationNotice();
             operationNoticePanel.SetActive(notice.text.Length > 0);
             status.text = screen.UiStatus;
+            ready.gameObject.SetActive(!master);
             ready.interactable = screen.UiRoomCanReady;
             Caption(ready, screen.UiLocalPlayer?.IsReady == true ? "준비 취소" : "준비");
             phase.gameObject.SetActive(master);
             phase.interactable = screen.UiRoomCanPhase;
-            Caption(phase, screen.UiLocalPlayer?.RoomIsRunning == true ? "대기 상태로 복귀" : "전원 준비 후 시작");
+            Caption(phase, screen.UiLocalPlayer?.RoomIsRunning == true ? "대기 상태로 복귀" : "시작하기");
             settings.gameObject.SetActive(master);
             settings.interactable = screen.UiRoomCanManage;
-            openMap.interactable = screen.UiRoomCanAct;
+            openMap.interactable = screen.UiRoomCanMove;
+            if (screen.UiLocalPlayer?.RoomIsRunning != true)
+            {
+                mapModal.SetActive(false);
+            }
             leave.interactable = logout.interactable = screen.UiRoomCanAct;
             roomParticipants.interactable = showLobbyParticipants && screen.UiRoomCanAct;
             lobbyParticipants.interactable = !showLobbyParticipants && screen.UiRoomCanAct;
@@ -299,8 +309,14 @@ namespace SmartTraining
             lobbyParticipants.GetComponent<UguiSelectionHighlight>()?.SetSelected(showLobbyParticipants);
             roomChat.GetComponent<UguiSelectionHighlight>()?.SetSelected(screen.UiRoomChatChannel == 1);
             lobbyChat.GetComponent<UguiSelectionHighlight>()?.SetSelected(screen.UiRoomChatChannel == 0);
-            chatInput.SetTextWithoutNotify(screen.UiChatInput);
-            chatInput.interactable = sendChat.interactable = screen.UiCanSendRoomScreenChat;
+            // IME 조합과 커서 위치를 매 프레임 초기화하지 않습니다. 전송 성공·채널 변경의 비움은 반영합니다.
+            if (chatInput.text != screen.UiChatInput && (!chatInput.isFocused || screen.UiChatInput.Length == 0))
+            {
+                chatInput.SetTextWithoutNotify(screen.UiChatInput);
+            }
+            bool canEditChat = screen.UiCanEditRoomChat && !pending && !settingsModal.activeSelf && !mapModal.activeSelf;
+            chatInput.interactable = canEditChat;
+            sendChat.interactable = canEditChat && screen.UiCanSendRoomScreenChat;
             chatStatus.text = screen.UiRoomChatStatus;
             notices.text = string.IsNullOrEmpty(screen.UiRoomNotices) ? "새로운 방 알림이 없습니다." : screen.UiRoomNotices;
             nameInput.interactable = capacityInput.interactable = saveSettings.interactable = screen.UiRoomCanEdit;
@@ -437,7 +453,7 @@ namespace SmartTraining
 
                 var row = Instantiate(chatTemplate, chatContent);
                 row.gameObject.SetActive(true);
-                row.text = UguiViewUtility.ChatLabel(message);
+                UguiViewUtility.SetChatMessage(row, message, screen.UiSelfId, chatTemplate.color);
                 messages[message.id] = row;
                 changed = true;
             }

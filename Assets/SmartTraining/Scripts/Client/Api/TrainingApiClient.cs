@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Globalization;
 using System.Net.Http;
@@ -11,9 +11,15 @@ namespace SmartTraining
 {
     public sealed class TrainingApiClient : IDisposable
     {
-        public string BaseUrl { get; }
+        public string BaseUrl
+        {
+            get;
+        }
 
-        public CurrentUser User { get; private set; }
+        public CurrentUser User
+        {
+            get; private set;
+        }
 
         public bool IsLoggedIn => !string.IsNullOrEmpty(accessToken);
 
@@ -39,7 +45,7 @@ namespace SmartTraining
                 false,
                 json =>
             {
-                if (JsonUtility.FromJson<HealthResponse>(json)?.status != "ok")
+                if (TrainingJson.Deserialize<HealthResponse>(json)?.status != "ok")
                 {
                     throw new FormatException();
                 }
@@ -61,7 +67,7 @@ namespace SmartTraining
             yield return Send(
                 "POST",
                 "/api/Auth/login",
-                JsonUtility.ToJson(new LoginRequest { userName = name }),
+                TrainingJson.Serialize(new LoginRequest { userName = name }),
                 false,
                 json =>
             {
@@ -82,7 +88,7 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                var user = JsonUtility.FromJson<CurrentUser>(json);
+                var user = TrainingJson.Deserialize<CurrentUser>(json);
                 if (user == null || string.IsNullOrEmpty(user.id))
                 {
                     throw new FormatException();
@@ -97,6 +103,20 @@ namespace SmartTraining
             );
         }
 
+        // 교육과정 선택은 로그인보다 먼저 하므로 인증 토큰 없이 조회합니다.
+        public IEnumerator GetCourses(Action<CourseSummary[]> success, Action<string> failure)
+        {
+            yield return Send("GET", "/api/Lobby/courses", null, false, json =>
+            {
+                var items = TrainingJson.Deserialize<CourseSummary[]>(json);
+                if (items == null)
+                {
+                    throw new FormatException();
+                }
+                success(items);
+            }, failure);
+        }
+
         public IEnumerator GetLobbies(Action<LobbySummary[]> success, Action<string> failure)
         {
             yield return WithSession(
@@ -107,18 +127,13 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                if (!json.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                var items = TrainingJson.Deserialize<LobbySummary[]>(json);
+                if (items == null)
                 {
                     throw new FormatException();
                 }
 
-                var list = JsonUtility.FromJson<LobbyList>("{\"items\":" + json + "}");
-                if (list?.items == null)
-                {
-                    throw new FormatException();
-                }
-
-                success(list.items);
+                success(items);
             },
                     failure
                 ),
@@ -136,18 +151,13 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                if (!json.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                var items = TrainingJson.Deserialize<LobbyParticipant[]>(json);
+                if (items == null)
                 {
                     throw new FormatException();
                 }
 
-                var list = JsonUtility.FromJson<LobbyParticipantList>("{\"items\":" + json + "}");
-                if (list?.items == null)
-                {
-                    throw new FormatException();
-                }
-
-                success(list.items);
+                success(items);
             },
                     failure
                 ),
@@ -177,11 +187,11 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Lobby/" + action,
-                    JsonUtility.ToJson(new LobbyMembershipRequest { lobbyId = lobbyId }),
+                    TrainingJson.Serialize(new LobbyMembershipRequest { lobbyId = lobbyId }),
                     true,
                     json =>
             {
-                if (JsonUtility.FromJson<ApiError>(json)?.success != true)
+                if (TrainingJson.Deserialize<ApiError>(json)?.success != true)
                 {
                     throw new FormatException();
                 }
@@ -212,18 +222,13 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                if (!json.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                var items = TrainingJson.Deserialize<ContentSummary[]>(json);
+                if (items == null)
                 {
                     throw new FormatException();
                 }
 
-                var list = JsonUtility.FromJson<ContentList>("{\"items\":" + json + "}");
-                if (list?.items == null)
-                {
-                    throw new FormatException();
-                }
-
-                success(list.items);
+                success(items);
             },
                     failure
                 ),
@@ -247,18 +252,19 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/create",
-                    JsonUtility.ToJson(new CreateRoomRequest {
-                            lobbyId = lobbyId,
-                            roomName = name,
-                            contentId = contentId,
-                            contentNodeId = contentNodeId,
-                            maxUsers = maxUsers,
-                            password = password
-                        }),
+                    TrainingJson.Serialize(new CreateRoomRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomName = name,
+                        contentId = contentId,
+                        contentNodeId = contentNodeId,
+                        maxUsers = maxUsers,
+                        password = password
+                    }),
                     true,
                     json =>
             {
-                var response = JsonUtility.FromJson<CreateRoomResponse>(json);
+                var response = TrainingJson.Deserialize<CreateRoomResponse>(json);
                 if (response == null || !response.success || string.IsNullOrEmpty(response.room?.id))
                 {
                     throw new FormatException();
@@ -288,18 +294,13 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                if (!json.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                var items = TrainingJson.Deserialize<RoomSummary[]>(json);
+                if (items == null)
                 {
                     throw new FormatException();
                 }
 
-                var list = JsonUtility.FromJson<RoomList>("{\"items\":" + json + "}");
-                if (list?.items == null)
-                {
-                    throw new FormatException();
-                }
-
-                success(list.items);
+                success(items);
             },
                     failure
                 ),
@@ -323,7 +324,7 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                var room = JsonUtility.FromJson<RoomSummary>(json);
+                var room = TrainingJson.Deserialize<RoomSummary>(json);
                 if (room == null || string.IsNullOrEmpty(room.id))
                 {
                     throw new FormatException();
@@ -350,15 +351,16 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/join",
-                    JsonUtility.ToJson(new JoinRoomRequest {
-                            lobbyId = lobbyId,
-                            roomId = roomId,
-                            password = password
-                        }),
+                    TrainingJson.Serialize(new JoinRoomRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomId = roomId,
+                        password = password
+                    }),
                     true,
                     json =>
             {
-                var reservation = JsonUtility.FromJson<JoinRoomResponse>(json);
+                var reservation = TrainingJson.Deserialize<JoinRoomResponse>(json);
                 if (reservation == null ||
                     !reservation.success ||
                     string.IsNullOrEmpty(reservation.admissionToken) ||
@@ -383,14 +385,15 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/leave",
-                    JsonUtility.ToJson(new RoomMembershipRequest {
-                            lobbyId = lobbyId,
-                            roomId = roomId
-                        }),
+                    TrainingJson.Serialize(new RoomMembershipRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomId = roomId
+                    }),
                     true,
                     json =>
             {
-                if (JsonUtility.FromJson<ApiError>(json)?.success != true)
+                if (TrainingJson.Deserialize<ApiError>(json)?.success != true)
                 {
                     throw new FormatException();
                 }
@@ -413,7 +416,7 @@ namespace SmartTraining
                     true,
                     json =>
             {
-                if (JsonUtility.FromJson<ApiError>(json)?.success != true)
+                if (TrainingJson.Deserialize<ApiError>(json)?.success != true)
                 {
                     throw new FormatException();
                 }
@@ -433,15 +436,16 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/transfer-master",
-                    JsonUtility.ToJson(new RoomParticipantRequest {
-                            lobbyId = lobbyId,
-                            roomId = roomId,
-                            targetUserId = targetUserId
-                        }),
+                    TrainingJson.Serialize(new RoomParticipantRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomId = roomId,
+                        targetUserId = targetUserId
+                    }),
                     true,
                     json =>
             {
-                var response = JsonUtility.FromJson<RoomHubResult>(json);
+                var response = TrainingJson.Deserialize<RoomHubResult>(json);
                 if (response?.success != true || response.masterUserId != targetUserId)
                 {
                     throw new FormatException();
@@ -461,15 +465,16 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/kick",
-                    JsonUtility.ToJson(new RoomParticipantRequest {
-                            lobbyId = lobbyId,
-                            roomId = roomId,
-                            targetUserId = targetUserId
-                        }),
+                    TrainingJson.Serialize(new RoomParticipantRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomId = roomId,
+                        targetUserId = targetUserId
+                    }),
                     true,
                     json =>
             {
-                if (JsonUtility.FromJson<ApiError>(json)?.success != true)
+                if (TrainingJson.Deserialize<ApiError>(json)?.success != true)
                 {
                     throw new FormatException();
                 }
@@ -495,16 +500,17 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/settings",
-                    JsonUtility.ToJson(new UpdateRoomSettingsRequest {
-                            lobbyId = lobbyId,
-                            roomId = roomId,
-                            roomName = name,
-                            maxUsers = capacity
-                        }),
+                    TrainingJson.Serialize(new UpdateRoomSettingsRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomId = roomId,
+                        roomName = name,
+                        maxUsers = capacity
+                    }),
                     true,
                     json =>
             {
-                var response = JsonUtility.FromJson<RoomHubResult>(json);
+                var response = TrainingJson.Deserialize<RoomHubResult>(json);
                 if (response?.success != true || response.roomName != name.Trim() || response.maxUsers != capacity)
                 {
                     throw new FormatException();
@@ -524,15 +530,16 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/entry-lock",
-                    JsonUtility.ToJson(new SetRoomEntryLockRequest {
-                            lobbyId = lobbyId,
-                            roomId = roomId,
-                            isEntryLocked = locked
-                        }),
+                    TrainingJson.Serialize(new SetRoomEntryLockRequest
+                    {
+                        lobbyId = lobbyId,
+                        roomId = roomId,
+                        isEntryLocked = locked
+                    }),
                     true,
                     json =>
             {
-                var response = JsonUtility.FromJson<RoomHubResult>(json);
+                var response = TrainingJson.Deserialize<RoomHubResult>(json);
                 if (response?.success != true || response.isEntryLocked != locked)
                 {
                     throw new FormatException();
@@ -581,7 +588,7 @@ namespace SmartTraining
 
         private void AcceptSession(string json)
         {
-            var response = JsonUtility.FromJson<LoginResponse>(json);
+            var response = TrainingJson.Deserialize<LoginResponse>(json);
             if (response == null ||
                 !response.success ||
                 string.IsNullOrEmpty(response.accessToken) ||
@@ -691,13 +698,13 @@ namespace SmartTraining
                         string message = request.responseCode == 0 ? "서버에 연결하지 못했습니다. 실행 상태와 주소를 확인해주세요." : "요청에 실패했습니다 (HTTP " + request.responseCode + ").";
                         try
                         {
-                            var error = JsonUtility.FromJson<ApiError>(request.downloadHandler.text);
+                            var error = TrainingJson.Deserialize<ApiError>(request.downloadHandler.text);
                             if (!string.IsNullOrEmpty(error?.message))
                             {
                                 message = error.message;
                             }
                         }
-                        catch (ArgumentException)
+                        catch (Exception error) when (error is ArgumentException || error is FormatException)
                         {
                         }
 
@@ -721,7 +728,7 @@ namespace SmartTraining
                     {
                         success(payload);
                     }
-                    catch (Exception error)when (error is ArgumentException || error is FormatException)
+                    catch (Exception error) when (error is ArgumentException || error is FormatException)
                     {
                         failure("서버 응답 형식을 확인해주세요.");
                     }
@@ -748,15 +755,16 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/password",
-                    JsonUtility.ToJson(new UpdateRoomPasswordRequest {
-                            lobbyId = lobby,
-                            roomId = room,
-                            password = password
-                        }),
+                    TrainingJson.Serialize(new UpdateRoomPasswordRequest
+                    {
+                        lobbyId = lobby,
+                        roomId = room,
+                        password = password
+                    }),
                     true,
                     json =>
             {
-                var response = JsonUtility.FromJson<ApiError>(json);
+                var response = TrainingJson.Deserialize<ApiError>(json);
                 if (response?.success != true)
                 {
                     throw new FormatException();
@@ -776,14 +784,15 @@ namespace SmartTraining
                 () => Send(
                     "POST",
                     "/api/Room/close",
-                    JsonUtility.ToJson(new RoomMembershipRequest {
-                            lobbyId = lobby,
-                            roomId = room
-                        }),
+                    TrainingJson.Serialize(new RoomMembershipRequest
+                    {
+                        lobbyId = lobby,
+                        roomId = room
+                    }),
                     true,
                     json =>
             {
-                if (JsonUtility.FromJson<ApiError>(json)?.success != true)
+                if (TrainingJson.Deserialize<ApiError>(json)?.success != true)
                 {
                     throw new FormatException();
                 }

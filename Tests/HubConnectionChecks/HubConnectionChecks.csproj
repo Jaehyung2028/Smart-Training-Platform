@@ -7,6 +7,10 @@
     <NoWarn>$(NoWarn);CS0649</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.33" />
     <Compile Include="../../Assets/SmartTraining/Scripts/Client/Networking/RoomHubConnection.cs" Link="RoomHubConnection.cs" />
+    <Compile Include="../../Assets/SmartTraining/Scripts/Client/Api/TrainingJson.cs" Link="TrainingJson.cs" />
+    <Compile Include="../../Assets/SmartTraining/Scripts/Client/Api/ApiModels.cs" Link="ApiModels.cs" />
   </ItemGroup>
 </Project>

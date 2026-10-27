@@ -1,0 +1,9 @@
+﻿<linker>
+  <!-- SignalR JSON 바인딩과 Unity DTO의 public 필드를 스트리핑으로부터 보호합니다. -->
+  <assembly fullname="Assembly-CSharp">
+    <namespace fullname="SmartTraining" preserve="all" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.SignalR.Client.Core" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.SignalR.Protocols.Json" preserve="all" />
+  <assembly fullname="System.Text.Json" preserve="all" />
+</linker>

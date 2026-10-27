@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -467,8 +468,36 @@ namespace SmartTraining.Editor
             var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             var screen = UnityEngine.Object.FindFirstObjectByType<ApiLobbyScreen>();
             BindScreen(screen, first, client, lobby, room);
-            client.SetReady(false);
-            yield return WaitReady(other, first.User.id, false);
+            var roomView = screen.GetComponentInChildren<RoomUguiView>(true);
+            Check(roomView != null, "room chat UI is available during waiting");
+            var refreshRoomView = typeof(RoomUguiView).GetMethod("Refresh", flags);
+            refreshRoomView.Invoke(roomView, null);
+            roomView.chatInput.text = "대기 중 채팅 초안";
+            // 숨겨진 로비의 닫기 처리가 다른 화면의 입력 포커스를 지우지 않는지 확인합니다.
+            var interior = screen.GetComponentInChildren<LobbyInteriorUguiView>(true);
+            var popup = typeof(LobbyInteriorUguiView).GetField("contentTree", flags).GetValue(interior);
+            var closeTree = popup.GetType().GetMethod("Close", flags);
+            var events = UnityEngine.EventSystems.EventSystem.current;
+            events.SetSelectedGameObject(roomView.chatInput.gameObject);
+            for (int repeat = 0; repeat < 5; repeat++)
+            {
+                closeTree.Invoke(popup, null);
+            }
+            Check(events.currentSelectedGameObject == roomView.chatInput.gameObject,
+                "repeated hidden tree close preserves room chat focus");
+            typeof(RoomUguiView).GetMethod("OpenSettings", flags).Invoke(roomView, null);
+            foreach (var field in new[] { roomView.nameInput, roomView.capacityInput, roomView.passwordInput })
+            {
+                events.SetSelectedGameObject(field.gameObject);
+                closeTree.Invoke(popup, null);
+                Check(events.currentSelectedGameObject == field.gameObject,
+                    "hidden tree close preserves room settings input focus " + field.name);
+            }
+            typeof(RoomUguiView).GetMethod("CloseSettings", flags).Invoke(roomView, null);
+            roomView.chatInput.text = "";
+            refreshRoomView.Invoke(roomView, null);
+            other.SetReady(false);
+            yield return WaitReady(client, second.User.id, false);
             bool ownershipRejected = false;
             try
             {
@@ -485,8 +514,8 @@ namespace SmartTraining.Editor
                 !client.LocalPlayer.RoomIsRunning && !other.LocalPlayer.RoomIsRunning,
                 "dedicated server rejects start when a participant is unready"
             );
-            client.SetReady(true);
-            yield return WaitReady(other, first.User.id, true);
+            other.SetReady(true);
+            yield return WaitReady(client, second.User.id, true);
             visitor = new TrainingApiClient(first.BaseUrl);
             yield return visitor.Login("phase-" + Guid.NewGuid().ToString("N").Substring(0, 6), () =>
             {
@@ -691,7 +720,7 @@ namespace SmartTraining.Editor
         {
             double until = Time.realtimeSinceStartupAsDouble + 5;
             RoomPlayer player;
-            while ((player = Array.Find(connection.Players, value => value.UserId == userId)) == null || player.IsReady != expected)
+            while ((player = Array.Find(connection.Players, value => value.UserId == userId)) == null || (expected ? !player.IsReady && !player.IsRoomMaster : player.IsReady))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -706,7 +735,7 @@ namespace SmartTraining.Editor
         {
             Check(
                 client.GetReadiness().ParticipantCount == 2 && client.GetReadiness().ReadyCount == 0 && !client.GetReadiness().AllReady,
-                "all participants start unready including master"
+                "only ordinary participant requires readiness; master starts without ready"
             );
             var disconnected = new RoomNetworkClient();
             Check(
@@ -727,18 +756,17 @@ namespace SmartTraining.Editor
             var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             var screen = UnityEngine.Object.FindFirstObjectByType<ApiLobbyScreen>();
             BindScreen(screen, first, client, lobby, room);
-            yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("SetReady", flags).Invoke(screen, new object[] { true });
-            yield return WaitReady(other, first.User.id, true);
-            Check(
-                client.GetReadiness().ReadyCount == 1 && other.GetReadiness().ReadyCount == 1 && !client.GetReadiness().AllReady && !other.LocalPlayer.IsReady,
-                "ready button synchronizes only its owner and keeps partial group unready"
-            );
+            Check(!client.SetReady(true), "master cannot use client readiness control");
+            client.LocalPlayer.SetReadyRpc(true);
+            yield return Settle();
+            Check(!client.LocalPlayer.IsReady && !client.GetReadiness().AllReady && client.GetReadiness().ReadyTargetCount == 1,
+                "server rejects master ready RPC and waits for ordinary participant");
             Check(other.SetReady(true), "ordinary participant can prepare");
             yield return WaitReady(client, second.User.id, true);
             yield return WaitReady(other, second.User.id, true);
             Check(
                 client.GetReadiness().AllReady && other.GetReadiness().AllReady,
-                "all ready is consistent on both clients including master"
+                "ordinary participant ready enables master start on both clients"
             );
             visitor = new TrainingApiClient(first.BaseUrl);
             Action<string> fail = message => throw new Exception(message);
@@ -760,7 +788,7 @@ namespace SmartTraining.Editor
             yield return WaitReady(visitingClient, first.User.id, true);
             yield return WaitReady(visitingClient, second.User.id, true);
             Check(
-                !visitingClient.LocalPlayer.IsReady && visitingClient.GetReadiness().ReadyCount == 2 && !client.GetReadiness().AllReady && client.GetReadiness().ParticipantCount == 3,
+                !visitingClient.LocalPlayer.IsReady && visitingClient.GetReadiness().ReadyCount == 1 && !client.GetReadiness().AllReady && client.GetReadiness().ParticipantCount == 3,
                 "late join receives existing readiness and starts unready, clearing all-ready"
             );
             visitingClient.Dispose();
@@ -777,28 +805,33 @@ namespace SmartTraining.Editor
             }, fail);
             visitor.Dispose();
             visitor = null;
-            yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("SetReady", flags).Invoke(screen, new object[] { false });
-            yield return WaitReady(other, first.User.id, false);
+            other.SetReady(false);
+            yield return WaitReady(client, second.User.id, false);
             Check(
-                !client.GetReadiness().AllReady && client.GetReadiness().ReadyCount == 1 && other.LocalPlayer.IsReady,
+                !client.GetReadiness().AllReady && client.GetReadiness().ReadyCount == 0 && !other.LocalPlayer.IsReady,
                 "cancel ready button clears all-ready without changing other participant"
             );
-            client.SetReady(true);
-            yield return WaitReady(other, first.User.id, true);
+            other.SetReady(true);
+            yield return WaitReady(client, second.User.id, true);
             yield return first.TransferRoomMaster(lobby, room, second.User.id, () =>
             {
             }, message => throw new Exception(message));
             yield return WaitMaster(client, second.User.id);
             yield return WaitMaster(other, second.User.id);
             Check(
-                client.GetReadiness().AllReady && other.GetReadiness().AllReady,
-                "manual master transfer preserves participant readiness"
+                !client.GetReadiness().AllReady && !other.GetReadiness().AllReady && !client.LocalPlayer.IsReady,
+                "former master must prepare after role transfer"
             );
+            client.SetReady(true);
+            yield return WaitReady(other, first.User.id, true);
+            Check(client.GetReadiness().AllReady, "former master can prepare as ordinary participant");
             yield return second.TransferRoomMaster(lobby, room, first.User.id, () =>
             {
             }, message => throw new Exception(message));
             yield return WaitMaster(client, first.User.id);
             yield return WaitMaster(other, first.User.id);
+            other.SetReady(true);
+            yield return WaitReady(client, second.User.id, true);
             BindScreen(screen, null, null, "", "");
         }
 
@@ -1598,8 +1631,8 @@ namespace SmartTraining.Editor
             yield return Move(client, Vector2.right, 0.4f);
             yield return Settle();
             Check(
-                client.IsConnected && other.IsConnected && client.LocalPlayer.ServerPosition.x > start.x + 0.5f,
-                "entry lock preserves existing movement and both connections"
+                client.IsConnected && other.IsConnected && Vector3.Distance(client.LocalPlayer.ServerPosition, start) < 0.1f,
+                "entry lock preserves connections while waiting phase blocks movement"
             );
             yield return first.TransferRoomMaster(lobby, room, second.User.id, () =>
             {
@@ -1663,6 +1696,22 @@ namespace SmartTraining.Editor
 
         private static IEnumerator MovementChecks()
         {
+            var waitingPosition = client.LocalPlayer.ServerPosition;
+            Check(!HasVisibleCharacter(client.LocalPlayer), "waiting participant has no visible character");
+            // 클라이언트 전송 함수 우회 요청도 서버가 대기 상태에서 거절해야 합니다.
+            client.LocalPlayer.MoveRpc(Vector2.right);
+            yield return Settle();
+            Check(Vector3.Distance(waitingPosition, client.LocalPlayer.ServerPosition) < 0.1f,
+                "server rejects direct movement RPC before room start");
+            client.LocalPlayer.RequestPhaseRpc(true);
+            yield return WaitPhase(client, true);
+            yield return WaitPhase(other, true);
+            // 네트워크 연결만 시험하는 경로에서는 콘텐츠 씬이 없을 수 있습니다.
+            // 시작 상태만으로 로비에 캐릭터가 생기지 않고, 씬 준비 여부와 표시 상태가 일치해야 합니다.
+            yield return null;
+            Check(client.Players.All(player => HasVisibleCharacter(player) == (ContentSceneSession.SceneReady)) &&
+                other.Players.All(player => HasVisibleCharacter(player) == (ContentSceneSession.SceneReady)),
+                "running participant visuals follow content scene readiness");
             var start = client.LocalPlayer.ServerPosition;
             var otherStart = other.LocalPlayer.ServerPosition;
             yield return Move(client, Vector2.right, 1);
@@ -1731,6 +1780,16 @@ namespace SmartTraining.Editor
                 Mathf.Abs(client.LocalPlayer.ServerPosition.x - RoomPlayer.ArenaHalfSize) < 0.1f,
                 "server clamps movement to training area boundary"
             );
+            client.LocalPlayer.RequestPhaseRpc(false);
+            yield return WaitPhase(client, false);
+            yield return WaitPhase(other, false);
+            Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
+                "waiting return removes characters without losing participant objects");
+        }
+
+        private static bool HasVisibleCharacter(RoomPlayer player)
+        {
+            return player.GetComponentsInChildren<Renderer>().Any(renderer => renderer.gameObject.name == "PlayerVisual" && renderer.gameObject.activeInHierarchy);
         }
 
         private static IEnumerator WaitMembership(TrainingApiClient api, string room, bool expected)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
@@ -33,6 +33,8 @@ namespace SmartTraining
 
         private RoomNetworkClient network;
 
+        private ContentSceneSession contentSession;
+
         private string networkRoomId = "", networkLobbyId = "";
 
         private string selectedContentId = "";
@@ -50,6 +52,8 @@ namespace SmartTraining
         private string reconnectRoomId = "", reconnectLobbyId = "";
 
         private bool previousRunInBackground;
+
+        internal bool UiContentSceneActive => contentSession != null && contentSession.IsActive;
 
         private void OnEnable()
         {
@@ -117,6 +121,7 @@ namespace SmartTraining
 
         private void ClearView()
         {
+            ClearCourses();
             ClearLobbyJoinProgress();
             ClearLobbyJoinFailure();
             roomJoinProgress = "";
@@ -462,15 +467,12 @@ namespace SmartTraining
 
         private void Update()
         {
+            UpdateContentScene();
+            UpdateCoursesBeforeLogin();
             ValidateRoomAction();
             UpdateLobbyRooms();
             UpdateRoomNotices();
-            if (network?.IsConnected == true)
-            {
-                var buttons = UseUguiRoom && Application.isFocused ? roomView.ReadMovement() : Vector2.zero;
-                bool blocked = busy || (UseUguiRoom && roomView.BlocksMovement);
-                network.SendMovement(blocked ? Vector2.zero : Vector2.ClampMagnitude(RoomMovementInput.Read() + buttons, 1));
-            }
+            UpdateRoomMovement();
 
             if (!busy && api?.IsLoggedIn == true && network?.WasDisconnected == true)
             {
@@ -478,8 +480,53 @@ namespace SmartTraining
             }
         }
 
+        // 서버가 확정한 진행 상태만 씬 전환에 전달합니다. 대기 UI와 네트워크 연결은 유지합니다.
+        private void UpdateContentScene()
+        {
+            if (contentSession == null)
+            {
+                contentSession = gameObject.AddComponent<ContentSceneSession>();
+            }
+
+            bool running = isActiveAndEnabled && network?.IsConnected == true && network.LocalPlayer?.RoomIsRunning == true;
+            contentSession.Synchronize(this, running);
+        }
+
+        private void UpdateRoomMovement()
+        {
+            if (network?.IsConnected != true)
+            {
+                return;
+            }
+
+            network.SendMovement(ReadRoomMovement());
+        }
+
+        // 콘텐츠 중에는 1인칭 입력을, 그 외에는 기존 방 UI 입력을 사용합니다. 처리 중에는 이동을 멈춥니다.
+        private Vector2 ReadRoomMovement()
+        {
+            if (busy)
+            {
+                return Vector2.zero;
+            }
+
+            if (UiContentSceneActive)
+            {
+                return contentSession.ReadMovement();
+            }
+
+            if (UseUguiRoom && roomView.BlocksMovement)
+            {
+                return Vector2.zero;
+            }
+
+            var buttons = UseUguiRoom && Application.isFocused ? roomView.ReadMovement() : Vector2.zero;
+            return Vector2.ClampMagnitude(RoomMovementInput.Read() + buttons, 1);
+        }
+
         private void OnDisable()
         {
+            contentSession?.StopSession();
             ClearRoomAction();
             Application.runInBackground = previousRunInBackground;
             StopAllCoroutines();

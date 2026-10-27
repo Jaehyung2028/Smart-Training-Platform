@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
@@ -6,6 +6,10 @@ namespace SmartTraining
 {
     public sealed partial class ApiLobbyScreen
     {
+        private ContentSummary activeRoomContent;
+
+        internal ContentSummary UiRoomContent => activeRoomContent;
+
         private string roomJoinProgress = "";
 
         private bool roomJoinCanCancel, roomJoinCancelRequested;
@@ -29,6 +33,7 @@ namespace SmartTraining
         {
             network?.Dispose();
             network = null;
+            activeRoomContent = null;
             networkRoomId = "";
             networkLobbyId = "";
         }
@@ -129,6 +134,7 @@ namespace SmartTraining
             joinRoomPassword = "";
             networkRoomId = reservation.room.id;
             networkLobbyId = reservation.room.lobbyId;
+            activeRoomContent = reservation.room.content;
             network = new RoomNetworkClient();
             string error = null;
             roomJoinProgress = "2/4 · 방 서버에 연결 중…";

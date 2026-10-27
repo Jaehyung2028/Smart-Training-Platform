@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -84,14 +84,15 @@ namespace SmartTraining
             leave.onClick.AddListener(() => screen.UiLeaveCurrentLobby());
             create.onClick.AddListener(OpenCreate);
             closeCreate.onClick.AddListener(CloseCreate);
+            // 생성 창 내부가 아닌 화면 최상위에 띄워 넓은 별도 창에서 트리를 탐색합니다.
             contentTree = new ContentTreePopup(
-                createModal.transform,
+                transform,
                 createContent.GetComponentInChildren<Text>().font,
                 content => screen.UiSelectContent(content.rootContent, content.id)
             );
             createContent.onClick.AddListener(() =>
             {
-                if (screen.UiCanUseRooms)
+                if (screen.UiCanUseRooms && createModal.activeSelf)
                 {
                     contentTree.Show(screen.UiContents, screen.UiContentId, screen.UiContentNodeId);
                 }
@@ -272,7 +273,7 @@ namespace SmartTraining
 
             bool busy = screen.UiProcessing, joining = !string.IsNullOrEmpty(screen.UiRoomProgress);
             progressModal.SetActive(joining);
-            mainInteraction.interactable = mainInteraction.blocksRaycasts = !busy && !joining && !createModal.activeSelf;
+            mainInteraction.interactable = mainInteraction.blocksRaycasts = !busy && !joining && !createModal.activeSelf && contentTree?.IsOpen != true;
             if (submitting && !busy)
             {
                 submitting = false;
@@ -352,7 +353,7 @@ namespace SmartTraining
             }
 
             createContent.interactable = closeCreate.interactable = !busy && !choosingContent;
-            submitCreate.interactable = screen.UiCanUseRooms && content != null && !choosingContent;
+            submitCreate.interactable = screen.UiCanUseRooms && content != null && (content.children == null || content.children.Length == 0) && !choosingContent;
             if (Time.realtimeSinceStartup < nextLists)
             {
                 return;
@@ -433,7 +434,7 @@ namespace SmartTraining
 
                 var row = Instantiate(chatTemplate, chatContent);
                 row.gameObject.SetActive(true);
-                row.text = UguiViewUtility.ChatLabel(message);
+                UguiViewUtility.SetChatMessage(row, message, screen.UiSelfId, chatTemplate.color);
                 chatRows[message.id] = row;
                 changed = true;
             }

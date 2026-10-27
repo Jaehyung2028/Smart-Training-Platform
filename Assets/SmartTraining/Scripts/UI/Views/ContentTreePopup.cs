@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace SmartTraining
 {
-    // 기존 방 생성 프리팹에서도 사용할 수 있도록 선택 창을 한 번 만들고 재사용합니다.
+    // 화면 전체를 덮는 독립 선택 창입니다. 방 생성 입력값을 유지한 채 트리를 탐색합니다.
     // 콘텐츠 데이터와 서버 요청은 Controller가 담당하고 이 객체는 펼침 상태와 선택 표시만 관리합니다.
     internal sealed class ContentTreePopup
     {
@@ -41,15 +41,20 @@ namespace SmartTraining
             var root = Node("Content Tree Overlay", parent);
             Stretch(root, Vector2.zero, Vector2.one);
             overlay = root.gameObject;
+            // 다른 창의 배치·크기 제한을 받지 않고 가장 위에서 입력을 처리합니다.
+            var popupCanvas = overlay.AddComponent<Canvas>();
+            popupCanvas.overrideSorting = true;
+            popupCanvas.sortingOrder = 100;
+            overlay.AddComponent<GraphicRaycaster>();
             overlay.AddComponent<Image>().color = new Color(0, 0, 0, .6f);
             var card = Node("Content Tree Card", root);
-            Stretch(card, new Vector2(.12f, .10f), new Vector2(.88f, .90f));
+            Stretch(card, new Vector2(.08f, .06f), new Vector2(.92f, .94f));
             card.gameObject.AddComponent<Image>().color = new Color32(248, 250, 252, 255);
-            var title = Label("콘텐츠 선택", card, 23);
+            var title = Label("훈련 콘텐츠 선택", card, 23);
             Stretch(title.rectTransform, new Vector2(0, .91f), Vector2.one, 18);
             title.rectTransform.offsetMin = new Vector2(18, 2);
             title.rectTransform.offsetMax = new Vector2(-18, -2);
-            var hint = Label("왼쪽 + / - 버튼으로 펼치거나 접고, 콘텐츠 이름을 눌러 선택하세요.", card, 15);
+            var hint = Label("+ / - 버튼으로 분류를 펼치고, 최하위 콘텐츠 이름을 눌러 선택하세요.", card, 15);
             Stretch(hint.rectTransform, new Vector2(0, .84f), new Vector2(1, .91f), 18);
             hint.rectTransform.offsetMin = new Vector2(18, 2);
             hint.rectTransform.offsetMax = new Vector2(-18, -2);
@@ -103,7 +108,7 @@ namespace SmartTraining
         internal void Show(ContentSummary[] contents, string rootId, int nodeId)
         {
             source = contents;
-            pending = Array.Find(contents, item => item.rootContent == rootId && item.id == nodeId);
+            pending = Array.Find(contents, item => item.rootContent == rootId && item.id == nodeId && (item.children == null || item.children.Length == 0));
             collapsed.Clear();
             overlay.SetActive(true);
             overlay.transform.SetAsLastSibling();
@@ -124,8 +129,15 @@ namespace SmartTraining
         // 창만 닫습니다. 취소 시 임시 선택은 Controller에 전달되지 않습니다.
         internal void Close()
         {
+            // 숨겨진 로비 화면에서도 매 프레임 호출될 수 있습니다. 이미 닫혔으면 아무것도 하지 않습니다.
+            if (!overlay.activeSelf)
+            {
+                return;
+            }
+
+            // 방의 채팅·설정 입력창 등 다른 UI가 가진 포커스는 건드리지 않습니다.
+            UguiViewUtility.ClearSelection(overlay.transform);
             overlay.SetActive(false);
-            EventSystem.current?.SetSelectedGameObject(null);
         }
 
         // 노드 ID는 루트마다 겹칠 수 있으므로 루트와 숫자 ID를 묶어 펼침 상태를 구분합니다.
@@ -191,6 +203,8 @@ namespace SmartTraining
                 RefreshSelection();
             }
             );
+            // 부모는 분류용이므로 펼침 버튼만 사용하고, 자식이 없는 최하위 항목만 선택합니다.
+            choose.interactable = !children;
             choose.GetComponentInChildren<Text>().alignment = TextAnchor.MiddleLeft;
             var chooseSize = choose.gameObject.AddComponent<LayoutElement>();
             chooseSize.minWidth = 60;

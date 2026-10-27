@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SmartTraining
 {
-    // JsonUtility는 프로퍼티 대신 JSON 이름과 동일한 public 필드를 사용합니다.
+    // 서버 JSON 이름과 같은 public 필드를 사용합니다. TrainingJson이 필드 직렬화를 활성화합니다.
     [Serializable]
     public class ApiError
     {
@@ -14,6 +14,14 @@ namespace SmartTraining
         public string errorCode;
 
         public string traceId;
+    }
+
+    // 로그인 전 선택할 최상위 교육과정입니다. 상세 콘텐츠 트리와는 구분합니다.
+    [Serializable]
+    public class CourseSummary
+    {
+        public string id, name, unavailableReason;
+        public bool canEnter;
     }
 
     // 닉네임 로그인 입력입니다. 본인 사용자 ID는 서버에서 발급합니다.
@@ -103,13 +111,6 @@ namespace SmartTraining
         public long shutdownRevision;
     }
 
-    // JsonUtility가 최상위 JSON 배열을 읽을 수 있도록 items로 감싼 형식입니다.
-    [Serializable]
-    public class LobbyList
-    {
-        public LobbySummary[] items;
-    }
-
     // 로비 참가자의 대기·방 접속 상태와 방장 여부를 표시합니다.
     [Serializable]
     public class LobbyParticipant
@@ -127,13 +128,6 @@ namespace SmartTraining
         public bool isRoomMaster;
 
         public bool roomIsRunning;
-    }
-
-    // 로비 참가자 배열을 JsonUtility로 읽기 위한 래퍼입니다.
-    [Serializable]
-    public class LobbyParticipantList
-    {
-        public LobbyParticipant[] items;
     }
 
     // 서버의 { status: ok } JSON을 읽는 클라이언트 형식입니다. 서버에 같은 이름의 클래스가 필요한 것은 아닙니다.
@@ -158,6 +152,12 @@ namespace SmartTraining
         public string rootContent;
 
         public string title;
+
+        // category: 분류, video: 비디오 시청, scenario: 시나리오 실습, model: 3D 모델 둘러보기입니다. 서버 카탈로그의 값을 그대로 받습니다.
+        public string contentType;
+
+        // Addressables의 기본 콘텐츠 프리팹 주소입니다.
+        public string assetId;
 
         public int id;
 
@@ -193,13 +193,6 @@ namespace SmartTraining
                 AddToList(child, result);
             }
         }
-    }
-
-    // 콘텐츠 트리 배열을 JSON에서 읽기 위한 래퍼입니다.
-    [Serializable]
-    public class ContentList
-    {
-        public ContentSummary[] items;
     }
 
     // 방 생성 입력입니다. 콘텐츠 루트와 선택 노드 ID를 함께 전달합니다.
@@ -243,6 +236,12 @@ namespace SmartTraining
 
         public string contentTitle;
 
+        // 방에서 선택한 콘텐츠를 어떤 방식으로 표시할지 구분하는 값입니다.
+        public string contentType;
+
+        // Addressables의 기본 콘텐츠 프리팹 주소입니다.
+        public string assetId;
+
         public string masterUserId;
 
         public string createdAt;
@@ -265,13 +264,6 @@ namespace SmartTraining
         public bool hasPassword;
 
         public bool isRunning;
-    }
-
-    // 방 요약 배열을 JSON에서 읽기 위한 래퍼입니다.
-    [Serializable]
-    public class RoomList
-    {
-        public RoomSummary[] items;
     }
 
     // 로비·방 ID는 작업할 장소입니다. 요청자 신원은 본문이 아닌 인증 헤더에서 전달됩니다.
@@ -309,6 +301,9 @@ namespace SmartTraining
     [Serializable]
     public class ReservedRoom
     {
+        // 서버가 방 생성 시 확정한 콘텐츠 정보입니다. 로비에서 마지막으로 선택한 값과 구분합니다.
+        public ContentSummary content;
+
         public string id;
 
         public string lobbyId;
@@ -350,6 +345,8 @@ namespace SmartTraining
     [Serializable]
     public class RoomHubResult : ApiError
     {
+        public string contentType;
+
         public string userId;
 
         public string userName;

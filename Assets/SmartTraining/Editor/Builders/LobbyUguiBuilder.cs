@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -72,7 +72,7 @@ namespace SmartTraining.Editor
                 view.nicknameInput = Input("Nickname", view.loginPanel.transform, "닉네임을 입력해주세요", 20);
                 var loginActions = Row("Login Actions", view.loginPanel.transform);
                 view.healthButton = Button("서버 연결 확인", loginActions);
-                view.loginButton = Button("로그인", loginActions);
+                view.loginButton = Button("로그인 후 입장", loginActions);
                 view.lobbyPanel = Panel("Lobby Browser Panel", card);
                 Vertical(view.lobbyPanel.transform, 0, 8);
                 Flex(view.lobbyPanel);

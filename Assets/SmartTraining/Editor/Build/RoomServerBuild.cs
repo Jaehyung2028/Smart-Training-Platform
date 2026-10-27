@@ -10,6 +10,8 @@ namespace SmartTraining.Editor
         [MenuItem("Smart Training/Build Windows Room Server")]
         public static void Build()
         {
+            ContentAddressablesSetup.Prepare();
+            ModelContentBuilder.PrepareNetworkPrefab();
             RoomPlayerPrefabBuilder.Create();
             var output = Environment.GetEnvironmentVariable("SMART_TRAINING_ROOM_BUILD");
             if (string.IsNullOrEmpty(output))

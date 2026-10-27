@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -136,7 +136,7 @@ namespace SmartTraining
                 return;
             }
 
-            var message = JsonUtility.FromJson<LobbyChatMessage>(json);
+            var message = TrainingJson.Deserialize<LobbyChatMessage>(json);
             if (message == null ||
                 message.roomId != chatRoomId ||
                 message.lobbyId != chatLobbyId ||

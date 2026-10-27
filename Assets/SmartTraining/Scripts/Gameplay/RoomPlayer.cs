@@ -23,6 +23,11 @@ namespace SmartTraining
 
         private double inputReceivedAt;
 
+        // 참가자 네트워크 정보는 대기 중에도 유지하지만, 화면 캐릭터는 시작 후에만 만듭니다.
+        private GameObject visual;
+
+        private int spawnIndex;
+
         private Material material;
 
         private RoomHubResult initialParticipant;
@@ -137,6 +142,14 @@ namespace SmartTraining
                 return;
             }
 
+            if (roomRunning.Value != running)
+            {
+                // 대기 복귀와 새 시작에서 이전 입력과 좌표를 다음 훈련에 넘기지 않습니다.
+                input = Vector2.zero;
+                inputReceivedAt = 0;
+                position.Value = SpawnPosition(spawnIndex);
+                transform.position = position.Value;
+            }
             roomRunning.Value = running;
             phasePending.Value = pending;
             if (resetReady)
@@ -178,7 +191,7 @@ namespace SmartTraining
         // 현재 소유자가 준비 상태를 요청합니다. 진행 중이거나 상태 전환 중이면 바꾸지 않습니다.
         public void SetReadyRpc(bool value)
         {
-            if (IsServer && IsSpawned && !RoomIsRunning && !PhasePending)
+            if (IsServer && IsSpawned && !IsRoomMaster && !RoomIsRunning && !PhasePending)
             {
                 ready.Value = value;
             }
@@ -196,7 +209,14 @@ namespace SmartTraining
         {
             if (IsServer && IsSpawned)
             {
-                roomMasterId.Value = new FixedString64Bytes(masterId ?? "");
+                string nextMaster = masterId ?? "";
+                bool roleChanged = IsRoomMaster != (!string.IsNullOrEmpty(UserId) && UserId == nextMaster);
+                roomMasterId.Value = new FixedString64Bytes(nextMaster);
+                if (roleChanged)
+                {
+                    // 이전 방장이 일반 참가자가 되면 직접 준비해야 하고, 새 방장은 준비 대상에서 빠집니다.
+                    ready.Value = false;
+                }
             }
         }
 
@@ -204,6 +224,7 @@ namespace SmartTraining
         public void InitializeServer(RoomHubResult participant)
         {
             initialParticipant = participant;
+            spawnIndex = participant.roomIndex;
             transform.position = SpawnPosition(participant.roomIndex);
         }
 
@@ -229,12 +250,9 @@ namespace SmartTraining
                 NetworkManager.NetworkTickSystem.Tick += ServerTick;
             }
 
-#if !UNITY_SERVER
-            if (IsClient)
-            {
-                CreateVisual();
-            }
-#endif
+            // 늦게 상태를 받거나 재접속해도 현재 진행 상태에 맞춰 캐릭터를 표시합니다.
+            roomRunning.OnValueChanged += OnRoomRunningChanged;
+            RefreshVisual();
         }
 
         public override void OnNetworkDespawn()
@@ -244,6 +262,8 @@ namespace SmartTraining
                 NetworkManager.NetworkTickSystem.Tick -= ServerTick;
             }
 
+            roomRunning.OnValueChanged -= OnRoomRunningChanged;
+            RemoveVisual();
             input = Vector2.zero;
         }
 
@@ -251,7 +271,7 @@ namespace SmartTraining
         // 소유자의 방향 입력만 받아 비정상 수치와 과도한 입력 크기를 검사합니다. 최종 위치는 서버가 계산합니다.
         public void MoveRpc(Vector2 direction)
         {
-            if (!IsServer || !Finite(direction.x) || !Finite(direction.y))
+            if (!IsServer || !IsSpawned || !RoomIsRunning || PhasePending || !Finite(direction.x) || !Finite(direction.y))
             {
                 return;
             }
@@ -265,8 +285,9 @@ namespace SmartTraining
         // 서버 Tick마다 위치를 갱신합니다. 오래된 입력은 중지하고 이동 영역을 제한합니다.
         private void ServerTick()
         {
-            if (!IsSpawned)
+            if (!IsSpawned || !RoomIsRunning || PhasePending)
             {
+                input = Vector2.zero;
                 return;
             }
 
@@ -290,15 +311,60 @@ namespace SmartTraining
                 HeartbeatRpc();
             }
 
+            if (IsSpawned && IsClient)
+            {
+                RefreshVisual();
+            }
+
             if (IsSpawned && !IsServer)
             {
                 transform.position = Vector3.Lerp(transform.position, position.Value, 1 - Mathf.Exp(-16 * Time.unscaledDeltaTime));
             }
         }
 
+        private void OnRoomRunningChanged(bool previous, bool current)
+        {
+            RefreshVisual();
+        }
+
+        // 준비와 방장 RPC에 필요한 RoomPlayer는 유지하고, 보이는 캐릭터의 생명주기만 분리합니다.
+        private void RefreshVisual()
+        {
+#if !UNITY_SERVER
+            if (IsSpawned && IsClient && RoomIsRunning && ContentSceneSession.SceneReady)
+            {
+                if (visual == null)
+                {
+                    transform.position = position.Value;
+                    CreateVisual();
+                }
+            }
+            else
+            {
+                RemoveVisual();
+            }
+#endif
+        }
+
+        private void RemoveVisual()
+        {
+            if (visual != null)
+            {
+                visual.SetActive(false);
+                Destroy(visual);
+                visual = null;
+            }
+
+            if (material != null)
+            {
+                Destroy(material);
+                material = null;
+            }
+        }
+
         private void CreateVisual()
         {
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             visual.name = "PlayerVisual";
             visual.transform.SetParent(transform, false);
             var collider = visual.GetComponent<Collider>();
@@ -317,16 +383,16 @@ namespace SmartTraining
             {
                 color = IsOwner ? new Color(0.2f, 0.85f, 0.45f) : new Color(0.25f, 0.6f, 1f)
             };
-            visual.GetComponent<Renderer>().sharedMaterial = material;
+            var renderer = visual.GetComponent<Renderer>();
+            renderer.sharedMaterial = material;
+            // 자기 몸이 1인칭 카메라를 가리지 않게 숨깁니다. 다른 참가자에게는 그대로 보입니다.
+            renderer.enabled = !IsOwner;
         }
 
         public override void OnDestroy()
         {
-            if (material != null)
-            {
-                Destroy(material);
-            }
-
+            roomRunning.OnValueChanged -= OnRoomRunningChanged;
+            RemoveVisual();
             base.OnDestroy();
         }
     }

@@ -29,7 +29,9 @@ namespace SmartTraining
 
         internal bool UiRoomCanEdit => UiRoomCanManage && !UiLocalPlayer.RoomIsRunning && !UiLocalPlayer.PhasePending;
 
-        internal bool UiRoomCanReady => UiRoomCanAct && !UiLocalPlayer.RoomIsRunning && !UiLocalPlayer.PhasePending;
+        internal bool UiRoomCanMove => UiRoomCanAct && UiLocalPlayer.RoomIsRunning && !UiLocalPlayer.PhasePending;
+
+        internal bool UiRoomCanReady => UiRoomCanAct && !UiLocalPlayer.IsRoomMaster && !UiLocalPlayer.RoomIsRunning && !UiLocalPlayer.PhasePending;
 
         internal bool UiRoomCanPhase => UiRoomCanManage && !UiLocalPlayer.PhasePending && (UiLocalPlayer.RoomIsRunning || network.GetReadiness().AllReady);
 
@@ -47,7 +49,7 @@ namespace SmartTraining
 
             var master = Array.Find(UiRoomPlayers, p => p.UserId == local.RoomMasterUserId);
             var ready = network.GetReadiness();
-            return (local.PhasePending ? "상태 변경 중…" : local.RoomIsRunning ? "진행 중" : "대기 중") + " · 접속 " + UiRoomPlayers.Length + "/" + local.RoomCapacity + " · 준비 " + ready.ReadyCount + "/" + ready.ParticipantCount + "\n방장: " + (master?.UserName ?? "확인 중…") + " · 내 역할: " + (local.IsRoomMaster ? "방장" : "참가자") + " · 새 입장: " + (local.RoomEntryLocked ? "잠김" : "허용");
+            return (local.PhasePending ? "상태 변경 중…" : local.RoomIsRunning ? "진행 중" : "대기 중") + " · 접속 " + UiRoomPlayers.Length + "/" + local.RoomCapacity + " · 준비 " + ready.ReadyCount + "/" + ready.ReadyTargetCount + " (방장 제외)" + "\n방장: " + (master?.UserName ?? "확인 중…") + " · 내 역할: " + (local.IsRoomMaster ? "방장" : "참가자") + " · 새 입장: " + (local.RoomEntryLocked ? "잠김" : "허용");
         }
 
         internal void UiToggleReady()
@@ -186,6 +188,9 @@ namespace SmartTraining
             chatInput = "";
             chatStatus = "";
         }
+
+        // 알림 재연결과 자동 조회 중에도 초안은 작성할 수 있습니다. 전송 권한은 별도로 확인합니다.
+        internal bool UiCanEditRoomChat => UseUguiRoom && UiLoggedIn && UiLocalPlayer != null && !HasPendingRoomAction && !WaitingForExitCleanup;
 
         internal bool UiCanSendRoomScreenChat => UiRoomCanAct && UiCanChat && (chatChannel == 0 || RoomChatIsBound());
 

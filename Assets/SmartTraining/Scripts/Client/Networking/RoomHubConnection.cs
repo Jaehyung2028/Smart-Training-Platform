@@ -1,67 +1,33 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.WebSockets;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
+using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SmartTraining
 {
-    // Unity 방 서버의 관리 통신과 클라이언트의 로비 알림에 사용하는 SignalR JSON 연결입니다.
+    // SignalR 프로토콜·핑·메시지 분할·요청 대응은 Microsoft 클라이언트가 처리합니다.
+    // 이 클래스에는 프로젝트의 시간 제한과 Unity 메인 스레드로 이벤트를 전달하는 역할만 남깁니다.
     public sealed class RoomHubConnection : IDisposable
     {
-        [Serializable]
-        private sealed class Message
-        {
-            public int type;
+        private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
-            public string invocationId, target, error;
+        private readonly CancellationTokenSource lifetime = new();
 
-            public string[] arguments;
+        private readonly ConcurrentQueue<Action> callbacks = new();
 
-            public RoomHubResult result;
-        }
+        private HubConnection connection;
 
-        [Serializable]
-        private sealed class Invocation
-        {
-            public int type = 1;
+        private volatile bool disposed;
 
-            public string invocationId, target;
+        private string failure;
 
-            public string[] arguments;
-        }
+        private int shutdownStarted;
 
-        private readonly ClientWebSocket socket = new ClientWebSocket();
-
-        private readonly CancellationTokenSource cancellation = new CancellationTokenSource();
-
-        private readonly SemaphoreSlim sending = new SemaphoreSlim(1, 1);
-
-        private readonly ConcurrentQueue<string> incoming = new ConcurrentQueue<string>();
-
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<RoomHubResult>> pending = new ConcurrentDictionary<string, TaskCompletionSource<RoomHubResult>>();
-
-        private readonly TaskCompletionSource<bool> handshake = new TaskCompletionSource<bool>();
-
-        private int nextId;
-
-        private bool disposed;
-
-        private float nextPing;
-
-        private const int RequestTimeoutMilliseconds = 10000;
-
-        private const double ReceiveTimeoutSeconds = 30;
-
-        private long lastReceivedTimestamp = Stopwatch.GetTimestamp();
-
-        private volatile string transportFailure;
-
-        public string Failure { get; private set; }
+        public string Failure => failure;
 
         public event Action<string, string> DisconnectUser;
 
@@ -75,169 +41,102 @@ namespace SmartTraining
 
         public event Action<string> LobbyChat;
 
-        // 방 그룹의 메시지 JSON과 공통 방 ID입니다.
         public event Action<string, string> RoomChat;
 
-        // 연결 시작·핸드셰이크 전송·응답 대기를 하나의 제한 시간으로 처리합니다.
         public async Task Connect(string baseUrl, string hubPath = "/RoomHub", string accessToken = null)
         {
-            if (disposed || Failure != null)
+            ThrowIfClosed();
+            if (connection != null)
             {
-                throw new InvalidOperationException("RoomHub 연결이 종료되었습니다.");
+                throw new InvalidOperationException("이미 연결을 시작한 RoomHub입니다.");
             }
 
-            using (var operation = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token))
+            connection = new HubConnectionBuilder()
+                .WithUrl(baseUrl.TrimEnd('/') + hubPath, options =>
+                {
+                    // 기존 서버와 같은 WebSocket 경로를 사용합니다. 토큰 헤더도 라이브러리가 처리합니다.
+                    options.Transports = HttpTransportType.WebSockets;
+                    options.SkipNegotiation = true;
+                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                })
+                .AddJsonProtocol(options => options.PayloadSerializerOptions = TrainingJson.Options)
+                .Build();
+            connection.HandshakeTimeout = RequestTimeout;
+            connection.ServerTimeout = TimeSpan.FromSeconds(30);
+            connection.KeepAliveInterval = TimeSpan.FromSeconds(10);
+            RegisterEvents();
+            using (var operation = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token))
             {
-                operation.CancelAfter(RequestTimeoutMilliseconds);
+                operation.CancelAfter(RequestTimeout);
                 try
                 {
-                    var address = new UriBuilder(new Uri(baseUrl.TrimEnd('/') + hubPath));
-                    address.Scheme = address.Scheme == "https" ? "wss" : "ws";
-                    if (!string.IsNullOrEmpty(accessToken))
-                    {
-                        socket.Options.SetRequestHeader("Authorization", "Bearer " + accessToken);
-                    }
-
-                    await socket.ConnectAsync(address.Uri, operation.Token);
-                    _ = Receive();
-                    await Send("{\"protocol\":\"json\",\"version\":1}", operation.Token);
-                    await WaitForCompletion(handshake.Task, operation.Token);
+                    await connection.StartAsync(operation.Token);
                 }
-                catch (OperationCanceledException)when (!cancellation.IsCancellationRequested)
+                catch (OperationCanceledException) when (!lifetime.IsCancellationRequested)
                 {
                     Fail("RoomHub 연결 시간이 초과되었습니다.");
                     throw new TimeoutException(Failure);
                 }
                 catch
                 {
-                    Fail();
+                    Fail("RoomHub 연결이 종료되었습니다.");
                     throw;
                 }
             }
         }
 
-        // 전송 차례 대기부터 응답까지 전체 요청에 10초를 적용합니다.
+        // 라이브러리의 On<T>()로 서버 이벤트 이름과 수신 형식을 등록합니다.
+        private void RegisterEvents()
+        {
+            connection.On<string, string>("DisconnectUser", (user, token) => Enqueue(() => DisconnectUser?.Invoke(user, token)));
+            connection.On<string, string>("KickUser", (user, token) => Enqueue(() => KickUser?.Invoke(user, token)));
+            connection.On<string>("CloseRoom", room => Enqueue(() => CloseRoom?.Invoke(room)));
+            connection.On<string>("RoomsChanged", lobby => Enqueue(() => RoomsChanged?.Invoke(lobby)));
+            connection.On<string>("SubscriptionEnded", reason => Enqueue(() => SubscriptionEnded?.Invoke(reason)));
+            connection.On<string>("LobbyChat", json => Enqueue(() => LobbyChat?.Invoke(json)));
+            connection.On<string, string>("RoomChat", (json, room) => Enqueue(() => RoomChat?.Invoke(json, room)));
+            connection.Closed += error =>
+            {
+                Enqueue(() => Fail("RoomHub 연결이 종료되었습니다."));
+                return Task.CompletedTask;
+            };
+        }
+
         public async Task<RoomHubResult> Invoke(string target, params string[] arguments)
         {
-            if (disposed || Failure != null)
+            ThrowIfClosed();
+            if (connection == null)
             {
-                throw new InvalidOperationException("RoomHub 연결이 종료되었습니다.");
+                throw new InvalidOperationException("먼저 RoomHub에 연결해주세요.");
             }
 
-            var id = (++nextId).ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var completion = new TaskCompletionSource<RoomHubResult>();
-            pending.TryAdd(id, completion);
-            using (var operation = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token))
+            using (var operation = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token))
             {
-                operation.CancelAfter(RequestTimeoutMilliseconds);
+                operation.CancelAfter(RequestTimeout);
                 try
                 {
-                    await Send(
-                        JsonUtility.ToJson(new Invocation {
-                                invocationId = id,
-                                target = target,
-                                arguments = arguments
-                            }),
-                        operation.Token
-                    );
-                    return await WaitForCompletion(completion.Task, operation.Token);
+                    // 요청 ID와 응답 대기 사전을 직접 만들지 않습니다. void 응답은 기존 공통 성공 결과로 맞춥니다.
+                    return await connection.InvokeCoreAsync<RoomHubResult>(target, arguments.Cast<object>().ToArray(), operation.Token)
+                        ?? new RoomHubResult { success = true };
                 }
-                catch (OperationCanceledException)when (!cancellation.IsCancellationRequested)
+                catch (OperationCanceledException) when (!lifetime.IsCancellationRequested)
                 {
-                    // 이미 전송된 요청은 서버에서 실행됐을 수도 있습니다. 연결을 재사용하지 않고 실제 상태를 다시 조회합니다.
+                    // 전송 후 시간 초과는 서버 처리 여부가 불명확하므로 기존과 같이 연결을 닫고 재조회합니다.
                     Fail("RoomHub 요청 시간이 초과되었습니다.");
                     throw new TimeoutException(Failure);
                 }
-                finally
-                {
-                    pending.TryRemove(id, out _);
-                    if (completion.Task.IsFaulted)
-                    {
-                        _ = completion.Task.Exception;
-                    }
-                }
             }
         }
 
-        // Unity에서 지원하는 Task API로 응답 대기 취소를 연결합니다. 등록은 완료 시 해제합니다.
-        private static async Task<T> WaitForCompletion<T>(Task<T> task, CancellationToken token)
+        private void Enqueue(Action callback)
         {
-            var cancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (token.Register(() => cancelled.TrySetResult(true)))
+            if (!disposed && Failure == null)
             {
-                if (await Task.WhenAny(task, cancelled.Task) != task)
-                {
-                    token.ThrowIfCancellationRequested();
-                }
-
-                return await task;
+                callbacks.Enqueue(callback);
             }
         }
 
-        private async Task Send(string json, CancellationToken token)
-        {
-            var data = Encoding.UTF8.GetBytes(json + '\u001e');
-            await sending.WaitAsync(token);
-            try
-            {
-                await socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Text, true, token);
-            }
-            catch (Exception error)when (error is WebSocketException || error is InvalidOperationException)
-            {
-                Fail();
-                throw;
-            }
-            finally
-            {
-                sending.Release();
-            }
-        }
-
-        private async Task Receive()
-        {
-            try
-            {
-                var buffer = new byte[4096];
-                var decoder = Encoding.UTF8.GetDecoder();
-                var chars = new char[4096];
-                var frame = new StringBuilder();
-                while (!cancellation.IsCancellationRequested)
-                {
-                    var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellation.Token);
-                    if (result.MessageType != WebSocketMessageType.Text)
-                    {
-                        throw new InvalidOperationException("RoomHub 연결이 종료되었습니다.");
-                    }
-
-                    int count = decoder.GetChars(buffer, 0, result.Count, chars, 0);
-                    for (int i = 0; i < count; i++)
-                    {
-                        if (chars[i] == '\u001e')
-                        {
-                            incoming.Enqueue(frame.ToString());
-                            frame.Clear();
-                        }
-                        else
-                        {
-                            frame.Append(chars[i]);
-                            if (frame.Length > 65536)
-                            {
-                                throw new InvalidOperationException("RoomHub 메시지가 너무 큽니다.");
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                if (!disposed)
-                {
-                    transportFailure = "RoomHub 연결이 종료되었습니다.";
-                }
-            }
-        }
-
-        // Unity 메인 스레드에서 수신 메시지와 화면 콜백을 처리합니다.
+        // Unity에서 호출하는 Tick은 화면 콜백만 실행합니다. 연결 유지와 프로토콜 처리는 하지 않습니다.
         public void Tick()
         {
             if (disposed || Failure != null)
@@ -245,130 +144,60 @@ namespace SmartTraining
                 return;
             }
 
-            while (incoming.TryDequeue(out var json))
+            while (callbacks.TryDequeue(out var callback))
             {
+                if (disposed || Failure != null)
+                {
+                    break;
+                }
+
                 try
                 {
-                    var message = JsonUtility.FromJson<Message>(json);
-                    // 목록 변경이 없어도 SignalR의 연결 유지 메시지가 수신 시각을 갱신합니다.
-                    lastReceivedTimestamp = Stopwatch.GetTimestamp();
-                    if (!handshake.Task.IsCompleted)
-                    {
-                        if (!string.IsNullOrEmpty(message.error))
-                        {
-                            throw new InvalidOperationException("RoomHub 프로토콜을 시작하지 못했습니다.");
-                        }
-
-                        handshake.TrySetResult(true);
-                        continue;
-                    }
-
-                    if (message.type == 3 &&
-                        message.invocationId != null &&
-                        pending.TryGetValue(message.invocationId, out var completion))
-                    {
-                        if (!string.IsNullOrEmpty(message.error))
-                        {
-                            completion.TrySetException(new InvalidOperationException("RoomHub 요청이 거부되었습니다."));
-                        }
-                        else
-                        {
-                            completion.TrySetResult(message.result ?? new RoomHubResult { success = true });
-                        }
-                    }
-                    else if (message.type == 1 && message.target == "DisconnectUser" && message.arguments?.Length == 2)
-                    {
-                        DisconnectUser?.Invoke(message.arguments[0], message.arguments[1]);
-                    }
-                    else if (message.type == 1 && message.target == "KickUser" && message.arguments?.Length == 2)
-                    {
-                        KickUser?.Invoke(message.arguments[0], message.arguments[1]);
-                    }
-                    else if (message.type == 1 && message.target == "CloseRoom" && message.arguments?.Length == 1)
-                    {
-                        CloseRoom?.Invoke(message.arguments[0]);
-                    }
-                    else if (message.type == 1 && message.target == "RoomsChanged" && message.arguments?.Length == 1)
-                    {
-                        RoomsChanged?.Invoke(message.arguments[0]);
-                    }
-                    else if (message.type == 1 && message.target == "SubscriptionEnded" && message.arguments?.Length == 1)
-                    {
-                        SubscriptionEnded?.Invoke(message.arguments[0]);
-                    }
-                    else if (message.type == 1 && message.target == "LobbyChat" && message.arguments?.Length == 1)
-                    {
-                        LobbyChat?.Invoke(message.arguments[0]);
-                    }
-                    else if (message.type == 1 && message.target == "RoomChat" && message.arguments?.Length == 2)
-                    {
-                        RoomChat?.Invoke(message.arguments[0], message.arguments[1]);
-                    }
-                    else if (message.type == 7)
-                    {
-                        throw new InvalidOperationException("RoomHub 연결이 종료되었습니다.");
-                    }
+                    callback();
                 }
-                catch (Exception)
+                catch
                 {
-                    Fail();
+                    Fail("RoomHub 이벤트를 처리하지 못했습니다.");
                     return;
                 }
             }
+        }
 
-            if (transportFailure != null)
+        private void ThrowIfClosed()
+        {
+            if (disposed || Failure != null)
             {
-                Fail();
-            }
-
-            if (handshake.Task.IsCompletedSuccessfully &&
-                (Stopwatch.GetTimestamp() - lastReceivedTimestamp) / (double)Stopwatch.Frequency >= ReceiveTimeoutSeconds)
-            {
-                Fail("서버 응답이 없어 알림 연결을 다시 확인합니다.");
-            }
-
-            if (!disposed &&
-                Failure == null &&
-                handshake.Task.IsCompletedSuccessfully &&
-                Time.realtimeSinceStartup >= nextPing)
-            {
-                nextPing = Time.realtimeSinceStartup + 10;
-                _ = Ping();
+                throw new InvalidOperationException("RoomHub 연결이 종료되었습니다.");
             }
         }
 
-        private async Task Ping()
+        private void Fail(string message)
         {
-            using (var operation = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token))
-            {
-                operation.CancelAfter(RequestTimeoutMilliseconds);
-                try
-                {
-                    await Send("{\"type\":6}", operation.Token);
-                }
-                catch (Exception)
-                {
-                    Fail();
-                }
-            }
-        }
-
-        private void Fail(string message = "RoomHub 연결이 종료되었습니다.")
-        {
-            if (Failure != null)
+            if (Interlocked.CompareExchange(ref failure, message, null) != null)
             {
                 return;
             }
 
-            Failure = message;
-            // 보내는 중인 작업도 취소해 늦게 전송되거나 전송 차례를 계속 기다리지 않도록 합니다.
-            socket.Abort();
-            cancellation.Cancel();
-            handshake.TrySetException(new InvalidOperationException(Failure));
-            _ = handshake.Task.Exception;
-            foreach (var completion in pending.Values)
+            lifetime.Cancel();
+            if (Interlocked.Exchange(ref shutdownStarted, 1) == 0)
             {
-                completion.TrySetException(new InvalidOperationException(Failure));
+                _ = ShutdownAsync();
+            }
+        }
+
+        private async Task ShutdownAsync()
+        {
+            try
+            {
+                if (connection != null)
+                {
+                    // 종료 시 Unity 프레임을 막지 않습니다. 이 후처리에서는 Unity API를 사용하지 않습니다.
+                    await connection.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                // 종료 중인 연결은 재사용하지 않습니다. 종료 예외가 미관찰 Task로 남지 않도록 합니다.
             }
         }
 
@@ -380,8 +209,10 @@ namespace SmartTraining
             }
 
             disposed = true;
-            Fail();
-            socket.Dispose();
+            Fail("RoomHub 연결이 종료되었습니다.");
+            while (callbacks.TryDequeue(out _))
+            {
+            }
         }
     }
 }
