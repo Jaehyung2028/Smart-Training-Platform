@@ -134,13 +134,6 @@ namespace SmartTraining.Editor
                     "cross-screen button wiring is detected"
                 );
                 layout.roomView.sendChat = send;
-                var move = layout.roomView.movementButtons[0];
-                layout.roomView.movementButtons[0] = null;
-                Check(
-                    UguiSceneDesigner.Validate(layout).Any(error => error.Contains("movementButtons[0]")),
-                    "missing array element reports its exact index"
-                );
-                layout.roomView.movementButtons[0] = move;
                 var duplicate = UnityEngine.Object.Instantiate(layout.roomView, layout.transform);
                 Check(
                     UguiSceneDesigner.Validate(layout).Any(error => error.Contains("각각 하나")),
@@ -154,10 +147,10 @@ namespace SmartTraining.Editor
                     "build preparation removes transient preview state"
                 );
                 var window = EditorWindow.GetWindow<UguiSceneWindow>();
-                UguiScenePreview.Show(layout, UguiPreviewScreen.Movement);
+                UguiScenePreview.Show(layout, UguiPreviewScreen.RoomSettings);
                 window.Close();
                 Check(
-                    !UguiScenePreview.IsActive && !layout.roomView.mapModal.activeSelf,
+                    !UguiScenePreview.IsActive && !layout.roomView.settingsModal.activeSelf,
                     "closing preview window restores original display"
                 );
                 Check(

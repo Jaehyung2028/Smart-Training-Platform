@@ -9,16 +9,23 @@ SmartTraining/
 │  │  ├─ Controllers/   ApiLobbyScreen과 기능별 partial 파일
 │  │  ├─ Api/           ASP.NET 요청과 응답 모델
 │  │  └─ Networking/    접속·실시간 알림·연결 상태·주소 설정
-│  ├─ Gameplay/         네트워크 플레이어와 이동 입력
+│  ├─ Gameplay/
+│  │  ├─ Core/          콘텐츠 로딩·씬 연결
+│  │  ├─ Room/          방 플레이어
+│  │  ├─ Model/         모델 관찰·회전·부품 기능
+│  │  ├─ Scenario/      실습 데이터·진행·동기화
+│  │  └─ Video/         영상 콘텐츠·동기화
+│  ├─ Common/           공통 입력·카메라·미디어·설정
 │  ├─ Servers/          Unity 전용 방 서버 실행 코드
 │  ├─ Domain/           방 검색·정렬과 알림 기록
 │  ├─ UI/
 │  │  ├─ Views/         로그인·로비·방 화면과 카드
-│  │  └─ Common/        공통 테마·초기화·선택 표시·이동 버튼
+│  │  ├─ Content/       Common·Model·Scenario·Video별 콘텐츠 UI
+│  │  └─ Common/        공통 테마·초기화·선택 표시
 │  └─ Diagnostics/      개발용 검증과 에디터 세션 정리
 ├─ Editor/
 │  ├─ Build/            클라이언트·전용 서버 빌드
-│  ├─ Builders/         프리팹 생성
+│  ├─ Builders/         UI 프리팹 생성과 Content/의 콘텐츠 생성기
 │  ├─ UI/
 │  │  ├─ Designers/     화면별 테마 적용
 │  │  └─ SceneTools/    씬 배치·미리보기 창
@@ -26,6 +33,11 @@ SmartTraining/
 │     ├─ UI/           UI 연결·해상도 검사
 │     ├─ Integration/  API·서버·종료 연동 검사
 │     └─ Features/     접속·채팅·방 관리 기능 검사
+├─ Content/
+│  ├─ Models/          모델 프리팹과 부품·애니메이션
+│  ├─ Videos/          영상 프리팹·클립·자막
+│  ├─ Scenarios/       실습 프리팹과 단계 데이터
+│  └─ Shared/Materials/ 공용 재질
 ├─ Resources/           런타임 로딩용 프리팹과 테마
 ├─ Scenes/              클라이언트·전용 서버 씬
 └─ Documentation/

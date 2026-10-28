@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7c2cc60a51f1b349a7e5aed37493e0d, type: 3}
   m_Name: DefaultUguiTheme
   m_EditorClassIdentifier: Assembly-CSharp::SmartTraining.UguiTheme
-  background: {r: 0.05882353, g: 0.09019608, b: 0.16470589, a: 1}
-  surface: {r: 0.972549, g: 0.98039216, b: 0.9882353, a: 1}
-  field: {r: 1, g: 1, b: 1, a: 1}
-  ink: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
-  muted: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  background: {r: 0.9137255, g: 0.9372549, b: 0.96862745, a: 1}
+  surface: {r: 1, g: 1, b: 1, a: 1}
+  field: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
+  ink: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
+  muted: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   accent: {r: 0.14509805, g: 0.3882353, b: 0.92156863, a: 1}
   accentHover: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
   accentPressed: {r: 0.11764706, g: 0.2509804, b: 0.6862745, a: 1}
-  line: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-  secondary: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
+  line: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+  secondary: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
   bodySize: 16
   controlHeight: 44

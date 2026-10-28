@@ -17,11 +17,14 @@ namespace SmartTraining.Editor
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(AssetPath));
         }
 
+
         [MenuItem("Smart Training/UI/Create Room UI (if missing)")]
         public static void EnsureAssets()
         {
             if (AssetDatabase.LoadAssetAtPath<RoomUguiView>(AssetPath) != null)
             {
+                RemoveLegacyControls();
+                EnsureContentControls();
                 return;
             }
 
@@ -66,6 +69,7 @@ namespace SmartTraining.Editor
                 ui.ready = SmallButton("준비", actions);
                 ui.phase = SmallButton("전원 준비 후 시작", actions);
                 ui.settings = SmallButton("방장 설정", actions);
+                AddContentControls(ui);
                 var body = Row("Body", main);
                 Flex(body.gameObject);
                 body.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
@@ -94,8 +98,6 @@ namespace SmartTraining.Editor
                 var kick = SmallButton("강퇴", rowActions);
                 kick.name = "Kick";
                 ui.participantTemplate.gameObject.SetActive(false);
-                var participantFooter = CompactRow("Participant Footer", left);
-                ui.refreshParticipants = SmallButton("로비 명단 새로고침", participantFooter);
                 var right = Node("Chat and Movement", body);
                 Vertical(right, 0, 5);
                 var rl = right.gameObject.AddComponent<LayoutElement>();
@@ -121,47 +123,6 @@ namespace SmartTraining.Editor
                 ui.sendChat = SmallButton("전송", compose);
                 Width(ui.sendChat.gameObject, 68);
                 ui.chatStatus = Label("채팅 연결 중…", right, 14, 24);
-                ui.openMap = SmallButton("위치·이동 보기", participantFooter);
-                ui.mapModal = Overlay("Movement Map", root.transform, out var mapCard, new Vector2(.18f, .12f), new Vector2(.82f, .88f));
-                Label("참가자 위치·이동", mapCard, 24, 34);
-                var movement = Row("Movement", mapCard);
-                Flex(movement.gameObject);
-                movement.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-                ui.map = Node("Position Map", movement);
-                ui.map.gameObject.AddComponent<Image>().color = new Color(.85f, .89f, .94f);
-                var mapLayout = ui.map.gameObject.AddComponent<LayoutElement>();
-                mapLayout.minWidth = 220;
-                mapLayout.flexibleWidth = 2;
-                ui.markerTemplate = Node("Marker Template", ui.map);
-                ui.markerTemplate.anchorMin = ui.markerTemplate.anchorMax = new Vector2(.5f, .5f);
-                ui.markerTemplate.sizeDelta = new Vector2(12, 12);
-                ui.markerTemplate.gameObject.AddComponent<Image>().raycastTarget = false;
-                var markerLabel = Label("이름", ui.markerTemplate, 12, 24);
-                Object.DestroyImmediate(markerLabel.GetComponent<LayoutElement>());
-                markerLabel.rectTransform.anchorMin = markerLabel.rectTransform.anchorMax = new Vector2(.5f, 1);
-                markerLabel.rectTransform.pivot = new Vector2(.5f, 0);
-                markerLabel.rectTransform.sizeDelta = new Vector2(120, 22);
-                markerLabel.alignment = TextAnchor.MiddleCenter;
-                ui.markerTemplate.gameObject.SetActive(false);
-                var controls = Node("Movement Controls", movement);
-                Vertical(controls, 0, 4);
-                controls.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-                Label("위치 확인 · 초록: 나 / 파랑: 참가자\nWASD·방향키 또는 버튼 길게 누르기", controls, 13, 44);
-                var upRow = CompactRow("Forward", controls);
-                var up = Move("앞 ↑", upRow, Vector2.up);
-                var bottom = CompactRow("Directions", controls);
-                var back = Move("뒤 ↓", bottom, Vector2.down);
-                var west = Move("←", bottom, Vector2.left);
-                var east = Move("→", bottom, Vector2.right);
-                ui.movementButtons = new[]
-                {
-                    up,
-                    back,
-                    west,
-                    east
-                };
-                ui.closeMap = Button("위치 창 닫기", mapCard);
-                ui.mapModal.SetActive(false);
                 var noticeHeader = CompactRow("Notice Header", main);
                 Label("방 알림 · 최근 20개", noticeHeader, 16, 30);
                 ui.clearNotices = SmallButton("알림 지우기", noticeHeader);
@@ -174,7 +135,13 @@ namespace SmartTraining.Editor
                 var footer = CompactRow("Footer", main);
                 ui.leave = SmallButton("방에서 나가기", footer);
                 ui.logout = SmallButton("로그아웃", footer);
-                ui.settingsModal = Overlay("Room Settings", root.transform, out var settingsCard, new Vector2(.15f, .08f), new Vector2(.85f, .92f));
+                ui.settingsModal = Overlay(
+                    "Room Settings",
+                    root.transform,
+                    out var settingsCard,
+                    new Vector2(.15f, .08f),
+                    new Vector2(.85f, .92f)
+                );
                 ui.settingsModal.AddComponent<CanvasGroup>();
                 Label("방장 설정", settingsCard, 24, 34);
                 var settingsScroll = Scroll("Settings Scroll", settingsCard, out var settingsContent);
@@ -220,13 +187,79 @@ namespace SmartTraining.Editor
             }
         }
 
-        private static RoomMoveButton Move(string text, Transform parent, Vector2 direction)
+
+        // 기존 UI의 사용자 편집을 유지하면서 콘텐츠 표시·선택 버튼만 추가합니다.
+        [MenuItem("Smart Training/UI/Ensure Room Content Controls")]
+        public static void EnsureContentControls()
         {
-            var button = SmallButton(text, parent);
-            var hold = button.gameObject.AddComponent<RoomMoveButton>();
-            hold.direction = direction;
-            return hold;
+            var root = PrefabUtility.LoadPrefabContents(AssetPath);
+            try
+            {
+                var ui = root.GetComponent<RoomUguiView>();
+                if (ui.changeContent == null ||
+                    ui.contentLabel == null ||
+                    ui.changeContent.GetComponent<LayoutElement>().preferredWidth < 1)
+                {
+                    AddContentControls(ui);
+                    UguiRoomDesigner.Apply(root, UguiLoginDesigner.LoadTheme());
+                    PrefabUtility.SaveAsPrefabAsset(root, AssetPath);
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
+
+
+        private static void AddContentControls(RoomUguiView ui)
+        {
+            if (ui.changeContent == null)
+            {
+                ui.changeContent = SmallButton("콘텐츠 변경", ui.settings.transform.parent);
+            }
+
+            Width(ui.changeContent.gameObject, 160);
+            UguiVisualStyle.Round(ui.changeContent.GetComponent<Image>());
+            if (ui.contentLabel == null)
+            {
+                ui.contentLabel = Label("콘텐츠 확인 중…", ui.summary.transform.parent, 16, 26);
+                ui.contentLabel.name = "Current Content";
+                ui.contentLabel.transform.SetSiblingIndex(ui.summary.transform.GetSiblingIndex() + 1);
+            }
+        }
+
+
+        // 이전 프리팹의 폐기된 보조 화면만 제거합니다. 나머지 UI와 사용자 편집은 보존합니다.
+        [MenuItem("Smart Training/UI/Clean Room Controls")]
+        public static void RemoveLegacyControls()
+        {
+            var root = PrefabUtility.LoadPrefabContents(AssetPath);
+            try
+            {
+                bool changed = false;
+                foreach (var child in root.GetComponentsInChildren<RectTransform>(true))
+                {
+                    if (child != null && (child.name == "Movement Map" || child.name == "Participant Footer"))
+                    {
+                        Object.DestroyImmediate(child.gameObject);
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(root, AssetPath);
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
+            Debug.Log("LEGACY ROOM CONTROLS REMOVED");
+        }
+
 
         private static void Anchors(RectTransform node, Vector2 min, Vector2 max)
         {
@@ -234,6 +267,7 @@ namespace SmartTraining.Editor
             node.anchorMax = max;
             node.offsetMin = node.offsetMax = Vector2.zero;
         }
+
 
         private static void SetHeight(GameObject node, float height)
         {
@@ -247,12 +281,14 @@ namespace SmartTraining.Editor
             layout.flexibleHeight = 0;
         }
 
+
         private static Transform CompactRow(string name, Transform parent)
         {
             var row = Row(name, parent);
             SetHeight(row.gameObject, 36);
             return row;
         }
+
 
         private static Button SmallButton(string name, Transform parent)
         {
@@ -262,12 +298,14 @@ namespace SmartTraining.Editor
             return button;
         }
 
+
         private static void Width(GameObject node, float width)
         {
             var layout = node.GetComponent<LayoutElement>();
             layout.minWidth = layout.preferredWidth = width;
             layout.flexibleWidth = 0;
         }
+
 
         private static ScrollRect Scroll(string name, Transform parent, out RectTransform content)
         {
@@ -291,6 +329,7 @@ namespace SmartTraining.Editor
             scroll.scrollSensitivity = 28;
             return scroll;
         }
+
 
         private static GameObject Overlay(string name, Transform parent, out RectTransform card, Vector2 min, Vector2 max)
         {

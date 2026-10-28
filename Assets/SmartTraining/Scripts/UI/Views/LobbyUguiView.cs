@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -228,6 +228,7 @@ namespace SmartTraining
             courseSelectorButton = new GameObject("Course Dropdown", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement)).GetComponent<Button>();
             courseSelectorButton.transform.SetParent(group.transform, false);
             courseSelectorButton.targetGraphic = courseSelectorButton.GetComponent<Image>();
+            UguiVisualStyle.Round(courseSelectorButton.GetComponent<Image>());
             courseSelectorButton.GetComponent<LayoutElement>().preferredHeight = 44;
             courseSelectionText = MakeCourseLabel("교육과정을 선택해주세요  ▾", courseSelectorButton.transform);
             courseSelectionText.rectTransform.anchorMin = Vector2.zero;

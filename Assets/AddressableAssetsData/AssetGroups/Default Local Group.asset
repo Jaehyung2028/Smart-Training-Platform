@@ -15,8 +15,48 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: cfb5b9b4b12ee1b43a9ddb6f987372b0
   m_SerializeEntries:
+  - m_GUID: 03ac6d423f9980440882c5d9f22b571a
+    m_Address: content/video/safety-intro
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 182fa8b6a19e6384aab40443b09819dd
+    m_Address: content/scenario/tool-assembly
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 673c8c8cb5b156649b966f2e1e67c13a
+    m_Address: content/scenario/evacuation-check
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8fcc243204e9cf64bbe8722cf43f9525
     m_Address: content/model/training-drill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d223fb72383c36b4ca62078c6efe81a3
+    m_Address: content/scenario/tool-check
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d26674c9d4234f041ab8d1501c74d801
+    m_Address: content/video/emergency-guide
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d545d1558108c904887ccabd61cf1642
+    m_Address: content/model/safety-equipment
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: daaea712fcb0cfc46a9cd3b38c14c750
+    m_Address: content/video/equipment-guide
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e913163a7adb0bb43ae943ebac996c2b
+    m_Address: content/model/extinguisher
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -14,9 +14,8 @@ namespace SmartTraining
     public sealed class RoomNetworkClient : IDisposable
     {
         private GameObject root;
-
         private NetworkManager manager;
-
+        private NetworkShutdownCleanup shutdown;
         private bool failed;
 
         public bool IsConnected => manager != null && manager.IsConnectedClient;
@@ -27,6 +26,7 @@ namespace SmartTraining
 
         internal string AdmissionToken { get; private set; }
 
+
         private float nextInputAt;
 
         public string ServerEndpoint { get; private set; } = "";
@@ -34,6 +34,7 @@ namespace SmartTraining
         public RoomPlayer LocalPlayer => manager != null && manager.IsConnectedClient && manager.LocalClient?.PlayerObject != null ? manager.LocalClient.PlayerObject.GetComponent<RoomPlayer>() : null;
 
         public RoomPlayer[] Players => manager == null || manager.SpawnManager == null ? Array.Empty<RoomPlayer>() : manager.SpawnManager.SpawnedObjects.Values.Select(value => value.GetComponent<RoomPlayer>()).Where(value => value != null).ToArray();
+
 
         public bool SetReady(bool value)
         {
@@ -48,19 +49,26 @@ namespace SmartTraining
                 return false;
             }
 
-            player.SetReadyRpc(value);
+            player.SetReadyRpc(value, player.RoomContentNodeId);
             return true;
         }
+
 
         public RoomReadinessSummary GetReadiness()
         {
             return RoomReadinessSummary.FromPlayers(Players, LocalPlayer?.RoomMasterUserId, LocalPlayer != null);
         }
 
+
         public void SendMovement(Vector2 direction)
         {
             var player = LocalPlayer;
-            if (player == null || !player.IsSpawned || !player.IsOwner || !player.RoomIsRunning || player.PhasePending || Time.unscaledTime < nextInputAt)
+            if (player == null ||
+                !player.IsSpawned ||
+                !player.IsOwner ||
+                !player.RoomIsRunning ||
+                player.PhasePending ||
+                Time.unscaledTime < nextInputAt)
             {
                 return;
             }
@@ -68,6 +76,7 @@ namespace SmartTraining
             nextInputAt = Time.unscaledTime + 0.05f;
             player.MoveRpc(direction);
         }
+
 
         public IEnumerator Connect(
             string userId,
@@ -96,10 +105,30 @@ namespace SmartTraining
                 reservation.room.port < 1 ||
                 reservation.room.port > 65535 ||
                 string.IsNullOrEmpty(reservation.room.ipAddress) ||
-                !DateTimeOffset.TryParse(reservation.expiresAtUtc, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expires) ||
+                !DateTimeOffset.TryParse(
+                reservation.expiresAtUtc,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal,
+                out var expires
+            ) ||
                 expires <= DateTimeOffset.UtcNow)
             {
                 failure("유효한 접속 예약이 없습니다. 다시 참가해주세요.");
+                yield break;
+            }
+
+            // 퇴장 직후 재접속해도 이전 NetworkManager의 Singleton을 새 연결에서 공유하지 않습니다.
+            var previousShutdown = NetworkManager.Singleton != null
+                ? NetworkManager.Singleton.GetComponent<NetworkShutdownCleanup>() : null;
+            double shutdownBy = Time.realtimeSinceStartupAsDouble + 10;
+            while (previousShutdown != null && Time.realtimeSinceStartupAsDouble < shutdownBy)
+            {
+                yield return null;
+            }
+
+            if (previousShutdown != null)
+            {
+                failure("이전 네트워크 연결이 아직 종료되지 않았습니다. 잠시 후 다시 참가해주세요.");
                 yield break;
             }
 
@@ -165,18 +194,15 @@ namespace SmartTraining
                 NetworkTransport = transport,
                 EnableSceneManagement = false,
                 ConnectionApproval = true,
-                ConnectionData = Encoding.UTF8.GetBytes(TrainingJson.Serialize(new RoomConnectionData {
-                            roomId = reservation.room.id,
-                            userId = userId,
-                            admissionToken = reservation.admissionToken
-                        }))
-
+                ConnectionData = Encoding.UTF8.GetBytes(TrainingJson.Serialize(new RoomConnectionData { roomId = reservation.room.id, userId = userId, admissionToken = reservation.admissionToken }))
             };
             string prefabError = null;
             try
             {
                 RoomPlayerPrefab.Register(manager);
                 SharedModel.Register(manager);
+                SharedVideo.Register(manager);
+                SharedScenario.Register(manager);
             }
             catch (InvalidOperationException error)
             {
@@ -199,8 +225,14 @@ namespace SmartTraining
                 yield break;
             }
 
-            double limit = Time.realtimeSinceStartupAsDouble + Math.Min(15, Math.Max(0, (expires - DateTimeOffset.UtcNow).TotalSeconds));
-            while (!IsConnected && !failed && cancellationRequested?.Invoke() != true && Time.realtimeSinceStartupAsDouble < limit)
+            double limit = Time.realtimeSinceStartupAsDouble + Math.Min(
+                15,
+                Math.Max(0, (expires - DateTimeOffset.UtcNow).TotalSeconds)
+            );
+            while (!IsConnected &&
+                !failed &&
+                cancellationRequested?.Invoke() != true &&
+                Time.realtimeSinceStartupAsDouble < limit)
             {
                 yield return null;
             }
@@ -218,10 +250,16 @@ namespace SmartTraining
             }
             else
             {
+                string reason = DisconnectReason;
+                string endpoint = ServerEndpoint;
+                bool transportFailed = failed;
                 Dispose();
-                failure("방 서버에 접속하지 못했습니다. 예약을 정리하고 다시 참가해주세요.");
+                string detail = string.IsNullOrWhiteSpace(reason) ? (transportFailed ? "연결이 종료되었습니다." : "연결 대기 시간이 초과되었습니다.") : reason;
+                Debug.LogWarning($"방 서버 접속 실패 ({endpoint}): {detail}");
+                failure("방 서버에 접속하지 못했습니다. " + detail + " 예약을 정리하고 다시 참가해주세요.");
             }
         }
+
 
         private void OnDisconnected(ulong id)
         {
@@ -230,11 +268,29 @@ namespace SmartTraining
             DisconnectReason = manager?.DisconnectReason;
         }
 
+
         private void OnTransportFailure()
         {
             failed = true;
             WasDisconnected = true;
         }
+
+
+        // Shutdown은 즉시 완료되지 않습니다. 이전 매니저와 전송 드라이버가 사라진 다음 재입장합니다.
+        public IEnumerator WaitForShutdown()
+        {
+            double deadline = Time.realtimeSinceStartupAsDouble + 10;
+            while (shutdown != null && Time.realtimeSinceStartupAsDouble < deadline)
+            {
+                yield return null;
+            }
+
+            if (shutdown != null)
+            {
+                Debug.LogWarning("이전 방의 네트워크 종료가 지연되고 있습니다. 종료 전 재접속은 차단합니다.");
+            }
+        }
+
 
         public void Dispose()
         {
@@ -243,7 +299,8 @@ namespace SmartTraining
                 manager.OnClientDisconnectCallback -= OnDisconnected;
                 manager.OnTransportFailure -= OnTransportFailure;
                 manager.NetworkConfig.ConnectionData = Array.Empty<byte>();
-                root.AddComponent<NetworkShutdownCleanup>().Begin(manager);
+                shutdown = root.AddComponent<NetworkShutdownCleanup>();
+                shutdown.Begin(manager);
             }
             else if (root != null)
             {
@@ -260,6 +317,7 @@ namespace SmartTraining
         }
     }
 
+
     public readonly struct RoomReadinessSummary
     {
         public int ParticipantCount { get; }
@@ -268,19 +326,25 @@ namespace SmartTraining
 
         public bool AllReady { get; }
 
+
         // 클라이언트의 시작 버튼과 전용 서버의 시작 승인에 같은 준비 기준을 사용합니다.
         public static RoomReadinessSummary FromPlayers(RoomPlayer[] players, string masterId, bool connectionsConfirmed)
         {
             var targets = players.Where(player => player.UserId != masterId).ToArray();
             int readyCount = targets.Count(player => player.IsSpawned && player.IsReady);
-            bool confirmed = connectionsConfirmed && !string.IsNullOrEmpty(masterId) &&
+            bool confirmed = connectionsConfirmed &&
+                !string.IsNullOrEmpty(masterId) &&
                 players.Count(player => player.UserId == masterId) == 1 &&
-                players.All(player => player.IsSpawned && Guid.TryParse(player.UserId, out _) && player.RoomMasterUserId == masterId);
+                players.All(player => player.IsSpawned &&
+                Guid.TryParse(player.UserId, out _) &&
+                player.RoomMasterUserId == masterId);
             return new RoomReadinessSummary(players.Length, readyCount, confirmed, targets.Length);
         }
 
+
         // 전체 접속 인원과 준비 대상 인원을 구분합니다. 방장 혼자 있으면 준비 대상은 0명입니다.
         public int ReadyTargetCount { get; }
+
 
         public RoomReadinessSummary(int participants, int ready, bool confirmed, int readyTargets)
         {

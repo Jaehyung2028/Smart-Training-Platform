@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -434,7 +434,7 @@ namespace SmartTraining
 
                 var row = Instantiate(chatTemplate, chatContent);
                 row.gameObject.SetActive(true);
-                UguiViewUtility.SetChatMessage(row, message, screen.UiSelfId, chatTemplate.color);
+                ChatMessagePresentation.SetChatMessage(row, message, screen.UiSelfId, chatTemplate.color);
                 chatRows[message.id] = row;
                 changed = true;
             }

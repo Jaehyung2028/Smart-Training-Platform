@@ -12,6 +12,8 @@ namespace SmartTraining.Editor
         {
             ContentAddressablesSetup.Prepare();
             ModelContentBuilder.PrepareNetworkPrefab();
+            VideoContentBuilder.PrepareNetworkPrefab();
+            SampleCourseBuilder.Prepare();
             RoomPlayerPrefabBuilder.Create();
             var output = Environment.GetEnvironmentVariable("SMART_TRAINING_ROOM_BUILD");
             if (string.IsNullOrEmpty(output))

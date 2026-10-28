@@ -11,6 +11,16 @@ namespace SmartTraining
     // View의 공통 초기화를 모읍니다. 입장·권한·네트워크 흐름은 ApiLobbyScreen에서 처리합니다.
     internal static class UguiViewUtility
     {
+        // 텍스트 입력 여부는 키보드 입력 모듈이 아닌 UGUI 포커스에서 판단합니다.
+        internal static bool IsEditingText
+        {
+            get
+            {
+                var selected = UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject;
+                return selected != null && selected.TryGetComponent<UnityEngine.UI.InputField>(out var field) && field.isFocused;
+            }
+        }
+
         internal static void EnsureComponents(Component view, ref Canvas canvas, ref CanvasGroup interaction, ref GraphicRaycaster raycaster)
         {
             // Unity의 null 비교로 컴포넌트 누락과 이미 파괴된 객체를 함께 확인합니다.
@@ -100,21 +110,6 @@ namespace SmartTraining
             }
 
             return ownedFont;
-        }
-
-        // 같은 닉네임이 아니라 서버 사용자 ID로 본인 메시지를 구분합니다. 다른 사용자는 프리팹의 기본 색상을 유지합니다.
-        internal static void SetChatMessage(Text label, LobbyChatMessage message, string localUserId, Color defaultColor)
-        {
-            label.text = ChatLabel(message);
-            label.color = !string.IsNullOrEmpty(localUserId) && message.userId == localUserId
-                ? new Color32(21, 128, 61, 255)
-                : defaultColor;
-        }
-
-        internal static string ChatLabel(LobbyChatMessage message)
-        {
-            string time = DateTimeOffset.TryParse(message.sentAt, out var sent) ? sent.ToLocalTime().ToString("HH:mm:ss") : "";
-            return "[" + time + "] " + message.nickname + ": " + message.text;
         }
 
         internal static bool RemoveMissing<T>(Dictionary<string, T> items, HashSet<string> ids)

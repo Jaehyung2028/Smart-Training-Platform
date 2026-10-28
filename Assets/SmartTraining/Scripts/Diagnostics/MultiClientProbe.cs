@@ -57,8 +57,34 @@ namespace SmartTraining
             public bool partDetailsVisible, selectedPartHighlighted;
             public string partTitle, partDescription;
             public bool partListVisible, partListSelectionVisible;
+            public bool contentMenuOpen, contentOptionsOpen, contentCameraCanInteract;
+            public float contentVolume;
+            public int contentCameraCount, contentAvatarCount;
+            public int roomContentNodeId;
+            public int learningPercent, learningRun, observedParts, requiredParts, observationNodeCount;
+            public bool learningComplete;
+            public string learningLabel;
+            public string[] participantLearning;
+            public bool scenarioReady, scenarioComplete, scenarioToolMenuVisible;
+            public int scenarioToolOptions;
+            public string scenarioCardTitle, scenarioCardGoal, scenarioCardRequirement, scenarioCardProgress;
+            public string scenarioNotice;
+            public bool scenarioNoticeVisible;
+            public int scenarioCompletedSteps, scenarioRevision;
+            public string scenarioSelectedTool, scenarioFeedback;
+            public Vector3 localPosition;
+            public bool scenarioPresent, scenarioValid;
+            public int scenarioStepCount, scenarioObjectCount;
+            public bool videoPresent, videoReady, videoPlaying, videoCanControl, videoControlsVisible;
+            public double videoPosition, videoDuration, videoLocalTime;
+            public float videoVolume;
+            public string videoError = "";
+            public string videoSubtitle = "";
+            public bool videoSubtitlesEnabled, videoSubtitleVisible;
             public int selectedNodeCount;
             public string[] selectedPartNames = Array.Empty<string>();
+            public float modelMinimumY;
+            public Vector3[] disassemblyPartPositions = Array.Empty<Vector3>();
             public int modelStepIndex = -1, modelStepCount;
             public string modelStepTitle = "";
             public bool modelStepVisible, modelStepHighlighted, modelStepPreviousEnabled, modelStepNextEnabled;
@@ -92,6 +118,25 @@ namespace SmartTraining
         private IEnumerator Invoke(string method, params object[] args) =>
             (IEnumerator)typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, args);
         private bool Busy => screen != null && (bool)Get("busy");
+        // 좌표를 직접 바꾸지 않고 일반 이동 RPC를 사용해 실제 서버의 이동 제한을 통과합니다.
+        private IEnumerator WalkToScenarioWorkBench()
+        {
+            var player = screen.UiLocalPlayer;
+            var destination = new Vector3(-0.4f, 1, 2.5f);
+            float until = Time.unscaledTime + 20;
+            while (player != null && player.RoomIsRunning &&
+                Vector3.Distance(player.ServerPosition, destination) > 0.2f && Time.unscaledTime < until)
+            {
+                var direction = destination - player.ServerPosition;
+                player.MoveRpc(Vector2.ClampMagnitude(new Vector2(direction.x, direction.z), 1));
+                yield return new WaitForEndOfFrame();
+            }
+            if (player != null)
+            {
+                player.MoveRpc(Vector2.zero);
+            }
+        }
+
         private void Update()
         {
             if (directory == null || Time.unscaledTime < nextPoll) return;
@@ -136,6 +181,12 @@ namespace SmartTraining
                                 for(int repeat=0;repeat<20;repeat++){screen.UiLogout();screen.UiSubmitCreate();screen.UiSaveRoomSettings();screen.UiEnter();}break;
                             case "roomReady": RoomClick(RoomUi.ready); break;
                             case "roomPhase": RoomClick(RoomUi.phase); break;
+                            case "roomContent":
+                                var chosenContent = Array.Find(screen.UiContents, item => item.id.ToString() == command.value);
+                                screen.UiChangeRoomContent(chosenContent);
+                                break;
+                            case "staleReady": screen.UiLocalPlayer.SetReadyRpc(true, int.Parse(command.value)); break;
+                            case "roomContentOpen": RoomClick(RoomUi.changeContent); break;
                             case "roomSettings": RoomClick(RoomUi.settings); break;
                             case "roomSettingsClose": RoomClick(RoomUi.closeSettings); break;
                             case "roomSettingsSave": RoomUi.nameInput.text=command.value;RoomUi.capacityInput.text=command.lobbyId;RoomClick(RoomUi.saveSettings);break;
@@ -156,9 +207,6 @@ namespace SmartTraining
                             case "roomChatBlur": RoomUi.chatInput.DeactivateInputField();UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);break;
                             case "roomLeave": RoomClick(RoomUi.leave);break;
                             case "roomLogout": RoomClick(RoomUi.logout);break;
-                            case "roomMap": RoomClick(command.enabled?RoomUi.openMap:RoomUi.closeMap);break;
-                            case "roomMoveDown": RoomUi.movementButtons[0].OnPointerDown(new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current){button=UnityEngine.EventSystems.PointerEventData.InputButton.Left});break;
-                            case "roomMoveUp": RoomUi.movementButtons[0].OnPointerUp(new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current));break;
                             case "roomCapture": CaptureCanvas(RoomUi.canvas,Path.Combine(directory,Path.GetFileName(command.value)));break;
                             case "uiCreateOpen": screen.GetComponentInChildren<LobbyInteriorUguiView>(true).create.onClick.Invoke(); break;
                             case "uiCreateSubmit":
@@ -203,6 +251,136 @@ namespace SmartTraining
                             case "uiResize": var dimensions = command.value.Split('x'); Screen.SetResolution(int.Parse(dimensions[0]), int.Parse(dimensions[1]), FullScreenMode.Windowed); break;
                             case "uiTestFailure": Set("lobbyJoinError",command.value);break;
                             // 실제 두 클라이언트에서 소유권 경쟁·Transform 동기화·반환을 확인하는 진단 명령입니다.
+                            case "contentButton":
+                                var contentButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                                    .First(button => button.GetComponentInChildren<UnityEngine.UI.Text>()?.text == command.value);
+                                if (!contentButton.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("콘텐츠 버튼이 비활성화되어 있습니다.");
+                                }
+                                contentButton.onClick.Invoke();
+                                break;
+                            case "contentVolume":
+                                var options = screen.GetComponentsInChildren<RectTransform>().First(item => item.name == "Content Options");
+                                options.GetComponentsInChildren<UnityEngine.UI.Slider>()[2].value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
+                                break;
+                            case "contentEscape":
+                                var session = screen.GetComponent<ContentSceneSession>();
+                                var hud = (ContentHudController)typeof(ContentSceneSession).GetField("hud", Flags).GetValue(session);
+                                hud.HandleBack();
+                                break;
+                            case "scenarioCapture":
+                                CaptureCanvas(screen.GetComponentsInChildren<Canvas>().First(canvas => canvas.name == "Content HUD"),
+                                    Path.Combine(directory, "scenario.png"));
+                                break;
+                            case "scenarioSelectTool":
+                                var toolButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                                    .First(item => item.name == "Scenario Tool " + command.value);
+                                if (!toolButton.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("개인 공구 버튼이 비활성화되어 있습니다.");
+                                }
+                                toolButton.onClick.Invoke();
+                                break;
+                            case "scenarioRawSelectTool":
+                                var toolParts = command.value.Split('|');
+                                SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).SelectToolRpc(toolParts[0], int.Parse(toolParts[1]));
+                                break;
+                            case "scenarioWalk":
+                                operation = WalkToScenarioWorkBench();
+                                break;
+                            case "scenarioInteract":
+                                UnityEngine.Object.FindAnyObjectByType<ScenarioContent>().Interact(command.value);
+                                break;
+                            case "scenarioRawInteract":
+                                var rawParts = command.value.Split('|');
+                                SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).InteractRpc(rawParts[0], int.Parse(rawParts[1]));
+                                break;
+                            case "scenarioReset":
+                                SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).ResetRpc(
+                                    UnityEngine.Object.FindAnyObjectByType<ScenarioContent>().Revision);
+                                break;
+                            case "observePart":
+                                var observationModel = UnityEngine.Object.FindAnyObjectByType<ModelViewer>();
+                                var observationNode = observationModel.Parts[int.Parse(command.value)];
+                                observationModel.SelectPartFromList(observationNode);
+                                break;
+                            case "catalogCreate":
+                                var catalogChoice = command.value.Split('|');
+                                Set("selectedContentId", catalogChoice[0]);
+                                Set("selectedContentNodeId", int.Parse(catalogChoice[1]));
+                                Set("roomName", "카탈로그 샘플 " + catalogChoice[1]);
+                                Set("maxUsersText", "4");
+                                operation = Invoke("CreateRoom");
+                                break;
+                            case "scenarioCreate":
+                                Set("roomName", "시나리오 데이터 확인");
+                                Set("maxUsersText", "4");
+                                Set("selectedContentId", "safety-training");
+                                Set("selectedContentNodeId", 11);
+                                operation = Invoke("CreateRoom");
+                                break;
+                            case "videoCreate":
+                                Set("roomName", "공유 영상 확인");
+                                Set("maxUsersText", "4");
+                                Set("selectedContentId", "safety-training");
+                                Set("selectedContentNodeId", 12);
+                                operation = Invoke("CreateRoom");
+                                break;
+                            case "videoCapture":
+                                var captureVideo = UnityEngine.Object.FindAnyObjectByType<VideoContentPlayer>().GetComponent<UnityEngine.Video.VideoPlayer>();
+                                var captureTexture = captureVideo.targetTexture;
+                                var previousTarget = RenderTexture.active;
+                                var captureFrame = new Texture2D(captureTexture.width, captureTexture.height, TextureFormat.RGB24, false);
+                                try
+                                {
+                                    RenderTexture.active = captureTexture;
+                                    captureFrame.ReadPixels(new Rect(0, 0, captureTexture.width, captureTexture.height), 0, 0);
+                                    captureFrame.Apply();
+                                    File.WriteAllBytes(Path.Combine(directory, Path.GetFileName(command.value)), captureFrame.EncodeToPNG());
+                                }
+                                finally
+                                {
+                                    RenderTexture.active = previousTarget;
+                                    Destroy(captureFrame);
+                                }
+                                break;
+                            case "videoToggle":
+                                var videoToggle = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "Video Play Pause");
+                                if (!videoToggle.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("영상 재생 버튼이 비활성화되어 있습니다.");
+                                }
+                                videoToggle.onClick.Invoke();
+                                break;
+                            case "videoControl":
+                                var videoControl = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == command.value);
+                                if (!videoControl.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("영상 조작 버튼이 비활성화되어 있습니다.");
+                                }
+                                videoControl.onClick.Invoke();
+                                break;
+                            case "videoSeek":
+                                var videoSeek = screen.GetComponentsInChildren<UnityEngine.UI.Slider>().First(slider => slider.name == "Video Seek");
+                                if (!videoSeek.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("영상 구간 이동이 비활성화되어 있습니다.");
+                                }
+                                videoSeek.value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
+                                break;
+                            case "videoVolume":
+                                screen.GetComponentsInChildren<UnityEngine.UI.Slider>().First(slider => slider.name == "Video Local Volume").value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
+                                break;
+                            case "videoRawPlay":
+                                SharedVideo.Find(screen.UiLocalPlayer.NetworkManager).SetPlayingRpc(command.enabled);
+                                break;
+                            case "videoRawSeek":
+                                SharedVideo.Find(screen.UiLocalPlayer.NetworkManager).SeekRpc(double.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture));
+                                break;
+                            case "videoRawConfigure":
+                                SharedVideo.Find(screen.UiLocalPlayer.NetworkManager).ConfigureRpc(double.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture));
+                                break;
                             case "modelCreate":
                                 Set("roomName", "공유 모델 확인");
                                 Set("maxUsersText", "4");
@@ -393,7 +571,18 @@ namespace SmartTraining
                 checkingParticipants = client?.Players.Where(item => item.ConnectionState == ParticipantConnectionState.Checking).Select(item => item.UserId).ToArray() ?? Array.Empty<string>()
             };
             var shared = SharedModel.Find(player?.NetworkManager);
-            snapshot.contentReady = ContentSceneSession.SceneReady;
+            var learning = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.GetComponent<TrainingProgress>() : null;
+            snapshot.roomContentNodeId = screen.UiLocalPlayer?.RoomContentNodeId ?? 0;
+            snapshot.learningPercent = learning?.Percent ?? 0;
+            snapshot.learningRun = learning?.Run ?? 0;
+            snapshot.learningComplete = learning?.IsComplete == true;
+            snapshot.learningLabel = learning?.Label ?? "";
+            snapshot.participantLearning = screen.UiRoomPlayers.Select(participant => participant.GetComponent<TrainingProgress>()?.Label ?? "").ToArray();
+            var observedModel = UnityEngine.Object.FindAnyObjectByType<ModelViewer>();
+            snapshot.observedParts = observedModel?.ObservedPartCount ?? 0;
+            snapshot.requiredParts = observedModel?.RequiredPartCount ?? 0;
+            snapshot.observationNodeCount = observedModel?.Parts.Count ?? 0;
+            snapshot.contentReady = screen.GetComponent<ContentSceneSession>()?.SceneReady == true;
             snapshot.modelPresent = shared != null;
             if (shared != null)
             {
@@ -421,6 +610,57 @@ namespace SmartTraining
                     snapshot.partListSelectionVisible = viewport.rect.Contains(viewport.InverseTransformPoint(selectedRect.TransformPoint(selectedRect.rect.center)));
                 }
             }
+            var cameras = UnityEngine.Object.FindObjectsByType<FirstPersonCameraController>();
+            snapshot.contentCameraCount = cameras.Length;
+            snapshot.contentCameraCanInteract = cameras.Length > 0 && cameras[0].CanInteract;
+            snapshot.contentVolume = AudioListener.volume;
+            snapshot.contentMenuOpen = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Content Menu Overlay");
+            snapshot.contentOptionsOpen = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Content Options");
+            snapshot.contentAvatarCount = screen.UiRoomPlayers.Count(participant => participant.transform.Find("PlayerVisual")?.gameObject.activeInHierarchy == true);
+            var scenario = UnityEngine.Object.FindAnyObjectByType<ScenarioContent>();
+            snapshot.localPosition = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.ServerPosition : Vector3.zero;
+            snapshot.scenarioPresent = scenario != null;
+            if (scenario != null)
+            {
+                var menu = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Scenario Tool Menu");
+                snapshot.scenarioToolMenuVisible = menu != null;
+                snapshot.scenarioToolOptions = menu != null ? menu.GetComponentsInChildren<UnityEngine.UI.Button>().Length : 0;
+                var cardLabels = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true);
+                snapshot.scenarioCardTitle = cardLabels.FirstOrDefault(item => item.name == "Scenario Title")?.text ?? "";
+                snapshot.scenarioCardGoal = cardLabels.FirstOrDefault(item => item.name == "Scenario Current Title")?.text ?? "";
+                snapshot.scenarioCardRequirement = cardLabels.FirstOrDefault(item => item.name == "Scenario Requirement")?.text ?? "";
+                snapshot.scenarioCardProgress = cardLabels.FirstOrDefault(item => item.name == "Scenario Progress")?.text ?? "";
+                snapshot.scenarioReady = scenario.IsReady;
+                snapshot.scenarioComplete = scenario.IsComplete;
+                snapshot.scenarioCompletedSteps = scenario.CompletedSteps;
+                snapshot.scenarioRevision = scenario.Revision;
+                snapshot.scenarioSelectedTool = scenario.SelectedTool;
+                snapshot.scenarioFeedback = scenario.Feedback;
+                var notice = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true).FirstOrDefault(item => item.name == "Scenario Feedback Text");
+                snapshot.scenarioNotice = notice != null ? notice.text : "";
+                snapshot.scenarioNoticeVisible = notice != null && notice.gameObject.activeInHierarchy;
+                snapshot.scenarioValid = scenario.TryInitialize(out _);
+                snapshot.scenarioStepCount = scenario.Definition != null ? scenario.Definition.Steps.Count : 0;
+                snapshot.scenarioObjectCount = scenario.GetComponentsInChildren<ScenarioObject>(true).Length;
+            }
+            var videoViewer = UnityEngine.Object.FindAnyObjectByType<VideoContentPlayer>();
+            snapshot.videoPresent = videoViewer != null;
+            snapshot.videoControlsVisible = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Video Controls");
+            if (videoViewer != null)
+            {
+                snapshot.videoReady = videoViewer.IsReady;
+                snapshot.videoPlaying = videoViewer.IsPlaying;
+                snapshot.videoCanControl = videoViewer.CanControl;
+                snapshot.videoDuration = videoViewer.Duration;
+                snapshot.videoPosition = videoViewer.Position;
+                snapshot.videoLocalTime = videoViewer.LocalTime;
+                snapshot.videoVolume = videoViewer.Volume;
+                snapshot.videoError = videoViewer.Error;
+                snapshot.videoSubtitlesEnabled = videoViewer.SubtitlesEnabled;
+                var subtitleText = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true).FirstOrDefault(label => label.name == "Video Subtitle Text");
+                snapshot.videoSubtitle = subtitleText != null ? subtitleText.text : "";
+                snapshot.videoSubtitleVisible = subtitleText != null && subtitleText.gameObject.activeInHierarchy;
+            }
             var selectedViewer = UnityEngine.Object.FindAnyObjectByType<ModelViewer>();
             if (selectedViewer != null)
             {
@@ -428,6 +668,13 @@ namespace SmartTraining
                 snapshot.selectedPartNames = selectedViewer.SelectedNodes.Select(node => node.Transform.name).ToArray();
                 snapshot.modelStepIndex = selectedViewer.CurrentStepIndex;
                 snapshot.modelStepCount = selectedViewer.StepCount;
+                snapshot.modelMinimumY = selectedViewer.GetComponentsInChildren<Renderer>().Min(renderer => renderer.bounds.min.y);
+                var disassembly = selectedViewer.GetComponent<ModelDisassemblyAnimation>();
+                if (disassembly != null)
+                {
+                    snapshot.disassemblyPartPositions = disassembly.GetOrderedSteps().SelectMany(step => step.Targets)
+                        .Where(target => target != null).Distinct().Select(target => target.localPosition).ToArray();
+                }
                 snapshot.modelStepTitle = selectedViewer.CurrentStep?.Title ?? "";
                 snapshot.modelStepVisible = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Model Step Guide");
                 var stepButtons = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true);
@@ -547,7 +794,7 @@ namespace SmartTraining
             if(roomView!=null)
             {
                 snapshot.uiInRoom=roomView.canvas.enabled;snapshot.uiInRoomLayoutValid=RoomRaycasts(roomView);
-                snapshot.uiSettingsVisible=roomView.settingsModal.activeSelf;snapshot.uiConfirmVisible=roomView.confirmationModal.activeSelf;snapshot.uiMapVisible=roomView.mapModal.activeSelf;
+                snapshot.uiSettingsVisible=roomView.settingsModal.activeSelf;snapshot.uiConfirmVisible=roomView.confirmationModal.activeSelf;
                 snapshot.uiRoomMasterControls=roomView.settings.gameObject.activeSelf;snapshot.uiReadyEnabled=roomView.ready.IsInteractable();snapshot.uiPhaseEnabled=roomView.phase.IsInteractable();
                 snapshot.uiRoomSendEnabled=roomView.sendChat.IsInteractable();snapshot.uiRoomInputEnabled=roomView.mainInteraction.interactable;
                 snapshot.uiMemberRows=roomView.participantsContent.Cast<Transform>().Count(x=>x.name.StartsWith("Member - ")&&x.gameObject.activeSelf);
@@ -555,8 +802,8 @@ namespace SmartTraining
                 snapshot.uiRoomParticipantActionsReady=participantActions.Length>0&&participantActions.All(button=>button.IsInteractable());
                 snapshot.uiRoomChannel=screen.UiRoomChatChannel;snapshot.uiInRoomSummary=roomView.summary.text;snapshot.uiInRoomChat=string.Join("\n",roomView.chatContent.GetComponentsInChildren<UnityEngine.UI.Text>().Select(x=>x.text));
                 snapshot.uiRoomConfirmText=roomView.confirmationText.text;snapshot.uiRoomPasswordStatus=roomView.passwordStatus.text;snapshot.uiRoomNoticeText=roomView.notices.text;
-                snapshot.uiTyping=RoomMovementInput.IsEditingText;snapshot.uiMovementBlocked=roomView.BlocksMovement;
-                var move=roomView.ReadMovement();snapshot.uiMoveX=move.x;snapshot.uiMoveY=move.y;
+                snapshot.uiTyping=UguiViewUtility.IsEditingText;snapshot.uiMovementBlocked=true;
+                var move=Vector2.zero;snapshot.uiMoveX=move.x;snapshot.uiMoveY=move.y;
             }
             var layout=screen.GetComponentInChildren<UguiSceneLayout>(true);
             snapshot.uiHasSceneLayout=layout!=null;
@@ -613,17 +860,21 @@ namespace SmartTraining
             // 숨겨진 검사 창은 화면 버퍼가 없을 수 있으므로 해당 Canvas만 텍스처로 렌더링합니다.
             var root = new GameObject("Probe UI Capture", typeof(Camera));
             var camera = root.GetComponent<Camera>(); camera.enabled = false;camera.clearFlags = CameraClearFlags.SolidColor;camera.backgroundColor = Color.black;
+            var sceneRenderers = UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None)
+                .Where(renderer => renderer.enabled && !renderer.transform.IsChildOf(canvas.transform)).ToArray();
             var target = new RenderTexture(Screen.width, Screen.height, 24);
             var texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
             var mode = canvas.renderMode;var previousCamera = canvas.worldCamera;var previousTarget = RenderTexture.active;
             try
             {
+                foreach (var renderer in sceneRenderers) renderer.enabled = false;
                 camera.targetTexture = target;canvas.renderMode = RenderMode.ScreenSpaceCamera;canvas.worldCamera = camera;canvas.planeDistance = 10;
                 Canvas.ForceUpdateCanvases();camera.Render();RenderTexture.active = target;
                 texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);texture.Apply();File.WriteAllBytes(path, texture.EncodeToPNG());
             }
             finally
             {
+                foreach (var renderer in sceneRenderers) if (renderer != null) renderer.enabled = true;
                 canvas.renderMode = mode;canvas.worldCamera = previousCamera;camera.targetTexture = null;RenderTexture.active = previousTarget;
                 Destroy(texture);Destroy(target);Destroy(root);Canvas.ForceUpdateCanvases();
             }
@@ -654,7 +905,9 @@ namespace SmartTraining
             foreach(var target in ui.GetComponentsInChildren<UnityEngine.UI.Selectable>())
             {
                 if(!target.IsInteractable())continue;
-                var rect=(RectTransform)target.transform;var point=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(rect.rect.center));
+                var rect=(RectTransform)target.transform;
+                if (rect.rect.width < 1 || rect.rect.height < 1) return false;
+                var point=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(rect.rect.center));
                 var scroll=target.GetComponentInParent<UnityEngine.UI.ScrollRect>();if(scroll!=null&&!RectTransformUtility.RectangleContainsScreenPoint(scroll.viewport,point))continue;
                 if(point.x<0||point.x>Screen.width||point.y<0||point.y>Screen.height)return false;
                 var hits=new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();events.RaycastAll(new UnityEngine.EventSystems.PointerEventData(events){position=point},hits);
@@ -669,7 +922,9 @@ namespace SmartTraining
             foreach(var target in ui.GetComponentsInChildren<UnityEngine.UI.Selectable>())
             {
                 if(!target.IsInteractable())continue;
-                var rect=(RectTransform)target.transform;var point=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(rect.rect.center));
+                var rect=(RectTransform)target.transform;
+                if (rect.rect.width < 1 || rect.rect.height < 1) return false;
+                var point=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(rect.rect.center));
                 var scroll=target.GetComponentInParent<UnityEngine.UI.ScrollRect>();if(scroll!=null&&!RectTransformUtility.RectangleContainsScreenPoint(scroll.viewport,point))continue;
                 if(point.x<0||point.x>Screen.width||point.y<0||point.y>Screen.height){Debug.LogWarning("ROOM RAYCAST OUTSIDE: "+target.name);return false;}
                 var hits=new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();events.RaycastAll(new UnityEngine.EventSystems.PointerEventData(events){position=point},hits);

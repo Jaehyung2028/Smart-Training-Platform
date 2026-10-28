@@ -35,7 +35,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5966306893896851070
 CanvasRenderer:
@@ -58,7 +58,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -138,7 +138,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -323,7 +323,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.05882353, g: 0.09019608, b: 0.16470589, a: 1}
+  m_Color: {r: 0.9137255, g: 0.9372549, b: 0.96862745, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -408,8 +408,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -439,13 +439,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -540,7 +540,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -620,7 +620,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -738,7 +738,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC774\uC804 \uBC29 \uC7AC\uC811\uC18D"
 --- !u!1 &1011134166347397755
 GameObject:
@@ -808,8 +808,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -839,13 +839,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -959,7 +959,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC804\uC1A1"
 --- !u!1 &1413452227014800030
 GameObject:
@@ -1019,7 +1019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1099,7 +1099,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1205,15 +1205,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.972549, g: 0.98039216, b: 0.9882353, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1235,12 +1235,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 12
-    m_Right: 12
-    m_Top: 12
-    m_Bottom: 12
+    m_Left: 24
+    m_Right: 24
+    m_Top: 20
+    m_Bottom: 20
   m_ChildAlignment: 0
-  m_Spacing: 6
+  m_Spacing: 8
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 1
@@ -1319,7 +1319,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1483,7 +1483,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1601,7 +1601,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC0C8 \uBC29 \uB9CC\uB4E4\uAE30"
 --- !u!1 &1988218048548834714
 GameObject:
@@ -1750,8 +1750,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1785,9 +1785,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
     m_PressedColor: {r: 0.11764706, g: 0.2509804, b: 0.6862745, a: 1}
     m_SelectedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -1859,7 +1859,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5255638619979029092
 CanvasRenderer:
@@ -1882,7 +1882,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2047,7 +2047,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2066,7 +2066,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC7AC\uC811\uC18D \uB300\uC0C1 \uC9C0\uC6B0\uAE30"
 --- !u!1 &2378183168885071181
 GameObject:
@@ -2127,7 +2127,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2236,8 +2236,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2267,13 +2267,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -2368,7 +2368,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2448,7 +2448,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2547,7 +2547,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2566,7 +2566,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uBC29 \uC785\uC7A5 \uCDE8\uC18C"
 --- !u!1 &2550945974582765063
 GameObject:
@@ -2626,7 +2626,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2645,7 +2645,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uB85C\uBE44 \uD1F4\uC7A5"
 --- !u!1 &2651059773974762881
 GameObject:
@@ -2715,8 +2715,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2750,9 +2750,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
     m_PressedColor: {r: 0.11764706, g: 0.2509804, b: 0.6862745, a: 1}
     m_SelectedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -2848,7 +2848,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2857,7 +2857,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 24
+    m_FontSize: 27
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
@@ -2972,15 +2972,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -3069,7 +3069,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &2980042903177652707
@@ -3155,15 +3155,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -3252,7 +3252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &3008926411078343380
@@ -3313,7 +3313,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3417,15 +3417,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -3514,7 +3514,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &3083449552054841005
@@ -3594,7 +3594,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uBC29 \uC0DD\uC131"
 --- !u!1 &3087979616089894764
 GameObject:
@@ -3679,15 +3679,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -3776,7 +3776,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &3121787402663896880
@@ -3838,7 +3838,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4042,15 +4042,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.972549, g: 0.98039216, b: 0.9882353, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -4143,7 +4143,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4162,7 +4162,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uB0A8\uC740 \uBC29 \uC811\uC18D \uC815\uB9AC"
 --- !u!1 &3534229573486860000
 GameObject:
@@ -4233,15 +4233,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.972549, g: 0.98039216, b: 0.9882353, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -4335,7 +4335,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4446,8 +4446,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -4481,9 +4481,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.9372549, g: 0.9647059, b: 1, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
     m_SelectedColor: {r: 0.9372549, g: 0.9647059, b: 1, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -4533,7 +4533,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SmartTraining.UguiSelectionHighlight
   border: {fileID: 2234959051245311751}
-  normalColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  normalColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   selectedColor: {r: 0.14509805, g: 0.3882353, b: 0.92156863, a: 1}
 --- !u!114 &2234959051245311751
 MonoBehaviour:
@@ -4547,7 +4547,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &3979836022851952493
@@ -4609,7 +4609,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4718,8 +4718,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -4753,9 +4753,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
     m_PressedColor: {r: 0.11764706, g: 0.2509804, b: 0.6862745, a: 1}
     m_SelectedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -4852,7 +4852,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4966,15 +4966,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -5063,7 +5063,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &4209181590957049421
@@ -5134,8 +5134,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -5165,13 +5165,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -5266,7 +5266,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5285,7 +5285,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uB85C\uADF8\uC544\uC6C3"
 --- !u!1 &4262162549096779469
 GameObject:
@@ -5346,7 +5346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5447,7 +5447,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5561,15 +5561,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -5658,7 +5658,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &4330521149461350990
@@ -5782,7 +5782,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1217596401600883985
 CanvasRenderer:
@@ -5805,7 +5805,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6054,7 +6054,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6110,7 +6110,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4050655586518647636
 CanvasRenderer:
@@ -6133,7 +6133,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6289,7 +6289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6298,7 +6298,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 18
+    m_FontSize: 17
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
@@ -6475,7 +6475,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6667,7 +6667,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6686,7 +6686,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC785\uC7A5 \uAC00\uB2A5\uB9CC: \uAEBC\uC9D0"
 --- !u!1 &5162251042296350472
 GameObject:
@@ -6756,8 +6756,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -6787,13 +6787,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -6899,8 +6899,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -6934,9 +6934,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.9372549, g: 0.9647059, b: 1, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
     m_SelectedColor: {r: 0.9372549, g: 0.9647059, b: 1, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -6985,7 +6985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &5237352762359155909
@@ -7047,7 +7047,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7245,8 +7245,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -7280,9 +7280,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
     m_PressedColor: {r: 0.11764706, g: 0.2509804, b: 0.6862745, a: 1}
     m_SelectedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -7381,15 +7381,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -7460,7 +7460,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &5563267626629035397
@@ -7531,8 +7531,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -7562,13 +7562,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -7940,8 +7940,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -7971,13 +7971,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -8049,7 +8049,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8321730713660872579
 CanvasRenderer:
@@ -8072,7 +8072,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8151,7 +8151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8230,7 +8230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8249,7 +8249,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uCD08\uAE30\uD654"
 --- !u!1 &5815801844414052269
 GameObject:
@@ -8389,7 +8389,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8488,7 +8488,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8507,7 +8507,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uCF58\uD150\uCE20 \uC120\uD0DD"
 --- !u!1 &6041761214599609278
 GameObject:
@@ -8586,7 +8586,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC120\uD0DD\uD55C \uBC29\uC5D0 \uCC38\uAC00"
 --- !u!1 &6285614002134752395
 GameObject:
@@ -8671,15 +8671,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -8768,7 +8768,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &6536422199230335028
@@ -8839,8 +8839,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -8870,13 +8870,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -8971,7 +8971,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8990,7 +8990,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uBAA9\uB85D \uC0C8\uB85C\uACE0\uCE68"
 --- !u!1 &6968072815498189822
 GameObject:
@@ -9050,7 +9050,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9069,7 +9069,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC804\uCCB4 \uBC29"
 --- !u!1 &7053363477676770665
 GameObject:
@@ -9129,7 +9129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9148,7 +9148,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uB2EB\uAE30"
 --- !u!1 &7055796522888723530
 GameObject:
@@ -9208,7 +9208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9227,7 +9227,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uBC29 \uC774\uB984\n\uC811\uC18D \xB7 \uC608\uC57D \xB7 \uBE48\uC790\uB9AC"
 --- !u!1 &7061750192000280075
 GameObject:
@@ -9287,7 +9287,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9306,7 +9306,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uCC38\uAC00\uC790\n\uC704\uCE58 \xB7 \uBC29 \uBCF4\uAE30"
 --- !u!1 &7186738124242685689
 GameObject:
@@ -9376,8 +9376,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -9407,13 +9407,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -9508,7 +9508,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9527,7 +9527,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uC54C\uB9BC \uB2E4\uC2DC \uC5F0\uACB0"
 --- !u!1 &7538372842345863149
 GameObject:
@@ -9597,8 +9597,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -9628,13 +9628,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -9731,7 +9731,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9797,7 +9797,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1460934044894039263
 CanvasRenderer:
@@ -9820,7 +9820,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -9903,15 +9903,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -9982,7 +9982,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &7779823448100732019
@@ -10044,7 +10044,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10310,15 +10310,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.972549, g: 0.98039216, b: 0.99215686, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -10389,7 +10389,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+  m_EffectColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
 --- !u!1 &7863555779112978285
@@ -10460,8 +10460,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -10491,13 +10491,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -10592,7 +10592,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10681,8 +10681,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -10712,13 +10712,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -10814,7 +10814,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10923,8 +10923,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -10958,9 +10958,9 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
     m_PressedColor: {r: 0.11764706, g: 0.2509804, b: 0.6862745, a: 1}
     m_SelectedColor: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -11057,7 +11057,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -11236,7 +11236,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -11255,7 +11255,7 @@ MonoBehaviour:
     m_RichText: 0
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
+    m_LineSpacing: 1.1
   m_Text: "\uCD5C\uADFC \uC0DD\uC131\uC21C"
 --- !u!1 &8957821847747122761
 GameObject:
@@ -11292,7 +11292,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: -10}
+  m_SizeDelta: {x: -28, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4654602310197968743
 CanvasRenderer:
@@ -11315,7 +11315,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.16078432, b: 0.23137255, a: 1}
+  m_Color: {r: 0.09411765, g: 0.15294118, b: 0.23529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -11404,8 +11404,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 90caa1db83b7bd844b456be8d8d39868, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -11435,13 +11435,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-    m_HighlightedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_NormalColor: {r: 0.92941177, g: 0.9490196, b: 0.9764706, a: 1}
+    m_HighlightedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
     m_PressedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_SelectedColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
-    m_DisabledColor: {r: 0.79607844, g: 0.8352941, b: 0.88235295, a: 1}
+    m_SelectedColor: {r: 0.84705883, g: 0.8862745, b: 0.93333334, a: 1}
+    m_DisabledColor: {r: 0.7921569, g: 0.8352941, b: 0.8980392, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.12
+    m_FadeDuration: 0.14
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -11536,7 +11536,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
-  m_Color: {r: 0.39215687, g: 0.45490196, b: 0.54509807, a: 1}
+  m_Color: {r: 0.4, g: 0.46666667, b: 0.5529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

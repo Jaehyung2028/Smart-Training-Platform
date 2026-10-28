@@ -13,6 +13,19 @@ namespace SmartTraining.Editor
             const string path = "Assets/SmartTraining/Resources/SmartTraining/RoomPlayer.prefab";
             if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
             {
+                var existing = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    if (existing.GetComponent<TrainingProgress>() == null)
+                    {
+                        existing.AddComponent<TrainingProgress>();
+                        PrefabUtility.SaveAsPrefabAsset(existing, path);
+                    }
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(existing);
+                }
                 return;
             }
 
@@ -23,6 +36,7 @@ namespace SmartTraining.Editor
             {
                 root.AddComponent<NetworkObject>();
                 root.AddComponent<RoomPlayer>();
+                root.AddComponent<TrainingProgress>();
                 PrefabUtility.SaveAsPrefabAsset(root, path);
                 AssetDatabase.SaveAssets();
             }

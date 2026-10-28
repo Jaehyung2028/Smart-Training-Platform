@@ -1,18 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace SmartTraining
 {
-    [Serializable]
-    public sealed class LobbyChatMessage
-    {
-        public string id, lobbyId, roomId, userId, nickname, text, sentAt;
-
-        public long sequence;
-    }
-
     public sealed partial class ApiLobbyScreen
     {
         private readonly List<LobbyChatMessage> chatMessages = new List<LobbyChatMessage>();

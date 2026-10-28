@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5596818142284181173}
   - component: {fileID: 4499605960883495}
   - component: {fileID: 3816666529631399697}
+  - component: {fileID: 5294706203193133730}
   m_Layer: 0
   m_Name: RoomPlayer
   m_TagString: Untagged
@@ -43,7 +44,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
   GlobalObjectIdHash: 0
   InScenePlacedSourceGlobalObjectIdHash: 0
@@ -68,6 +69,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 358bcfcc33d9400fb9578cd54a923e02, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::SmartTraining.RoomPlayer
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5294706203193133730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 832610286508293549}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07b340fac404c464caefc094ef0e20d1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SmartTraining.TrainingProgress
   ShowTopMostFoldoutHeaderGroup: 1

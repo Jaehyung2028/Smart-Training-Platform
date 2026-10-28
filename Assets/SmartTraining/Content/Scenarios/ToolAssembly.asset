@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd11537915804aaeb6f3d5b928a8491f, type: 3}
+  m_Name: ToolAssembly
+  m_EditorClassIdentifier: Assembly-CSharp::SmartTraining.ScenarioDefinition
+  id: tool-assembly
+  title: "볼트 풀기 실습"
+  steps:
+  - id: loosen-first
+    title: "첫 번째 볼트 풀기"
+    instruction: "스패너로 첫 번째 볼트를 푸세요."
+    toolId: spanner
+    targetId: bolt-a
+  - id: loosen-second
+    title: "두 번째 볼트 풀기"
+    instruction: "스패너로 두 번째 볼트를 푸세요."
+    toolId: spanner
+    targetId: bolt-b
+  - id: inspect-result
+    title: "작업 결과 확인"
+    instruction: "공구 없이 두 번째 볼트를 클릭해 작업 결과를 확인하세요."
+    toolId: ""
+    targetId: bolt-b
+  tools:
+  - id: spanner
+    title: "스패너"
+  - id: screwdriver
+    title: "드라이버"
+  - id: hammer
+    title: "망치"

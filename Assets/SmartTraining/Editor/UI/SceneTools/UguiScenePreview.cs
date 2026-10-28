@@ -21,8 +21,7 @@ namespace SmartTraining.Editor
         RoomJoin,
         Room,
         RoomSettings,
-        RoomConfirmation,
-        Movement
+        RoomConfirmation
     }
 
     [InitializeOnLoad]
@@ -87,7 +86,6 @@ namespace SmartTraining.Editor
             );
             SetActive(layout.roomView.settingsModal, screen == UguiPreviewScreen.RoomSettings);
             SetActive(layout.roomView.confirmationModal, screen == UguiPreviewScreen.RoomConfirmation);
-            SetActive(layout.roomView.mapModal, screen == UguiPreviewScreen.Movement);
             SetGroup(layout.roomView.mainInteraction, screen == UguiPreviewScreen.Room);
             if (screen == UguiPreviewScreen.RoomConfirmation)
             {

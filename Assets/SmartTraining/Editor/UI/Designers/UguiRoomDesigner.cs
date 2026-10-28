@@ -150,8 +150,7 @@ namespace SmartTraining.Editor
             foreach (var modal in new[]
             {
                 ui.settingsModal,
-                ui.confirmationModal,
-                ui.mapModal
+                ui.confirmationModal
             }
 
             )
@@ -160,7 +159,6 @@ namespace SmartTraining.Editor
                 modal.transform.Find("Card").GetComponent<Image>().color = theme.surface;
             }
 
-            ui.map.GetComponent<Image>().color = theme.secondary;
         }
 
         private static Outline Border(GameObject root, Color color)

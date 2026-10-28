@@ -547,7 +547,7 @@ namespace SmartTraining.Editor
                 fail
             );
             Check(!other.SetReady(false), "client preparation control is disabled during running phase");
-            other.LocalPlayer.SetReadyRpc(false);
+            other.LocalPlayer.SetReadyRpc(false, other.LocalPlayer.RoomContentNodeId);
             double until = Time.realtimeSinceStartupAsDouble + 0.4;
             while (Time.realtimeSinceStartupAsDouble < until)
             {
@@ -745,7 +745,7 @@ namespace SmartTraining.Editor
             bool rejected = false;
             try
             {
-                Array.Find(client.Players, player => !player.IsOwner).SetReadyRpc(true);
+                Array.Find(client.Players, player => !player.IsOwner).SetReadyRpc(true, client.LocalPlayer.RoomContentNodeId);
             }
             catch (Unity.Netcode.RpcException)
             {
@@ -757,7 +757,7 @@ namespace SmartTraining.Editor
             var screen = UnityEngine.Object.FindFirstObjectByType<ApiLobbyScreen>();
             BindScreen(screen, first, client, lobby, room);
             Check(!client.SetReady(true), "master cannot use client readiness control");
-            client.LocalPlayer.SetReadyRpc(true);
+            client.LocalPlayer.SetReadyRpc(true, client.LocalPlayer.RoomContentNodeId);
             yield return Settle();
             Check(!client.LocalPlayer.IsReady && !client.GetReadiness().AllReady && client.GetReadiness().ReadyTargetCount == 1,
                 "server rejects master ready RPC and waits for ordinary participant");
@@ -1706,12 +1706,24 @@ namespace SmartTraining.Editor
             client.LocalPlayer.RequestPhaseRpc(true);
             yield return WaitPhase(client, true);
             yield return WaitPhase(other, true);
-            // 네트워크 연결만 시험하는 경로에서는 콘텐츠 씬이 없을 수 있습니다.
-            // 시작 상태만으로 로비에 캐릭터가 생기지 않고, 씬 준비 여부와 표시 상태가 일치해야 합니다.
+            // 네트워크 상태만으로 메시가 생성되지 않고, 표시 계층이 명시적으로 연결할 때만 표시합니다.
             yield return null;
-            Check(client.Players.All(player => HasVisibleCharacter(player) == (ContentSceneSession.SceneReady)) &&
-                other.Players.All(player => HasVisibleCharacter(player) == (ContentSceneSession.SceneReady)),
-                "running participant visuals follow content scene readiness");
+            Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
+                "network state alone does not create avatar visuals");
+            foreach (var participant in client.Players.Concat(other.Players))
+            {
+                participant.SetPresentationVisible(true);
+            }
+            yield return null;
+            Check(client.Players.All(HasVisibleCharacter) && other.Players.All(HasVisibleCharacter),
+                "presentation owner explicitly enables avatar visuals");
+            foreach (var participant in client.Players.Concat(other.Players))
+            {
+                participant.SetPresentationVisible(false);
+            }
+            yield return null;
+            Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
+                "presentation owner explicitly disables avatar visuals");
             var start = client.LocalPlayer.ServerPosition;
             var otherStart = other.LocalPlayer.ServerPosition;
             yield return Move(client, Vector2.right, 1);

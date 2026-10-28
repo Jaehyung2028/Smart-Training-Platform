@@ -34,12 +34,12 @@ The .meta GUID of every existing asset is preserved.
 | Assets/SmartTraining/Scripts/RoomEndpoint.cs | Assets/SmartTraining/Scripts/Client/Networking/RoomEndpoint.cs |
 | Assets/SmartTraining/Scripts/RoomHubConnection.cs | Assets/SmartTraining/Scripts/Client/Networking/RoomHubConnection.cs |
 | Assets/SmartTraining/Scripts/RoomMoveButton.cs | Assets/SmartTraining/Scripts/UI/Common/RoomMoveButton.cs |
-| Assets/SmartTraining/Scripts/RoomMovementInput.cs | Assets/SmartTraining/Scripts/Gameplay/RoomMovementInput.cs |
+| Assets/SmartTraining/Scripts/RoomMovementInput.cs | Assets/SmartTraining/Scripts/Common/Input/PlayerMovementInput.cs |
 | Assets/SmartTraining/Scripts/RoomNetworkClient.cs | Assets/SmartTraining/Scripts/Client/Networking/RoomNetworkClient.cs |
 | Assets/SmartTraining/Scripts/RoomNoticeTracker.cs | Assets/SmartTraining/Scripts/Domain/RoomNoticeTracker.cs |
 | Assets/SmartTraining/Scripts/RoomParticipantCard.cs | Assets/SmartTraining/Scripts/UI/Views/RoomParticipantCard.cs |
-| Assets/SmartTraining/Scripts/RoomPlayer.cs | Assets/SmartTraining/Scripts/Gameplay/RoomPlayer.cs |
-| Assets/SmartTraining/Scripts/RoomPlayerPrefab.cs | Assets/SmartTraining/Scripts/Gameplay/RoomPlayerPrefab.cs |
+| Assets/SmartTraining/Scripts/RoomPlayer.cs | Assets/SmartTraining/Scripts/Gameplay/Room/RoomPlayer.cs |
+| Assets/SmartTraining/Scripts/RoomPlayerPrefab.cs | Assets/SmartTraining/Scripts/Gameplay/Room/RoomPlayerPrefab.cs |
 | Assets/SmartTraining/Scripts/RoomUguiView.cs | Assets/SmartTraining/Scripts/UI/Views/RoomUguiView.cs |
 | Assets/SmartTraining/Scripts/ServerAddressSettings.cs | Assets/SmartTraining/Scripts/Client/Networking/ServerAddressSettings.cs |
 | Assets/SmartTraining/Scripts/TrainingApiClient.cs | Assets/SmartTraining/Scripts/Client/Api/TrainingApiClient.cs |
@@ -134,3 +134,87 @@ The .meta GUID of every existing asset is preserved.
 | Assets/SmartTraining/STEP6-Netcode클라이언트.md | Assets/SmartTraining/Documentation/History/STEP6-Netcode클라이언트.md |
 | Assets/SmartTraining/STEP7-전용방서버.md | Assets/SmartTraining/Documentation/History/STEP7-전용방서버.md |
 | Assets/SmartTraining/STEP8-플레이어이동.md | Assets/SmartTraining/Documentation/History/STEP8-플레이어이동.md |
+
+## 공통 모듈 분리
+
+| 이전 위치 | 현재 위치 |
+| --- | --- |
+| Scripts/Gameplay/ContentPreferences.cs | Scripts/Common/Settings/ClientPreferences.cs |
+| Scripts/Gameplay/ContentOptionsPanel.cs | Scripts/Common/UI/ClientSettingsPanel.cs |
+| Scripts/Gameplay/VideoSubtitles.cs | Scripts/Common/Media/VideoSubtitles.cs |
+
+콘텐츠 HUD는 `Scripts/UI/Content/ContentHudController.cs`, 채팅 표현은 `Scripts/UI/Chat/ChatMessagePresentation.cs`에 있습니다. 전체 역할 경계는 `ModuleResponsibilities.md`를 참고합니다.
+
+## 콘텐츠별 폴더 정리
+
+Gameplay/Core: 콘텐츠 로딩과 씬 연결
+Gameplay/Room: 방 플레이어
+Gameplay/Model, Scenario, Video: 종류별 동작과 동기화
+UI/Content/Common, Model, Scenario, Video: 콘텐츠별 화면과 메뉴
+Editor/Builders/Content: 콘텐츠 생성과 Addressables 준비
+Content: Models, Videos, Scenarios의 콘텐츠와 Shared/Materials의 공용 재질
+
+| 이전 경로 | 현재 경로 |
+|---|---|
+| Assets/SmartTraining/Scripts/Gameplay/ContentActionMenu.cs | Assets/SmartTraining/Scripts/UI/Content/Common/ContentActionMenu.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ContentAssetScope.cs | Assets/SmartTraining/Scripts/Gameplay/Core/ContentAssetScope.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ContentResourceContext.cs | Assets/SmartTraining/Scripts/Gameplay/Core/ContentResourceContext.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ContentSceneSession.cs | Assets/SmartTraining/Scripts/Gameplay/Core/ContentSceneSession.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelDisassemblyAnimation.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelDisassemblyAnimation.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelExplodedView.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelExplodedView.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPartDetailsPanel.cs | Assets/SmartTraining/Scripts/UI/Content/Model/ModelPartDetailsPanel.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPartHighlighter.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelPartHighlighter.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPartInfo.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelPartInfo.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPartListPanel.cs | Assets/SmartTraining/Scripts/UI/Content/Model/ModelPartListPanel.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPartTransparency.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelPartTransparency.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPartTree.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelPartTree.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPlaybackState.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelPlaybackState.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelPointerGesture.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelPointerGesture.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelStepPanel.cs | Assets/SmartTraining/Scripts/UI/Content/Model/ModelStepPanel.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ModelViewer.cs | Assets/SmartTraining/Scripts/Gameplay/Model/ModelViewer.cs |
+| Assets/SmartTraining/Scripts/Gameplay/RoomPlayer.cs | Assets/SmartTraining/Scripts/Gameplay/Room/RoomPlayer.cs |
+| Assets/SmartTraining/Scripts/Gameplay/RoomPlayerPrefab.cs | Assets/SmartTraining/Scripts/Gameplay/Room/RoomPlayerPrefab.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ScenarioContent.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/ScenarioContent.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ScenarioDefinition.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/ScenarioDefinition.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ScenarioObject.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/ScenarioObject.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ScenarioObjectView.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/ScenarioObjectView.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ScenarioProgress.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/ScenarioProgress.cs |
+| Assets/SmartTraining/Scripts/Gameplay/ScenarioProgressState.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/ScenarioProgressState.cs |
+| Assets/SmartTraining/Scripts/Gameplay/SharedModel.cs | Assets/SmartTraining/Scripts/Gameplay/Model/SharedModel.cs |
+| Assets/SmartTraining/Scripts/Gameplay/SharedScenario.cs | Assets/SmartTraining/Scripts/Gameplay/Scenario/SharedScenario.cs |
+| Assets/SmartTraining/Scripts/Gameplay/SharedVideo.cs | Assets/SmartTraining/Scripts/Gameplay/Video/SharedVideo.cs |
+| Assets/SmartTraining/Scripts/Gameplay/TrainingContentStage.cs | Assets/SmartTraining/Scripts/Gameplay/Core/TrainingContentStage.cs |
+| Assets/SmartTraining/Scripts/Gameplay/VideoContentPlayer.cs | Assets/SmartTraining/Scripts/Gameplay/Video/VideoContentPlayer.cs |
+| Assets/SmartTraining/Scripts/Gameplay/VideoControlPanel.cs | Assets/SmartTraining/Scripts/UI/Content/Video/VideoControlPanel.cs |
+| Assets/SmartTraining/Scripts/Gameplay/VideoPlaybackState.cs | Assets/SmartTraining/Scripts/Gameplay/Video/VideoPlaybackState.cs |
+| Assets/SmartTraining/Scripts/UI/Content/ScenarioControlPanel.cs | Assets/SmartTraining/Scripts/UI/Content/Scenario/ScenarioControlPanel.cs |
+| Assets/SmartTraining/Scripts/UI/Content/ScenarioToolMenu.cs | Assets/SmartTraining/Scripts/UI/Content/Scenario/ScenarioToolMenu.cs |
+| Assets/SmartTraining/Editor/Builders/ContentAddressablesSetup.cs | Assets/SmartTraining/Editor/Builders/Content/ContentAddressablesSetup.cs |
+| Assets/SmartTraining/Editor/Builders/ModelContentBuilder.cs | Assets/SmartTraining/Editor/Builders/Content/ModelContentBuilder.cs |
+| Assets/SmartTraining/Editor/Builders/SampleCourseBuilder.cs | Assets/SmartTraining/Editor/Builders/Content/SampleCourseBuilder.cs |
+| Assets/SmartTraining/Editor/Builders/ScenarioContentBuilder.cs | Assets/SmartTraining/Editor/Builders/Content/ScenarioContentBuilder.cs |
+| Assets/SmartTraining/Editor/Builders/VideoContentBuilder.cs | Assets/SmartTraining/Editor/Builders/Content/VideoContentBuilder.cs |
+| Assets/SmartTraining/Content/Color-000000.mat | Assets/SmartTraining/Content/Shared/Materials/Color-000000.mat |
+| Assets/SmartTraining/Content/Color-3C82B4.mat | Assets/SmartTraining/Content/Shared/Materials/Color-3C82B4.mat |
+| Assets/SmartTraining/Content/Color-50AADC.mat | Assets/SmartTraining/Content/Shared/Materials/Color-50AADC.mat |
+| Assets/SmartTraining/Content/Color-6982B4.mat | Assets/SmartTraining/Content/Shared/Materials/Color-6982B4.mat |
+| Assets/SmartTraining/Content/Color-808080.mat | Assets/SmartTraining/Content/Shared/Materials/Color-808080.mat |
+| Assets/SmartTraining/Content/Color-9682B4.mat | Assets/SmartTraining/Content/Shared/Materials/Color-9682B4.mat |
+| Assets/SmartTraining/Content/Color-D22D2D.mat | Assets/SmartTraining/Content/Shared/Materials/Color-D22D2D.mat |
+| Assets/SmartTraining/Content/Color-FFEB04.mat | Assets/SmartTraining/Content/Shared/Materials/Color-FFEB04.mat |
+| Assets/SmartTraining/Content/EmergencyGuide.mp4 | Assets/SmartTraining/Content/Videos/EmergencyGuide/EmergencyGuide.mp4 |
+| Assets/SmartTraining/Content/EmergencyGuide.prefab | Assets/SmartTraining/Content/Videos/EmergencyGuide/EmergencyGuide.prefab |
+| Assets/SmartTraining/Content/EmergencyGuide.srt.txt | Assets/SmartTraining/Content/Videos/EmergencyGuide/EmergencyGuide.srt.txt |
+| Assets/SmartTraining/Content/EquipmentGuide.mp4 | Assets/SmartTraining/Content/Videos/EquipmentGuide/EquipmentGuide.mp4 |
+| Assets/SmartTraining/Content/EquipmentGuide.prefab | Assets/SmartTraining/Content/Videos/EquipmentGuide/EquipmentGuide.prefab |
+| Assets/SmartTraining/Content/EquipmentGuide.srt.txt | Assets/SmartTraining/Content/Videos/EquipmentGuide/EquipmentGuide.srt.txt |
+| Assets/SmartTraining/Content/EvacuationCheck.asset | Assets/SmartTraining/Content/Scenarios/EvacuationCheck/EvacuationCheck.asset |
+| Assets/SmartTraining/Content/EvacuationCheck.prefab | Assets/SmartTraining/Content/Scenarios/EvacuationCheck/EvacuationCheck.prefab |
+| Assets/SmartTraining/Content/Extinguisher.prefab | Assets/SmartTraining/Content/Models/Extinguisher/Extinguisher.prefab |
+| Assets/SmartTraining/Content/SafetyEquipment.prefab | Assets/SmartTraining/Content/Models/SafetyEquipment/SafetyEquipment.prefab |
+| Assets/SmartTraining/Content/ToolCheck.asset | Assets/SmartTraining/Content/Scenarios/ToolCheck/ToolCheck.asset |
+| Assets/SmartTraining/Content/ToolCheck.prefab | Assets/SmartTraining/Content/Scenarios/ToolCheck/ToolCheck.prefab |
+
+## 콘텐츠 폴더 통합
+
+기존·추가 샘플을 Content/Models, Content/Videos, Content/Scenarios에 함께 보관합니다. 공용 재질은 Content/Shared/Materials에 있습니다. CourseSamples 중간 폴더는 제거했습니다. 각 에셋의 GUID와 Addressables 주소는 유지합니다.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -14,6 +14,8 @@ namespace SmartTraining.Editor
             PlayerSettings.insecureHttpOption = InsecureHttpOption.DevelopmentOnly;
             ContentAddressablesSetup.Prepare();
             ModelContentBuilder.Prepare();
+            VideoContentBuilder.Prepare();
+            SampleCourseBuilder.Prepare();
             RoomPlayerPrefabBuilder.Create();
             LobbyUguiBuilder.EnsureAssets();
             LobbyInteriorUguiBuilder.EnsureAssets();

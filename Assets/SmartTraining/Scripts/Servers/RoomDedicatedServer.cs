@@ -13,35 +13,25 @@ namespace SmartTraining
     public sealed class RoomDedicatedServer : MonoBehaviour
     {
         private readonly Dictionary<ulong, RoomConnectionData> clients = new Dictionary<ulong, RoomConnectionData>();
-
         private readonly HashSet<string> claimedUsers = new HashSet<string>();
-
         private NetworkManager manager;
-
         private GameObject playerPrefab;
-
         private GameObject sharedModelPrefab;
-
         private SharedModel sharedModel;
-
+        private GameObject sharedVideoPrefab;
+        private SharedVideo sharedVideo;
+        private ScenarioServerSession scenarioSession;
+        private int contentNodeId;
+        private string contentAssetId = "";
         private string contentType = "";
-
         private RoomHubConnection hub;
-
         private string roomId;
-
         private string masterUserId = "";
-
         private bool entryLocked;
-
         private bool roomRunning, phasePending;
-
         private long phaseRevision = -1;
-
         private string currentRoomName = "";
-
         private int currentRoomCapacity;
-
         private bool stopping, registered;
 
         private IEnumerator Start()
@@ -75,13 +65,16 @@ namespace SmartTraining
                 EnableSceneManagement = false,
                 ConnectionApproval = true,
                 ClientConnectionBufferTimeout = 20
-
             };
             string prefabError = null;
             try
             {
                 playerPrefab = RoomPlayerPrefab.Register(manager);
                 sharedModelPrefab = SharedModel.Register(manager);
+                sharedVideoPrefab = SharedVideo.Register(manager);
+                var scenarioPrefab = SharedScenario.Register(manager);
+                scenarioSession = root.AddComponent<ScenarioServerSession>();
+                scenarioSession.Initialize(manager, scenarioPrefab);
             }
             catch (InvalidOperationException error)
             {
@@ -134,6 +127,7 @@ namespace SmartTraining
             StartCoroutine(SynchronizeRoomMaster());
         }
 
+
         private IEnumerator SynchronizeRoomMaster()
         {
             while (!stopping)
@@ -170,19 +164,35 @@ namespace SmartTraining
             }
         }
 
+
         private RoomPlayer[] ServerPlayers() => manager.ConnectedClients.Values.Select(value => value.PlayerObject == null ? null : value.PlayerObject.GetComponent<RoomPlayer>()).Where(value => value != null).ToArray();
 
         private void PublishRoomPhase(bool resetReady = false)
         {
             foreach (var player in ServerPlayers())
             {
-                player.SetRoomPhaseServer(roomRunning, phasePending, resetReady);
+                player.SetRoomContentServer(contentNodeId);
+                player.SetRoomPhaseServer(roomRunning, phasePending, resetReady, contentType);
             }
         }
 
-        // 모델 콘텐츠 시작 시 서버가 하나만 스폰합니다. 대기 복귀 시 소유자와 관계없이 서버가 제거합니다.
-        private void SynchronizeSharedModel()
+
+        // 콘텐츠 유형에 맞는 공용 상태를 하나만 스폰하고 대기 복귀 시 제거합니다.
+        private void SynchronizeSharedContent()
         {
+            scenarioSession.Synchronize(roomRunning && contentType == "scenario", contentAssetId);
+            bool needsVideo = roomRunning && contentType == "video";
+            if (needsVideo && sharedVideo == null)
+            {
+                sharedVideo = Instantiate(sharedVideoPrefab).GetComponent<SharedVideo>();
+                sharedVideo.NetworkObject.Spawn();
+            }
+            else if (!needsVideo && sharedVideo != null)
+            {
+                sharedVideo.NetworkObject.Despawn();
+                sharedVideo = null;
+            }
+
             bool needsModel = roomRunning && contentType == "model";
             if (needsModel && sharedModel == null)
             {
@@ -196,6 +206,7 @@ namespace SmartTraining
             }
         }
 
+
         private void ApplyRoomPhase(RoomHubResult result)
         {
             if (result.phaseRevision < phaseRevision)
@@ -205,11 +216,14 @@ namespace SmartTraining
 
             bool resetReady = result.phaseRevision > phaseRevision && roomRunning && !result.isRunning;
             phaseRevision = result.phaseRevision;
+            contentNodeId = result.contentNodeId;
             contentType = result.contentType ?? contentType;
+            contentAssetId = result.assetId ?? contentAssetId;
             roomRunning = result.isRunning;
             PublishRoomPhase(resetReady);
-            SynchronizeSharedModel();
+            SynchronizeSharedContent();
         }
+
 
         private void RequestRoomPhase(RoomPlayer caller, bool running)
         {
@@ -224,8 +238,11 @@ namespace SmartTraining
             }
 
             var players = ServerPlayers();
-            var readiness = RoomReadinessSummary.FromPlayers(players, caller.UserId,
-                players.Length == manager.ConnectedClients.Count);
+            var readiness = RoomReadinessSummary.FromPlayers(
+                players,
+                caller.UserId,
+                players.Length == manager.ConnectedClients.Count
+            );
             if (running && (roomRunning || !readiness.AllReady))
             {
                 caller.ReplyPhaseServer("방장을 제외한 참가자가 모두 접속을 완료하고 준비해야 시작할 수 있습니다.");
@@ -242,6 +259,7 @@ namespace SmartTraining
             PublishRoomPhase();
             StartCoroutine(ChangeRoomPhase(caller, admission, running, players));
         }
+
 
         private IEnumerator ChangeRoomPhase(RoomPlayer caller, RoomConnectionData admission, bool running, RoomPlayer[] players)
         {
@@ -291,6 +309,7 @@ namespace SmartTraining
             }
         }
 
+
         private static string Argument(string[] args, string name)
         {
             for (int i = 0; i + 1 < args.Length; i++)
@@ -303,6 +322,7 @@ namespace SmartTraining
 
             return null;
         }
+
 
         private float nextLatencySampleAt;
 
@@ -329,6 +349,7 @@ namespace SmartTraining
             }
         }
 
+
         private void Update()
         {
             if (stopping || hub == null)
@@ -344,6 +365,7 @@ namespace SmartTraining
             }
         }
 
+
         private IEnumerator Await(Task task)
         {
             while (!task.IsCompleted && !stopping)
@@ -351,6 +373,7 @@ namespace SmartTraining
                 yield return null;
             }
         }
+
 
         private bool Succeeded(Task task)
         {
@@ -367,6 +390,7 @@ namespace SmartTraining
 
             return false;
         }
+
 
         private void Approve(
             NetworkManager.ConnectionApprovalRequest request,
@@ -387,14 +411,16 @@ namespace SmartTraining
             {
             }
 
-            if (!registered ||
-                data == null ||
-                data.roomId != roomId ||
-                string.IsNullOrEmpty(data.userId) ||
-                string.IsNullOrEmpty(data.admissionToken) ||
-                !claimedUsers.Add(data.userId))
+            string rejection =
+                data == null ? "방 참가 정보의 형식이 올바르지 않습니다." :
+                data.roomId != roomId ? "요청한 방과 접속한 서버의 방이 다릅니다." :
+                string.IsNullOrEmpty(data.userId) || string.IsNullOrEmpty(data.admissionToken) ? "방 참가 정보가 누락되었습니다." :
+                !claimedUsers.Add(data.userId) ? "같은 사용자의 연결이 이미 처리 중입니다." : null;
+            if (rejection != null)
             {
-                response.Reason = "유효한 방 참가 예약이 필요합니다.";
+                response.Reason = rejection;
+                // 토큰은 출력하지 않고 승인에서 거절한 조건만 기록합니다.
+                Debug.LogWarning($"ROOM ADMISSION REJECTED: room={roomId}, registered={registered}, reason={rejection}");
                 return;
             }
 
@@ -403,8 +429,42 @@ namespace SmartTraining
             StartCoroutine(Validate(request.ClientNetworkId, data, response));
         }
 
-        private IEnumerator Validate(ulong id, RoomConnectionData data, NetworkManager.ConnectionApprovalResponse response)
+
+        private IEnumerator Validate(
+            ulong id,
+            RoomConnectionData data,
+            NetworkManager.ConnectionApprovalResponse response
+        )
         {
+            // ASP.NET의 Register 처리에서 입장 대기를 먼저 해제하므로, 그 응답이 이 서버에 도착하기 전에
+            // 클라이언트가 접속할 수 있습니다. NGO의 Pending 승인을 유지한 채 등록 완료를 기다립니다.
+            double registrationDeadline = Time.realtimeSinceStartupAsDouble + 10;
+            if (!registered)
+            {
+                Debug.Log("ROOM ADMISSION WAITING FOR REGISTRATION: " + roomId);
+            }
+
+            while (!registered &&
+                !stopping &&
+                clients.ContainsKey(id) &&
+                Time.realtimeSinceStartupAsDouble < registrationDeadline)
+            {
+                yield return null;
+            }
+
+            if (stopping || !clients.ContainsKey(id))
+            {
+                yield break;
+            }
+
+            if (!registered)
+            {
+                response.Reason = "방 서버의 관리 연결 준비 시간이 초과되었습니다.";
+                response.Pending = false;
+                RemoveClient(id);
+                yield break;
+            }
+
             var validation = hub.Invoke("ValidateConnection", data.userId, data.admissionToken);
             yield return Await(validation);
             if (stopping)
@@ -422,6 +482,7 @@ namespace SmartTraining
             }
         }
 
+
         private void Connected(ulong id)
         {
             if (clients.TryGetValue(id, out var data))
@@ -429,6 +490,7 @@ namespace SmartTraining
                 StartCoroutine(Confirm(id, data));
             }
         }
+
 
         private IEnumerator Confirm(ulong id, RoomConnectionData data)
         {
@@ -454,9 +516,7 @@ namespace SmartTraining
             }
 
             var participant = confirmation.Result;
-            if (participant.userId != data.userId ||
-                string.IsNullOrEmpty(participant.userName) ||
-                participant.roomIndex < 0)
+            if (participant.userId != data.userId || string.IsNullOrEmpty(participant.userName) || participant.roomIndex < 0)
             {
                 manager.DisconnectClient(id);
                 yield break;
@@ -469,8 +529,10 @@ namespace SmartTraining
             player.SetRoomMasterServer(masterUserId);
             player.SetRoomEntryLockServer(entryLocked);
             player.SetRoomSettingsServer(currentRoomName, currentRoomCapacity);
-            player.SetRoomPhaseServer(roomRunning, phasePending);
+            player.SetRoomContentServer(contentNodeId);
+            player.SetRoomPhaseServer(roomRunning, phasePending, contentType: contentType);
         }
+
 
         private void Disconnected(ulong id)
         {
@@ -481,12 +543,14 @@ namespace SmartTraining
             }
         }
 
+
         private IEnumerator NotifyDisconnected(RoomConnectionData data)
         {
             var notification = hub.Invoke("ClientDisconnected", data.userId, data.admissionToken);
             yield return Await(notification);
         // 로그아웃으로 소속이 먼저 제거됐을 수 있으므로 여기서의 중복 해제 실패는 무시합니다.
         }
+
 
         private RoomConnectionData RemoveClient(ulong id)
         {
@@ -500,6 +564,7 @@ namespace SmartTraining
             return data;
         }
 
+
         private void DisconnectUser(string userId, string token)
         {
             foreach (var pair in new List<KeyValuePair<ulong, RoomConnectionData>>(clients))
@@ -510,6 +575,7 @@ namespace SmartTraining
                 }
             }
         }
+
 
         private void TransportFailed() => StopServer("방 서버 네트워크가 종료되었습니다.");
 
@@ -523,6 +589,7 @@ namespace SmartTraining
                 }
             }
         }
+
 
         private IEnumerator CloseByMaster()
         {
@@ -538,6 +605,7 @@ namespace SmartTraining
             Application.Quit(0);
         }
 
+
         private void StopServer(string reason)
         {
             if (stopping)
@@ -551,6 +619,7 @@ namespace SmartTraining
             manager?.Shutdown(true);
             Application.Quit(1);
         }
+
 
         private void OnDestroy()
         {
