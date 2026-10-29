@@ -12,7 +12,7 @@ namespace SmartTraining.Editor
             ScenarioContentBuilder.Prepare();
             var definition = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(ScenarioContentBuilder.DefinitionPath);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ScenarioContentBuilder.PrefabPath);
-            Check(definition.TryValidate(out _) && definition.Steps.Count == 3, "예시 단계 데이터");
+            Check(definition.TryValidate(out _) && definition.Steps.Count == 6, "예시 단계 데이터");
             Check(prefab.GetComponent<ScenarioContent>().TryInitialize(out _), "프리팹 공구·대상 연결");
             var empty = ScriptableObject.CreateInstance<ScenarioDefinition>();
             try
@@ -23,17 +23,29 @@ namespace SmartTraining.Editor
             {
                 UnityEngine.Object.DestroyImmediate(empty);
             }
-            InvalidDefinition(definition, data => data.FindProperty("steps").GetArrayElementAtIndex(1)
-                .FindPropertyRelative("id").stringValue = definition.Steps[0].Id);
-            InvalidDefinition(definition, data => data.FindProperty("steps").GetArrayElementAtIndex(1)
-                .FindPropertyRelative("targetId").stringValue = "");
-            InvalidDefinition(definition, data => data.FindProperty("steps").GetArrayElementAtIndex(0)
-                .FindPropertyRelative("toolId").stringValue = "unregistered-tool");
+
+            InvalidDefinition(
+                definition,
+                data => data.FindProperty("steps").GetArrayElementAtIndex(1).FindPropertyRelative("id").stringValue = definition.Steps[0].Id
+            );
+            InvalidDefinition(
+                definition,
+                data => data.FindProperty("steps").GetArrayElementAtIndex(1).FindPropertyRelative("targetId").stringValue = ""
+            );
+            InvalidDefinition(
+                definition,
+                data => data.FindProperty("steps").GetArrayElementAtIndex(0).FindPropertyRelative("toolId").stringValue = "unregistered-tool"
+            );
             InvalidObject(prefab, "Bolt A", data => data.FindProperty("id").stringValue = "missing");
             InvalidObject(prefab, "Bolt A", data => data.FindProperty("id").stringValue = "bolt-b");
-            InvalidObject(prefab, "Bolt B", data => data.FindProperty("kind").enumValueIndex = (int)ScenarioObjectKind.Tool);
+            InvalidObject(
+                prefab,
+                "Bolt A",
+                data => data.FindProperty("kind").enumValueIndex = (int)ScenarioObjectKind.Tool
+            );
             Debug.Log("SCENARIO DATA CHECKS PASSED (9)");
         }
+
 
         private static void InvalidDefinition(ScenarioDefinition source, Action<SerializedObject> change)
         {
@@ -51,6 +63,7 @@ namespace SmartTraining.Editor
             }
         }
 
+
         private static void InvalidObject(GameObject source, string name, Action<SerializedObject> change)
         {
             var copy = UnityEngine.Object.Instantiate(source);
@@ -66,6 +79,7 @@ namespace SmartTraining.Editor
                 UnityEngine.Object.DestroyImmediate(copy);
             }
         }
+
 
         private static void Check(bool condition, string name)
         {

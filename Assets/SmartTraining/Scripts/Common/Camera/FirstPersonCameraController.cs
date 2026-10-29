@@ -30,6 +30,7 @@ namespace SmartTraining
         private int lookInputStartsAtFrame;
 
         public Camera ViewCamera => viewCamera;
+        public float Yaw => yaw;
         public bool CanInteract => isActiveAndEnabled && followTarget != null &&
             Application.isFocused && (inputAllowed?.Invoke() ?? true);
 

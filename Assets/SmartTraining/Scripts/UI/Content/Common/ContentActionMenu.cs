@@ -15,15 +15,13 @@ namespace SmartTraining
         private readonly Text toggleLabel;
         private readonly Text emptyLabel;
         private readonly List<(Button Button, Func<bool> CanExecute)> actions = new();
-
         private readonly List<GameObject> extraControls = new();
         private readonly List<(Selectable Control, Func<bool> CanUse)> controlStates = new();
-
         private readonly List<Action<bool>> sharedSliders = new();
         private readonly List<Action> flushSliders = new();
-        private readonly List<Action> cancelSliders = new();
 
         public bool IsOpen => panel != null && panel.activeSelf;
+
 
         public ContentActionMenu(Transform parent, Font font)
         {
@@ -41,8 +39,13 @@ namespace SmartTraining
             toggleRect.anchorMax = Vector2.one;
             toggleRect.offsetMin = toggleRect.offsetMax = Vector2.zero;
             toggleButton.onClick.AddListener(Toggle);
-
-            panel = new GameObject("Content Action List", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            panel = new GameObject(
+                "Content Action List",
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter)
+            );
             panel.transform.SetParent(root.transform, false);
             var panelRect = panel.GetComponent<RectTransform>();
             panelRect.anchorMin = Vector2.zero;
@@ -63,6 +66,7 @@ namespace SmartTraining
             Close();
         }
 
+
         // 콘텐츠 전용 UI도 같은 기능 메뉴의 배치·닫기·정리 수명주기에 포함합니다.
         public RectTransform AddSection(string name)
         {
@@ -77,6 +81,7 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
             return section.GetComponent<RectTransform>();
         }
+
 
         public void AddAction(string label, Action execute, Func<bool> canExecute)
         {
@@ -93,6 +98,7 @@ namespace SmartTraining
             actions.Add((button, canExecute));
             emptyLabel.gameObject.SetActive(false);
         }
+
 
         // 슬라이더는 메뉴를 닫지 않습니다. 선택 변경 후에도 개인별 설정을 그대로 사용합니다.
         public void AddTransparencyControls(Action<bool, float> apply, Func<bool> canUse)
@@ -112,6 +118,7 @@ namespace SmartTraining
                 {
                     return;
                 }
+
                 enabled = !enabled;
                 toggle.GetComponentInChildren<Text>().text = "주변 반투명: " + (enabled ? "켜짐" : "꺼짐");
                 apply(enabled, 1 - transparency);
@@ -131,9 +138,16 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
         }
 
+
         private Slider CreateSlider(string name)
         {
-            var slider = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Slider), typeof(LayoutElement)).GetComponent<Slider>();
+            var slider = new GameObject(
+                name,
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(Slider),
+                typeof(LayoutElement)
+            ).GetComponent<Slider>();
             slider.transform.SetParent(panel.transform, false);
             slider.GetComponent<Image>().color = new Color32(71, 85, 105, 255);
             slider.GetComponent<LayoutElement>().preferredHeight = 28;
@@ -154,8 +168,15 @@ namespace SmartTraining
             return slider;
         }
 
+
         // 서버의 공통 값을 표시합니다. 드래그 중 최신 입력만 0.1초 간격으로 보내고 마지막 값도 전송합니다.
-        public void AddSharedSlider(string title, string name, Func<float> getValue, Action<float> setValue, Func<bool> canUse)
+        public void AddSharedSlider(
+            string title,
+            string name,
+            Func<float> getValue,
+            Action<float> setValue,
+            Func<bool> canUse
+        )
         {
             var caption = CreateLabel(title + ": 0%", panel.transform);
             caption.fontSize = 16;
@@ -172,6 +193,7 @@ namespace SmartTraining
                 {
                     return;
                 }
+
                 requested = value;
                 editedAt = Time.unscaledTime;
                 pending = true;
@@ -183,14 +205,10 @@ namespace SmartTraining
                     setValue(requested);
                     nextSend = Time.unscaledTime + 0.1f;
                 }
+
                 pending = false;
             };
             flushSliders.Add(flush);
-            cancelSliders.Add(() =>
-            {
-                pending = false;
-                editedAt = float.NegativeInfinity;
-            });
             sharedSliders.Add(canInteract =>
             {
                 bool allowed = canInteract && canUse();
@@ -199,15 +217,18 @@ namespace SmartTraining
                 {
                     pending = false;
                 }
+
                 if (pending && Time.unscaledTime >= nextSend)
                 {
                     flush();
                 }
+
                 // 본인이 조절 중일 때 늦게 받은 이전 값으로 손잡이가 되돌아가지 않게 합니다.
                 if (!pending && Time.unscaledTime - editedAt > 0.25f)
                 {
                     slider.SetValueWithoutNotify(getValue());
                 }
+
                 caption.text = title + ": " + Mathf.RoundToInt(slider.value * 100) + "%";
             });
             extraControls.Add(caption.gameObject);
@@ -215,19 +236,32 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
         }
 
+
         public void AddPlaybackControls(Action<int> execute, Func<int, bool> canExecute, Func<string> getStatus)
         {
             var status = CreateLabel("조립 상태", panel.transform);
             status.fontSize = 16;
             status.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
-            var row = new GameObject("Model Playback Controls", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+            var row = new GameObject(
+                "Model Playback Controls",
+                typeof(RectTransform),
+                typeof(HorizontalLayoutGroup),
+                typeof(LayoutElement)
+            );
             row.transform.SetParent(panel.transform, false);
             row.GetComponent<LayoutElement>().preferredHeight = 40;
             var layout = row.GetComponent<HorizontalLayoutGroup>();
             layout.spacing = 4;
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandWidth = layout.childForceExpandHeight = true;
-            foreach (var item in new[] { (Label: "분해 재생", Direction: 1), (Label: "일시정지", Direction: 0), (Label: "재조립", Direction: -1) })
+            foreach (var item in new[]
+            {
+                (Label: "분해 재생", Direction: 1),
+                (Label: "일시정지", Direction: 0),
+                (Label: "재조립", Direction: -1)
+            }
+
+            )
             {
                 int direction = item.Direction;
                 var button = CreateButton(item.Label, row.transform);
@@ -242,25 +276,19 @@ namespace SmartTraining
                         {
                             flush();
                         }
+
                         execute(direction);
                     }
                 });
                 actions.Add((button, () => canExecute(direction)));
             }
+
             sharedSliders.Add(_ => status.text = getStatus());
             extraControls.Add(status.gameObject);
             extraControls.Add(row);
             emptyLabel.gameObject.SetActive(false);
         }
 
-        // 단계 이동을 누른 뒤 이전 슬라이더 입력이 뒤늦게 도착해 이동을 덮어쓰지 않게 합니다.
-        public void CancelPendingSliderChanges()
-        {
-            foreach (var cancel in cancelSliders)
-            {
-                cancel();
-            }
-        }
 
         public void ClearActions()
         {
@@ -270,19 +298,21 @@ namespace SmartTraining
                 action.Button.gameObject.SetActive(false);
                 UnityEngine.Object.Destroy(action.Button.gameObject);
             }
+
             actions.Clear();
             foreach (var control in extraControls)
             {
                 control.SetActive(false);
                 UnityEngine.Object.Destroy(control);
             }
+
             extraControls.Clear();
             controlStates.Clear();
             sharedSliders.Clear();
             flushSliders.Clear();
-            cancelSliders.Clear();
             emptyLabel.gameObject.SetActive(true);
         }
+
 
         public void Refresh(bool visible, bool canInteract)
         {
@@ -292,19 +322,23 @@ namespace SmartTraining
             {
                 Close();
             }
+
             foreach (var refresh in sharedSliders)
             {
                 refresh(canInteract);
             }
+
             foreach (var control in controlStates)
             {
                 control.Control.interactable = canInteract && control.CanUse();
             }
+
             foreach (var action in actions)
             {
                 action.Button.interactable = canInteract && action.CanExecute();
             }
         }
+
 
         public void Toggle()
         {
@@ -312,10 +346,12 @@ namespace SmartTraining
             {
                 return;
             }
+
             bool open = !IsOpen;
             panel.SetActive(open);
             toggleLabel.text = open ? "기능 메뉴 닫기" : "기능 메뉴";
         }
+
 
         public void Close()
         {
@@ -323,9 +359,11 @@ namespace SmartTraining
             {
                 return;
             }
+
             panel.SetActive(false);
             toggleLabel.text = "기능 메뉴";
         }
+
 
         private Button CreateButton(string text, Transform parent)
         {
@@ -340,6 +378,7 @@ namespace SmartTraining
             label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
             return button;
         }
+
 
         private Text CreateLabel(string text, Transform parent)
         {

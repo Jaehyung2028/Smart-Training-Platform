@@ -16,9 +16,15 @@ namespace SmartTraining.Editor
                 var existing = PrefabUtility.LoadPrefabContents(path);
                 try
                 {
+                    bool changed = RoomPlayerAvatarBuilder.Configure(existing);
                     if (existing.GetComponent<TrainingProgress>() == null)
                     {
                         existing.AddComponent<TrainingProgress>();
+                        changed = true;
+                    }
+
+                    if (changed)
+                    {
                         PrefabUtility.SaveAsPrefabAsset(existing, path);
                     }
                 }
@@ -26,6 +32,7 @@ namespace SmartTraining.Editor
                 {
                     PrefabUtility.UnloadPrefabContents(existing);
                 }
+
                 return;
             }
 
@@ -37,6 +44,7 @@ namespace SmartTraining.Editor
                 root.AddComponent<NetworkObject>();
                 root.AddComponent<RoomPlayer>();
                 root.AddComponent<TrainingProgress>();
+                RoomPlayerAvatarBuilder.Configure(root);
                 PrefabUtility.SaveAsPrefabAsset(root, path);
                 AssetDatabase.SaveAssets();
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -14,6 +15,10 @@ namespace SmartTraining
         public ScenarioContent Scenario;
         public Camera Camera;
         public TrainingProgress Progress;
+        public string RoomId, LocalUserId, ChatStatus;
+        public IReadOnlyList<LobbyChatMessage> ChatMessages;
+        public bool CanSendChat;
+        public ContentParticipantState[] Participants;
     }
 
 
@@ -22,6 +27,7 @@ namespace SmartTraining
         public Action SettingsChanged;
         public Action ReturnToWaiting;
         public Action LeaveRoom;
+        public Action<string, Action<bool>> SendChat;
     }
 
 
@@ -41,11 +47,15 @@ namespace SmartTraining
         private ClientSettingsPanel optionsPanel;
         private ContentActionMenu actionMenu;
         private ModelPartDetailsPanel partDetails;
-        private ModelStepPanel stepPanel;
         private ModelPartListPanel partList;
         private VideoControlPanel videoPanel;
         private ScenarioControlPanel scenarioPanel;
+        private ScenarioResultPanel scenarioResults;
         private ScenarioToolMenu scenarioTools;
+        private ScenarioRoleMenu scenarioRoles;
+        private ContentChatPanel chatPanel;
+        private Button chatButton, participantsButton;
+        private ContentParticipantPanel participantsPanel;
         private Text notice, modelControlStatus, learningStatus;
         private RectTransform learningPanel;
         private Button resumeButton, menuButton, returnButton, leaveButton;
@@ -55,7 +65,9 @@ namespace SmartTraining
 
         public bool MenuOpen => menuOpen;
 
-        public bool BlocksGameplayInput => menuOpen || state.Error.Length > 0;
+        private bool HasScenarioResults => state.Requested && state.SceneReady && state.Scenario?.IsComplete == true;
+
+        public bool BlocksGameplayInput => menuOpen || state.Error.Length > 0 || HasScenarioResults || chatPanel?.IsEditing == true;
 
 
         public ContentHudController(
@@ -100,8 +112,13 @@ namespace SmartTraining
 
         public void ClearContent()
         {
+            participantsPanel.Close();
+            chatPanel.Close();
+            videoPanel?.Dispose();
+            videoPanel = null;
             actionMenu.ClearActions();
             scenarioTools = null;
+            scenarioRoles = null;
             partList.Clear();
             state.Model = null;
             state.Video = null;
@@ -112,6 +129,8 @@ namespace SmartTraining
         public void EndSession()
         {
             CloseOptions();
+            participantsPanel.Close();
+            chatPanel.Close();
             state.Requested = false;
             state.Active = false;
             if (Root != null)
@@ -134,6 +153,7 @@ namespace SmartTraining
         {
             CloseOptions();
             menuAction.Dispose();
+            chatPanel.Dispose();
             if (Root != null)
             {
                 Root.SetActive(false);
@@ -149,27 +169,57 @@ namespace SmartTraining
             this.state = state;
             Root.SetActive(state.Active);
             notice.text = GetNotice();
-            learningPanel.anchoredPosition = new Vector2(24, state.Video != null ? 306 : 24);
+            bool showChat = state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0;
+            chatButton.interactable = showChat;
+            participantsButton.interactable = showChat;
+            participantsPanel.Refresh(state.Participants, showChat);
+            participantsButton.GetComponentInChildren<Text>().text = "참가자 (" + (state.Participants?.Length ?? 0) + ")";
+            chatPanel.Refresh(
+                state.RoomId,
+                state.LocalUserId,
+                state.ChatMessages,
+                state.ChatStatus,
+                showChat,
+                state.CanSendChat
+            );
+            chatButton.GetComponentInChildren<Text>().text = chatPanel.IsOpen ? "채팅 닫기" : "방 채팅";
+            learningPanel.anchoredPosition = new Vector2(24, 24);
             learningStatus.text = state.Progress == null ? "학습 준비 중" : state.Progress.Label;
             if (state.Model != null)
             {
                 learningStatus.text += "\n부품 확인 " + state.Model.ObservedPartCount + " / " + state.Model.RequiredPartCount;
             }
+
             learningStatus.color = state.Progress?.IsComplete == true ? new Color32(74, 222, 128, 255) : Color.white;
             learningPanel.gameObject.SetActive(state.Requested && state.SceneReady && !menuOpen);
             bool showModelStatus = state.Requested && state.SceneReady && state.Model != null && !menuOpen && state.Error.Length == 0;
             modelControlPanel.SetActive(showModelStatus);
-            videoPanel.Refresh(
+            videoPanel?.Refresh(
                 state.Video,
                 state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0,
                 state.CanInteract
             );
-            scenarioPanel.Refresh(state.Scenario,
-                state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0);
-            scenarioTools?.Refresh(state.Scenario,
-                state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0, state.CanInteract);
+            scenarioPanel.Refresh(
+                state.Scenario,
+                state.Requested && state.SceneReady && !menuOpen && !HasScenarioResults && state.Error.Length == 0
+            );
+            scenarioRoles?.Refresh(
+                state.Scenario,
+                state.Requested && state.SceneReady && !menuOpen && !HasScenarioResults && state.Error.Length == 0,
+                state.CanInteract
+            );
+            scenarioTools?.Refresh(
+                state.Scenario,
+                state.Requested && state.SceneReady && !menuOpen && !HasScenarioResults && state.Error.Length == 0,
+                state.CanInteract
+            );
+            scenarioResults.Refresh(
+                state.Scenario,
+                HasScenarioResults && !menuOpen && state.Error.Length == 0,
+                state.CanInteract && !state.Busy,
+                state.CanReturn
+            );
             partDetails.Refresh(state.Model, showModelStatus);
-            stepPanel.Refresh(state.Model, state.Camera, showModelStatus, state.CanInteract);
             partList.Refresh(state.Model, showModelStatus, state.CanInteract);
             if (showModelStatus)
             {
@@ -182,7 +232,7 @@ namespace SmartTraining
             optionsPanel.Root.SetActive(optionsOpen);
             menuButton.interactable = state.Requested;
             actionMenu.Refresh(
-                state.Requested && state.SceneReady,
+                state.Requested && state.SceneReady && !HasScenarioResults,
                 !menuOpen && state.Error.Length == 0 && state.CanInteract
             );
             resumeButton.interactable = state.SceneReady && !state.Busy;
@@ -203,7 +253,15 @@ namespace SmartTraining
         {
             if (state.Requested && Root != null)
             {
-                if (optionsOpen)
+                if (chatPanel.IsOpen)
+                {
+                    chatPanel.Close();
+                }
+                else if (participantsPanel.IsOpen)
+                {
+                    participantsPanel.Close();
+                }
+                else if (optionsOpen)
                 {
                     CloseOptions();
                 }
@@ -249,6 +307,7 @@ namespace SmartTraining
             {
                 return "WASD 이동 · 우클릭 드래그 시점 · 메뉴에서 내 공구 선택 · 대상 좌클릭 실습 · 휠 버튼 응시 · Esc 메뉴";
             }
+
             return menuOpen ? "메뉴 열림 · Esc로 조작 재개" : "WASD 이동 · 우클릭 드래그 시점 · 휠 버튼 누르는 동안 응시 · Esc 메뉴";
         }
 
@@ -274,8 +333,24 @@ namespace SmartTraining
             layout.childForceExpandWidth = false;
             notice = CreateLabel("콘텐츠 씬 준비 중", panel.transform);
             notice.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            participantsButton = CreateButton("참가자 (0)", panel.transform, () =>
+            {
+                chatPanel.Close();
+                participantsPanel.Toggle();
+            });
+            participantsButton.name = "Content Participants Toggle";
+            chatButton = CreateButton("방 채팅", panel.transform, () =>
+            {
+                participantsPanel.Close();
+                chatPanel.Toggle();
+            });
+            chatButton.name = "Content Chat Toggle";
             menuButton = CreateButton("메뉴 (Esc)", panel.transform, () => SetMenuOpen(true));
-            learningPanel = new GameObject("Learning Progress Card", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
+            learningPanel = new GameObject(
+                "Learning Progress Card",
+                typeof(RectTransform),
+                typeof(Image)
+            ).GetComponent<RectTransform>();
             learningPanel.SetParent(Root.transform, false);
             learningPanel.anchorMin = learningPanel.anchorMax = learningPanel.pivot = Vector2.zero;
             learningPanel.anchoredPosition = new Vector2(24, 24);
@@ -295,10 +370,15 @@ namespace SmartTraining
             CreateModelControlStatus();
             partDetails = new ModelPartDetailsPanel(Root.transform, font, () => state.Model?.ClearSelection());
             partList = new ModelPartListPanel(Root.transform, font);
-            stepPanel = new ModelStepPanel(Root.transform, font, () => actionMenu.CancelPendingSliderChanges());
             actionMenu = new ContentActionMenu(Root.transform, font);
-            videoPanel = new VideoControlPanel(Root.transform, font);
             scenarioPanel = new ScenarioControlPanel(Root.transform, font);
+            scenarioResults = new ScenarioResultPanel(Root.transform, font, () => actions.ReturnToWaiting?.Invoke());
+            chatPanel = new ContentChatPanel(
+                Root.transform,
+                font,
+                (text, completed) => actions.SendChat?.Invoke(text, completed)
+            );
+            participantsPanel = new ContentParticipantPanel(Root.transform, font);
             CreatePauseMenu();
         }
 
@@ -333,23 +413,18 @@ namespace SmartTraining
         // 콘텐츠 유형별로 기능을 등록합니다. 영상·시나리오 기능도 구현 시 이 메뉴에 각각 추가할 수 있습니다.
         internal void ConfigureContentActions(string contentType)
         {
+            videoPanel?.Dispose();
+            videoPanel = null;
             actionMenu.ClearActions();
             scenarioTools = null;
+            scenarioRoles = null;
             if (contentType == "video")
             {
-                actionMenu.AddAction(
-                    "영상 재생·일시정지",
-                    () => state.Video?.TogglePlayback(),
-                    () => state.Video != null && state.Video.CanControl
-                );
-                actionMenu.AddAction(
-                    "영상 처음으로",
-                    () => state.Video?.Seek(0),
-                    () => state.Video != null && state.Video.CanControl
-                );
+                videoPanel = new VideoControlPanel(actionMenu.AddSection("Video Menu"), Root.transform, font);
             }
             else if (contentType == "scenario")
             {
+                scenarioRoles = new ScenarioRoleMenu(actionMenu.AddSection("Scenario Role Menu"), font);
                 scenarioTools = new ScenarioToolMenu(actionMenu.AddSection("Scenario Tool Menu"), font);
                 actionMenu.AddAction(
                     "실습 처음부터 (방장)",
@@ -480,6 +555,7 @@ namespace SmartTraining
             {
                 optionsPanel.Refresh();
             }
+
             optionsOpen = false;
         }
 

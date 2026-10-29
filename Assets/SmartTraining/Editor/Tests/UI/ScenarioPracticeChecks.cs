@@ -16,6 +16,12 @@ namespace SmartTraining.Editor
             var definition = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(ScenarioContentBuilder.DefinitionPath));
             var fixture = new SerializedObject(definition);
             fixture.FindProperty("steps").arraySize = 2;
+            for (int index = 0; index < 2; index++)
+            {
+                fixture.FindProperty("steps").GetArrayElementAtIndex(index).FindPropertyRelative("action").enumValueIndex = (int)ScenarioAction.Check;
+            }
+
+            fixture.FindProperty("steps").GetArrayElementAtIndex(1).FindPropertyRelative("targetId").stringValue = "bolt-b";
             fixture.ApplyModifiedPropertiesWithoutUndo();
             var progress = new ScenarioProgress(definition);
             const ulong first = 7, second = 8;

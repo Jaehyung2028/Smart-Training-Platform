@@ -127,7 +127,7 @@ API 예약 후 UDP 연결에 실패하면 예약만 남을 수 있습니다. 실
 
 ## 교육과정 샘플
 
-장비 기초·작업 안전·비상 대응의 3개 교육과정에 모델·영상·실습을 각각 하나씩 구성했습니다. 총 9개 최하위 콘텐츠가 서로 다른 Addressables 프리팹에 연결되어 실행됩니다. [콘텐츠 트리와 리소스 목록](Assets/SmartTraining/Documentation/Guides/CourseSamples.md)을 참고하세요.
+장비 기초·작업 안전·비상 대응의 3개 교육과정에 모델·영상·실습 9개, 협동 실습 3개, 공구 8종 종합 실습 1개를 구성했습니다. 총 13개 최하위 콘텐츠가 각각 Addressables 프리팹에 연결됩니다. [콘텐츠 트리와 리소스 목록](Assets/SmartTraining/Documentation/Guides/CourseSamples.md)을 참고하세요.
 
 ## 학습 진행 표시
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -33,7 +34,58 @@ namespace SmartTraining
 
         public RoomPlayer LocalPlayer => manager != null && manager.IsConnectedClient && manager.LocalClient?.PlayerObject != null ? manager.LocalClient.PlayerObject.GetComponent<RoomPlayer>() : null;
 
-        public RoomPlayer[] Players => manager == null || manager.SpawnManager == null ? Array.Empty<RoomPlayer>() : manager.SpawnManager.SpawnedObjects.Values.Select(value => value.GetComponent<RoomPlayer>()).Where(value => value != null).ToArray();
+
+        private readonly List<RoomPlayer> playerBuffer = new();
+        private RoomPlayer[] players = Array.Empty<RoomPlayer>();
+        private int playersFrame = -1, spawnedCount = -1;
+
+        public RoomPlayer[] Players
+        {
+            get
+            {
+                if (manager == null || manager.SpawnManager == null)
+                {
+                    return Array.Empty<RoomPlayer>();
+                }
+
+                var spawned = manager.SpawnManager.SpawnedObjects;
+                bool valid = playersFrame == Time.frameCount && spawnedCount == spawned.Count;
+                if (valid)
+                {
+                    foreach (var player in players)
+                    {
+                        if (player == null || !player.IsSpawned)
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!valid)
+                {
+                    playerBuffer.Clear();
+                    foreach (var item in spawned.Values)
+                    {
+                        if (item.TryGetComponent<RoomPlayer>(out var player))
+                        {
+                            playerBuffer.Add(player);
+                        }
+                    }
+
+                    if (players.Length != playerBuffer.Count)
+                    {
+                        players = new RoomPlayer[playerBuffer.Count];
+                    }
+
+                    playerBuffer.CopyTo(players);
+                    playersFrame = Time.frameCount;
+                    spawnedCount = spawned.Count;
+                }
+
+                return players;
+            }
+        }
 
 
         public bool SetReady(bool value)
@@ -118,8 +170,7 @@ namespace SmartTraining
             }
 
             // 퇴장 직후 재접속해도 이전 NetworkManager의 Singleton을 새 연결에서 공유하지 않습니다.
-            var previousShutdown = NetworkManager.Singleton != null
-                ? NetworkManager.Singleton.GetComponent<NetworkShutdownCleanup>() : null;
+            var previousShutdown = NetworkManager.Singleton != null ? NetworkManager.Singleton.GetComponent<NetworkShutdownCleanup>() : null;
             double shutdownBy = Time.realtimeSinceStartupAsDouble + 10;
             while (previousShutdown != null && Time.realtimeSinceStartupAsDouble < shutdownBy)
             {
@@ -308,6 +359,9 @@ namespace SmartTraining
             }
 
             manager = null;
+            players = Array.Empty<RoomPlayer>();
+            playerBuffer.Clear();
+            playersFrame = spawnedCount = -1;
             root = null;
             ServerEndpoint = "";
             WasDisconnected = false;

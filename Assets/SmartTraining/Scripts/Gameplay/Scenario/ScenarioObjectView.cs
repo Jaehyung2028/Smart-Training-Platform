@@ -34,7 +34,7 @@ namespace SmartTraining
         }
 
 
-        public void Refresh(bool active, int completedUses, bool completed)
+        public void Refresh(bool active, float loosenAmount, bool completed)
         {
             int visualState = active ? 1 : completed ? 2 : 0;
             if (lastState != visualState)
@@ -77,12 +77,10 @@ namespace SmartTraining
                 }
             }
 
-            // 예시 볼트 풀기 연출입니다. 진행 판정은 이 Transform이 아닌 서버 단계 값으로 합니다.
-            float blend = 1 - Mathf.Exp(-10 * Time.unscaledDeltaTime);
-            var targetPosition = initialPosition + Vector3.up * (0.04f * completedUses);
-            var targetRotation = initialRotation * Quaternion.Euler(0, -90 * completedUses, 0);
-            item.transform.localPosition = Vector3.Lerp(item.transform.localPosition, targetPosition, blend);
-            item.transform.localRotation = Quaternion.Slerp(item.transform.localRotation, targetRotation, blend);
+            // 회전 횟수 전체를 매 프레임 평가해야 여러 바퀴 회전이 사라지지 않습니다.
+            // 위치/회전을 따로 전송하지 않고 모든 참가자가 같은 서버 시각에서 같은 자세를 계산합니다.
+            item.transform.localPosition = initialPosition + item.LoosenOffset * loosenAmount;
+            item.transform.localRotation = initialRotation * Quaternion.AngleAxis(-360 * item.LoosenTurns * loosenAmount, Vector3.up);
         }
 
 

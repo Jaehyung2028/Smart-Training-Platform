@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SmartTraining
@@ -227,7 +228,7 @@ namespace SmartTraining
 
         internal string UiRoomChatStatus => UiProcessing ? UiStatus : UiChatConnected && (chatChannel == 0 || RoomChatIsBound()) ? chatStatus : "채팅 연결 중…";
 
-        internal LobbyChatMessage[] UiRoomScreenMessages => (chatChannel == 1 ? roomChatMessages : chatMessages).ToArray();
+        internal IReadOnlyList<LobbyChatMessage> UiRoomScreenMessages => chatChannel == 1 ? roomChatMessages : chatMessages;
 
 
         internal void UiSendRoomScreenChat()

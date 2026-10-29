@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd11537915804aaeb6f3d5b928a8491f, type: 3}
+  m_Name: CooperativeSafety
+  m_EditorClassIdentifier: Assembly-CSharp::SmartTraining.ScenarioDefinition
+  id: cooperative-safety
+  title: "\uD611\uB3D9 \uBC29\uD638 \uB36E\uAC1C \uBCF5\uAD6C"
+  steps:
+  - id: inspect-guard
+    title: "\uBC29\uD638 \uB36E\uAC1C \uC774\uC0C1 \uD655\uC778"
+    instruction: "\uC810\uAC80 \uB2F4\uB2F9: WARN \uD45C\uC2DC\uB4F1\uC5D0\uC11C
+      \uD6C8\uB828\uC6A9 \uC815\uC9C0 \uC7A5\uBE44\uC758 \uB36E\uAC1C \uC774\uC0C1\uC744
+      \uD655\uC778\uD558\uC138\uC694."
+    toolId: 
+    targetId: guard-warning
+    action: 0
+    durationSeconds: 1.5
+    requiredRole: 1
+  - id: release-guard
+    title: "\uB36E\uAC1C \uACE0\uC815 \uBCFC\uD2B8 \uD480\uAE30"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2A4\uD328\uB108\uB85C BOLT\uB97C
+      \uD480\uC5B4 \uB36E\uAC1C\uB97C \uC870\uC815\uD560 \uC900\uBE44\uB97C \uD558\uC138\uC694."
+    toolId: spanner
+    targetId: guard-bolt
+    action: 1
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: close-guard
+    title: "\uBC29\uD638 \uB36E\uAC1C \uB2EB\uAE30"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uBD89\uC740 GUARD\uB97C \uD074\uB9AD\uD574
+      \uBC29\uD638 \uB36E\uAC1C\uB97C \uB2EB\uC73C\uC138\uC694. \uACF5\uAD6C\uB294
+      \uD544\uC694 \uC5C6\uC2B5\uB2C8\uB2E4."
+    toolId: 
+    targetId: guard-cover
+    action: 0
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: secure-guard
+    title: "\uBC29\uD638 \uB36E\uAC1C \uACE0\uC815"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2A4\uD328\uB108\uB85C BOLT\uB97C
+      \uCCB4\uACB0\uD574 \uB36E\uAC1C\uB97C \uACE0\uC815\uD558\uC138\uC694."
+    toolId: spanner
+    targetId: guard-bolt
+    action: 2
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: test-interlock
+    title: "\uB36E\uAC1C \uD655\uC778 \uC2A4\uC704\uCE58 \uC810\uAC80"
+    instruction: "\uC810\uAC80 \uB2F4\uB2F9: TEST \uBC84\uD2BC\uC744 \uB20C\uB7EC
+      \uBC29\uD638 \uB36E\uAC1C\uAC00 \uB2EB\uD78C \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uC138\uC694."
+    toolId: 
+    targetId: guard-test
+    action: 0
+    durationSeconds: 1.5
+    requiredRole: 1
+  tools:
+  - id: spanner
+    title: "\uCF64\uBE44\uB124\uC774\uC158 \uB80C\uCE58"
+    heldPrefab: {fileID: 2952906489457177493, guid: 9e6507863a802a148ac2d24db3f88ada, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.171, z: 4.656613e-10}
+    workRotation: {x: 90, y: 0, z: 0}
+  - id: screwdriver
+    title: "\uC2ED\uC790 \uB4DC\uB77C\uC774\uBC84"
+    heldPrefab: {fileID: 6178501118483652845, guid: 852ad5ff7653c674097a423299de9ff1, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.2574, z: 0}
+    workRotation: {x: 180, y: 0, z: 0}
+  - id: hammer
+    title: "\uB9DD\uCE58"
+    heldPrefab: {fileID: 598775265695343592, guid: 5f989e4a1536fe945a064dad1c0806bc, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0.05411471, y: 0.2737228, z: -0.000000002948783}
+    workRotation: {x: 0, y: 0, z: -90}
+  - id: axe
+    title: "\uB3C4\uB07C"
+    heldPrefab: {fileID: 2230026388333957369, guid: 7b3ff908edb01b74bb84abadd90f565d, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0.12253462, y: 0.36432493, z: -0.000000024484319}
+    workRotation: {x: 0, y: 0, z: -90}
+  - id: drill
+    title: "\uC804\uB3D9 \uB4DC\uB9B4"
+    heldPrefab: {fileID: 8887049889620735689, guid: 0b511e0f216f53a4f92f06d8e5889654, type: 3}
+    animateWork: 1
+    workContactPoint: {x: -0.0000000039252885, y: 0.2324433, z: -0.19387576}
+    workRotation: {x: 180, y: 0, z: 0}
+  - id: pipe-wrench
+    title: "\uD30C\uC774\uD504 \uB80C\uCE58"
+    heldPrefab: {fileID: 874365662346899547, guid: 3c5aa81ce72951344ba8a581ca7fd7a2, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.3066, z: 0.00001709722}
+    workRotation: {x: 90, y: 0, z: 0}
+  - id: pliers
+    title: "\uD50C\uB77C\uC774\uC5B4"
+    heldPrefab: {fileID: 6212452181571480667, guid: b7a797ef5ce89c444b4dbc362324e687, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.2, z: 0}
+    workRotation: {x: 180, y: 0, z: 0}
+  - id: saw
+    title: "\uD1B1"
+    heldPrefab: {fileID: 3651821094870475184, guid: 75f43d6ea6248c649a28700635c22143, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.2285166, z: 0.0822005}
+    workRotation: {x: 90, y: 0, z: 0}

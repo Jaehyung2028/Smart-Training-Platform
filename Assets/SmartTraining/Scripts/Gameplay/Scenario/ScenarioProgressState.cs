@@ -11,6 +11,20 @@ namespace SmartTraining
         public int Revision;
         public int RunRevision;
         public FixedString128Bytes LastActor;
+        public double WorkStartedAt;
+        public float WorkDuration;
+        public ulong WorkClientId;
+        public double RunStartedAt, RunEndedAt;
+        public int ToolErrors, TargetErrors;
+
+        public bool IsWorking => WorkDuration > 0;
+
+
+        public float GetWorkProgress(double serverTime)
+        {
+            return IsWorking ? UnityEngine.Mathf.Clamp01((float)((serverTime - WorkStartedAt) / WorkDuration)) : 0;
+        }
+
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer)
             where T : IReaderWriter
@@ -19,6 +33,13 @@ namespace SmartTraining
             serializer.SerializeValue(ref Revision);
             serializer.SerializeValue(ref RunRevision);
             serializer.SerializeValue(ref LastActor);
+            serializer.SerializeValue(ref WorkStartedAt);
+            serializer.SerializeValue(ref WorkDuration);
+            serializer.SerializeValue(ref WorkClientId);
+            serializer.SerializeValue(ref RunStartedAt);
+            serializer.SerializeValue(ref RunEndedAt);
+            serializer.SerializeValue(ref ToolErrors);
+            serializer.SerializeValue(ref TargetErrors);
         }
 
 
@@ -27,7 +48,14 @@ namespace SmartTraining
             return CompletedSteps == other.CompletedSteps &&
                 Revision == other.Revision &&
                 RunRevision == other.RunRevision &&
-                LastActor.Equals(other.LastActor);
+                LastActor.Equals(other.LastActor) &&
+                WorkStartedAt == other.WorkStartedAt &&
+                WorkDuration == other.WorkDuration &&
+                WorkClientId == other.WorkClientId &&
+                RunStartedAt == other.RunStartedAt &&
+                RunEndedAt == other.RunEndedAt &&
+                ToolErrors == other.ToolErrors &&
+                TargetErrors == other.TargetErrors;
         }
     }
 }

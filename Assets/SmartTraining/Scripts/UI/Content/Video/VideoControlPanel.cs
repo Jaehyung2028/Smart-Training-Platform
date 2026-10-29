@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace SmartTraining
 {
     // 공유 재생 조작과 개인 음량을 분리합니다. 창을 열어도 캐릭터 이동과 시점을 멈추지 않습니다.
-    public sealed class VideoControlPanel
+    public sealed class VideoControlPanel : IDisposable
     {
         private readonly GameObject root;
         private readonly Font font;
@@ -21,18 +21,19 @@ namespace SmartTraining
         private bool pending, dragging;
         private float requested, nextSend, editedAt = float.NegativeInfinity;
 
-        public VideoControlPanel(Transform parent, Font font)
+        public VideoControlPanel(Transform parent, Transform subtitleParent, Font font)
         {
             this.font = font;
-            root = new GameObject("Video Controls", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
+            root = new GameObject(
+                "Video Controls",
+                typeof(RectTransform),
+                typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter)
+            );
             root.transform.SetParent(parent, false);
-            var rect = root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.zero;
-            rect.anchoredPosition = new Vector2(24, 24);
-            rect.sizeDelta = new Vector2(600, 266);
-            root.GetComponent<Image>().color = new Color32(15, 23, 42, 245);
+            root.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var layout = root.GetComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(16, 16, 12, 12);
+            layout.padding = new RectOffset(0, 0, 0, 0);
             layout.spacing = 8;
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
@@ -65,11 +66,16 @@ namespace SmartTraining
                     pending = true;
                 }
             });
-            var controls = new GameObject("Video Playback Buttons", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+            var controls = new GameObject(
+                "Video Playback Buttons",
+                typeof(RectTransform),
+                typeof(HorizontalLayoutGroup),
+                typeof(LayoutElement)
+            );
             controls.transform.SetParent(root.transform, false);
             controls.GetComponent<LayoutElement>().preferredHeight = 34;
             var buttonsLayout = controls.GetComponent<HorizontalLayoutGroup>();
-            buttonsLayout.spacing = 8;
+            buttonsLayout.spacing = 4;
             buttonsLayout.childControlWidth = buttonsLayout.childControlHeight = true;
             buttonsLayout.childForceExpandWidth = true;
             buttonsLayout.childForceExpandHeight = false;
@@ -77,15 +83,33 @@ namespace SmartTraining
             play = CreatePlaybackButton("Video Play Pause", "재생", controls.transform, () => viewer.TogglePlayback());
             playLabel = play.GetComponentInChildren<Text>();
             forward = CreatePlaybackButton("Video Forward", "5초 앞으로", controls.transform, () => viewer.Skip(5));
-            stop = CreatePlaybackButton("Video Stop", "정지", controls.transform, () => viewer.StopPlayback());
-            subtitleToggle = CreatePlaybackButton("Video Subtitle Toggle", "자막 켜짐", root.transform,
-                () => viewer.ToggleSubtitles(), flushPendingSeek: false);
+            var options = new GameObject(
+                "Video Options Buttons",
+                typeof(RectTransform),
+                typeof(HorizontalLayoutGroup),
+                typeof(LayoutElement)
+            );
+            options.transform.SetParent(root.transform, false);
+            options.GetComponent<LayoutElement>().preferredHeight = 34;
+            var optionsLayout = options.GetComponent<HorizontalLayoutGroup>();
+            optionsLayout.spacing = 4;
+            optionsLayout.childControlWidth = optionsLayout.childControlHeight = true;
+            optionsLayout.childForceExpandWidth = true;
+            optionsLayout.childForceExpandHeight = false;
+            stop = CreatePlaybackButton("Video Stop", "정지", options.transform, () => viewer.StopPlayback());
+            subtitleToggle = CreatePlaybackButton(
+                "Video Subtitle Toggle",
+                "자막 켜짐",
+                options.transform,
+                () => viewer.ToggleSubtitles(),
+                flushPendingSeek: false
+            );
             subtitleToggleLabel = subtitleToggle.GetComponentInChildren<Text>();
             subtitleRoot = new GameObject("Video Subtitles", typeof(RectTransform), typeof(Image));
-            subtitleRoot.transform.SetParent(parent, false);
+            subtitleRoot.transform.SetParent(subtitleParent, false);
             var subtitleRect = subtitleRoot.GetComponent<RectTransform>();
             subtitleRect.anchorMin = subtitleRect.anchorMax = subtitleRect.pivot = new Vector2(0.5f, 0);
-            subtitleRect.anchoredPosition = new Vector2(0, 308);
+            subtitleRect.anchoredPosition = new Vector2(0, 100);
             subtitleRect.sizeDelta = new Vector2(900, 92);
             subtitleRoot.GetComponent<Image>().color = new Color(0, 0, 0, 0.75f);
             subtitleRoot.GetComponent<Image>().raycastTarget = false;
@@ -104,6 +128,7 @@ namespace SmartTraining
             volume.onValueChanged.AddListener(value => viewer?.SetVolume(value));
             root.SetActive(false);
         }
+
 
         internal void Refresh(VideoContentPlayer current, bool visible, bool canInteract)
         {
@@ -124,6 +149,17 @@ namespace SmartTraining
             }
 
             subtitleLabel.text = caption;
+            var subtitleRect = subtitleRoot.GetComponent<RectTransform>();
+            var canvasRect = (RectTransform)subtitleRoot.transform.parent;
+            float subtitleBottom = 100;
+            if (root.activeInHierarchy)
+            {
+                var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRect, root.transform);
+                subtitleBottom = bounds.max.y - canvasRect.rect.yMin + 12;
+            }
+
+            subtitleRect.anchoredPosition = new Vector2(0, Mathf.Min(subtitleBottom, canvasRect.rect.height - 170));
+            subtitleRect.sizeDelta = new Vector2(Mathf.Min(900, canvasRect.rect.width - 48), 92);
             subtitleToggle.interactable = canInteract && viewer.HasSubtitles;
             subtitleToggleLabel.text = !viewer.HasSubtitles ? "자막 없음" : viewer.SubtitlesEnabled ? "자막 켜짐" : "자막 꺼짐";
             bool canControl = canInteract && viewer.CanControl;
@@ -157,14 +193,36 @@ namespace SmartTraining
             volumeLabel.text = "내 영상 음량: " + Mathf.RoundToInt(viewer.Volume * 100) + "%";
         }
 
-        private Button CreatePlaybackButton(string name, string caption, Transform parent, Action action, bool flushPendingSeek = true)
+
+        public void Dispose()
         {
-            var button = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement)).GetComponent<Button>();
+            root.SetActive(false);
+            subtitleRoot.SetActive(false);
+            UnityEngine.Object.Destroy(root);
+            UnityEngine.Object.Destroy(subtitleRoot);
+        }
+
+
+        private Button CreatePlaybackButton(
+            string name,
+            string caption,
+            Transform parent,
+            Action action,
+            bool flushPendingSeek = true
+        )
+        {
+            var button = new GameObject(
+                name,
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(Button),
+                typeof(LayoutElement)
+            ).GetComponent<Button>();
             button.transform.SetParent(parent, false);
             button.GetComponent<LayoutElement>().preferredHeight = 34;
             button.GetComponent<Image>().color = new Color32(51, 65, 85, 255);
             button.targetGraphic = button.GetComponent<Image>();
-            var label = Text("Label", button.transform, 17);
+            var label = Text("Label", button.transform, 12);
             label.text = caption;
             label.alignment = TextAnchor.MiddleCenter;
             label.rectTransform.anchorMin = Vector2.zero;
@@ -178,11 +236,13 @@ namespace SmartTraining
                     {
                         FlushSeek();
                     }
+
                     action();
                 }
             });
             return button;
         }
+
 
         private void FlushSeek()
         {
@@ -195,11 +255,13 @@ namespace SmartTraining
             pending = false;
         }
 
+
         private static string FormatTime(double seconds)
         {
             var value = TimeSpan.FromSeconds(Math.Max(0, seconds));
             return ((int)value.TotalMinutes).ToString("00") + ":" + value.Seconds.ToString("00");
         }
+
 
         private Text Label(string name, int size, float height)
         {
@@ -207,6 +269,7 @@ namespace SmartTraining
             label.gameObject.AddComponent<LayoutElement>().preferredHeight = height;
             return label;
         }
+
 
         private Text Text(string name, Transform parent, int size)
         {
@@ -219,6 +282,7 @@ namespace SmartTraining
             text.raycastTarget = false;
             return text;
         }
+
 
         private Slider Slider(string name)
         {

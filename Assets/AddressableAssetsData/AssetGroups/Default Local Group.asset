@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: cfb5b9b4b12ee1b43a9ddb6f987372b0
   m_SerializeEntries:
+  - m_GUID: 02af0123fc41292489795041f319a753
+    m_Address: content/scenario/cooperative-emergency
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 03ac6d423f9980440882c5d9f22b571a
     m_Address: content/video/safety-intro
     m_ReadOnly: 0
@@ -25,6 +30,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33502729258f3d844992361426ce23f3
+    m_Address: content/scenario/cooperative-maintenance
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5da650a5b84f60b47a6425b28294392d
+    m_Address: content/scenario/cooperative-safety
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 673c8c8cb5b156649b966f2e1e67c13a
     m_Address: content/scenario/evacuation-check
     m_ReadOnly: 0
@@ -32,6 +47,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8fcc243204e9cf64bbe8722cf43f9525
     m_Address: content/model/training-drill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0a111378ee2a194b93947353f1579ef
+    m_Address: content/scenario/workplace-tools
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

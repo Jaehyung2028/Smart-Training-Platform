@@ -11,50 +11,28 @@ namespace SmartTraining
     public sealed class LobbyInteriorUguiView : MonoBehaviour
     {
         public Canvas canvas;
-
         public CanvasGroup mainInteraction;
-
         public Font fontOverride;
-
         public Text heading, connection, notice, status, roomCount, roomDetail, participantTitle, emptyRooms, emptyParticipants, emptyChat, chatStatus;
-
         public InputField search, joinPassword, chatInput, reconnectPassword, createName, createCapacity, createPassword;
-
         public Button refresh, leave, create, join, available, protection, sort, resetFilters, sendChat, notifications, logout, clearRoom, reconnect, forgetReconnect;
-
         public Button createContent, submitCreate, closeCreate, cancelJoin;
-
         public GameObject createModal, progressModal, reconnectPanel;
-
         public Text createStatus, progress;
-
         public RectTransform roomsContent, participantsContent, chatContent;
-
         public Button roomTemplate, participantTemplate;
-
         public Text chatTemplate;
-
         public ScrollRect chatScroll;
-
         private ApiLobbyScreen screen;
-
         private ContentTreePopup contentTree;
-
         private CanvasGroup interaction;
-
         private GraphicRaycaster raycaster;
-
         private Font runtimeFont;
-
         private bool wired, submitting;
-
         private string context = "";
-
         private float nextLists;
-
         private readonly Dictionary<string, Button> roomRows = new(), participantRows = new();
-
-        private readonly Dictionary<string, Text> chatRows = new();
+        private ChatMessageListView chatList;
 
         // Controller와 입력 필드·버튼을 연결합니다. 중복 Bind로 클릭 이벤트가 여러 번 등록되지 않게 wired를 확인합니다.
         public void Bind(ApiLobbyScreen controller)
@@ -138,6 +116,7 @@ namespace SmartTraining
             Refresh();
         }
 
+
         // 현재 콘텐츠 선택을 준비하고 방 생성 입력 창을 엽니다.
         private void OpenCreate()
         {
@@ -155,6 +134,7 @@ namespace SmartTraining
             EventSystem.current?.SetSelectedGameObject(createName.gameObject);
         }
 
+
         // 처리 중이 아니면 생성 창과 트리 창을 닫고 비밀번호 입력을 지웁니다.
         private void CloseCreate()
         {
@@ -170,6 +150,7 @@ namespace SmartTraining
             EventSystem.current?.SetSelectedGameObject(null);
         }
 
+
         private void EnsureComponents() => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
 
         private void LateUpdate() => Refresh();
@@ -181,6 +162,7 @@ namespace SmartTraining
                 Refresh();
             }
         }
+
 
         // 로그아웃·로비 변경 때 임시 입력과 생성된 목록 행을 정리합니다.
         internal void ResetTransientState()
@@ -211,9 +193,10 @@ namespace SmartTraining
 
             UguiViewUtility.RemoveMissing(roomRows, new HashSet<string>());
             UguiViewUtility.RemoveMissing(participantRows, new HashSet<string>());
-            UguiViewUtility.RemoveMissing(chatRows, new HashSet<string>());
+            chatList?.Clear();
             roomDetail.text = progress.text = createStatus.text = "";
         }
+
 
         // Controller 상태를 화면에 반영합니다. 처리 중 입력과 모달 뒤쪽 조작도 제한합니다.
         private void Refresh()
@@ -337,7 +320,10 @@ namespace SmartTraining
             progress.text = screen.UiRoomProgress;
             cancelJoin.interactable = screen.UiCanCancelRoom;
             createStatus.text = screen.UiStatus;
-            var content = Array.Find(screen.UiContents, x => x.rootContent == screen.UiContentId && x.id == screen.UiContentNodeId);
+            var content = Array.Find(
+                screen.UiContents,
+                x => x.rootContent == screen.UiContentId && x.id == screen.UiContentNodeId
+            );
             createContent.GetComponentInChildren<Text>().text = "콘텐츠 선택: " + (content == null ? "없음" : (content.depth > 0 ? "하위 콘텐츠 · " : "") + content.title);
             bool choosingContent = contentTree?.IsOpen == true;
             foreach (var field in new[]
@@ -353,7 +339,11 @@ namespace SmartTraining
             }
 
             createContent.interactable = closeCreate.interactable = !busy && !choosingContent;
-            submitCreate.interactable = screen.UiCanUseRooms && content != null && (content.children == null || content.children.Length == 0) && !choosingContent;
+            submitCreate.interactable = screen.UiCanUseRooms &&
+                content != null &&
+                (content.children == null ||
+                content.children.Length == 0) &&
+                !choosingContent;
             if (Time.realtimeSinceStartup < nextLists)
             {
                 return;
@@ -364,6 +354,7 @@ namespace SmartTraining
             UpdateParticipants();
             UpdateChat();
         }
+
 
         // 현재 방 목록과 행 ID를 비교해 필요한 행을 만들고 사라진 행을 제거합니다.
         private void UpdateRooms()
@@ -393,6 +384,7 @@ namespace SmartTraining
             }
         }
 
+
         // 참가자 소속과 연결 상태를 참가자 행에 반영합니다.
         private void UpdateParticipants()
         {
@@ -418,36 +410,19 @@ namespace SmartTraining
             }
         }
 
-        // 새 채팅 행을 추가하고 사용자가 아래쪽을 보고 있을 때만 최신 메시지로 스크롤합니다.
+
         private void UpdateChat()
         {
-            var messages = screen.UiChatMessages;
-            bool follow = chatRows.Count == 0 || chatScroll.verticalNormalizedPosition < .05f;
-            bool changed = UguiViewUtility.RemoveMissing(chatRows, new HashSet<string>(messages.Select(x => x.id)));
-            emptyChat.gameObject.SetActive(messages.Length == 0);
-            foreach (var message in messages)
-            {
-                if (chatRows.ContainsKey(message.id))
-                {
-                    continue;
-                }
-
-                var row = Instantiate(chatTemplate, chatContent);
-                row.gameObject.SetActive(true);
-                ChatMessagePresentation.SetChatMessage(row, message, screen.UiSelfId, chatTemplate.color);
-                chatRows[message.id] = row;
-                changed = true;
-            }
-
-            if (changed && follow)
-            {
-                Canvas.ForceUpdateCanvases();
-                chatScroll.verticalNormalizedPosition = 0;
-            }
+            chatList ??= new ChatMessageListView(chatScroll, () => Instantiate(chatTemplate, chatContent), chatTemplate.color);
+            var displayed = screen.UiChatMessages;
+            emptyChat.gameObject.SetActive(displayed.Count == 0);
+            chatList.Refresh(displayed, screen.UiSelfId, context);
         }
+
 
         private void OnDestroy()
         {
+            chatList?.Dispose();
             if (runtimeFont != null)
             {
                 Destroy(runtimeFont);

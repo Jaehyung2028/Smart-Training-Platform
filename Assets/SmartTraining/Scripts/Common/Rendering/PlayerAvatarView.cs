@@ -3,74 +3,84 @@ using UnityEngine;
 
 namespace SmartTraining
 {
-    // 참가자 정보나 씬을 모르는 기본 아바타 표시입니다. 표시 여부·로컬 시점 여부를 전달받습니다.
+    // 모델·Animator·표시 정보만 전달받습니다. 이동 권한이나 네트워크·콘텐츠 상태는 조회하지 않습니다.
     public sealed class PlayerAvatarView : IDisposable
     {
+        private static readonly int Speed = Animator.StringToHash("Speed");
         private readonly Transform parent;
-        private GameObject visual;
-        private Material material;
+        private readonly GameObject visual;
+        private readonly Animator animator;
+        private WorldNameTagView nameTag;
+        private Vector3 previousPosition;
+        private bool shown;
 
-        public PlayerAvatarView(Transform parent)
+        public PlayerAvatarView(Transform parent, Transform visualRoot, Animator animator)
         {
             this.parent = parent;
+            visual = visualRoot != null ? visualRoot.gameObject : null;
+            this.animator = animator;
         }
 
 
-        public bool HasVisual => visual != null;
+        public bool HasVisual => shown;
 
 
         public void Show(bool localFirstPerson)
         {
-            if (visual != null)
+            if (shown || visual == null)
             {
                 return;
             }
 
-            visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            visual.name = "PlayerVisual";
-            visual.transform.SetParent(parent, false);
-            var collider = visual.GetComponent<Collider>();
-            if (collider != null)
+            shown = true;
+            previousPosition = parent.position;
+            // 1인칭에서는 자신의 전신이 카메라와 시야를 가리지 않게 합니다.
+            visual.SetActive(!localFirstPerson);
+            if (!localFirstPerson)
             {
-                UnityEngine.Object.Destroy(collider);
+                nameTag ??= new WorldNameTagView(parent);
             }
+        }
 
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            if (shader == null)
+
+        public void Refresh(string displayName, Camera viewCamera, string detail = "", float deltaTime = 0)
+        {
+            if (!shown)
             {
                 return;
             }
 
-            material = new Material(shader)
+            nameTag?.Refresh(displayName, viewCamera, detail);
+            float distance = Vector3.ProjectOnPlane(parent.position - previousPosition, Vector3.up).magnitude;
+            previousPosition = parent.position;
+            if (animator != null && animator.isActiveAndEnabled && animator.isInitialized && deltaTime > 0)
             {
-                color = localFirstPerson ? new Color(0.2f, 0.85f, 0.45f) : new Color(0.25f, 0.6f, 1f)
-            };
-            var renderer = visual.GetComponent<Renderer>();
-            renderer.sharedMaterial = material;
-            renderer.enabled = !localFirstPerson;
+                // 동기화된 실제 이동을 사용하므로 애니메이션용 RPC를 매 프레임 전송하지 않습니다.
+                // 시작 위치 초기화처럼 큰 좌표 보정은 달리기로 표시하지 않습니다.
+                float speed = distance < 2 ? Mathf.Min(distance / deltaTime, 6) : 0;
+                animator.SetFloat(Speed, speed < .08f ? 0 : speed, .12f, deltaTime);
+            }
         }
 
 
         public void Hide()
         {
+            shown = false;
             if (visual != null)
             {
                 visual.SetActive(false);
-                UnityEngine.Object.Destroy(visual);
-                visual = null;
             }
 
-            if (material != null)
-            {
-                UnityEngine.Object.Destroy(material);
-                material = null;
-            }
+            nameTag?.Refresh("", null);
         }
 
 
         public void Dispose()
         {
             Hide();
+            nameTag?.Dispose();
+            nameTag = null;
+        // 모델은 프리팹 소유 자식이므로 표시 모듈에서 생성하거나 파괴하지 않습니다.
         }
     }
 }

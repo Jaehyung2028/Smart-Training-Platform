@@ -7,12 +7,38 @@ namespace SmartTraining
 {
     public sealed class RoomPlayer : NetworkBehaviour
     {
+        [SerializeField, Tooltip("RoomPlayer 하위에 배치한 표시 전용 모델입니다.")]
+        private Transform avatarRoot;
+        [SerializeField]
+        private Animator avatarAnimator;
+
+        internal Transform AvatarRoot => avatarRoot;
+
+
+        private void Awake()
+        {
+            // 전용 서버·대기실·본인 1인칭에서 모델이 먼저 노출되지 않도록 합니다.
+            if (avatarRoot != null)
+            {
+                avatarRoot.gameObject.SetActive(false);
+            }
+        }
+
+
         public const float MoveSpeed = 4f;
         public const float ArenaHalfSize = 12f;
         public const float InputTimeout = 0.3f;
         private readonly NetworkVariable<Vector3> position = new NetworkVariable<Vector3>(Vector3.zero);
         private readonly NetworkVariable<FixedString64Bytes> userId = new NetworkVariable<FixedString64Bytes>();
         private readonly NetworkVariable<FixedString128Bytes> userName = new NetworkVariable<FixedString128Bytes>();
+        // 수평 시선 방향은 소유자만 기록하며 Netcode Tick을 통해 다른 참가자에게 전달합니다.
+        private readonly NetworkVariable<float> facingYaw = new(
+            0,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Owner
+        );
+        private Camera presentationCamera;
+        private string presentationDetail = "";
         private Vector2 input;
         private double inputReceivedAt;
         // 참가자 네트워크 정보는 대기 중에도 유지하지만, 화면 캐릭터는 시작 후에만 만듭니다.
@@ -88,14 +114,64 @@ namespace SmartTraining
 
         public Vector3 ServerPosition => position.Value;
 
-        public string UserId => userId.Value.ToString();
 
-        public string UserName => userName.Value.ToString();
+        private FixedString64Bytes cachedUserIdValue;
+        private string cachedUserId = "";
+
+        public string UserId
+        {
+            get
+            {
+                var value = userId.Value;
+                if (!value.Equals(cachedUserIdValue))
+                {
+                    cachedUserIdValue = value;
+                    cachedUserId = value.ToString();
+                }
+
+                return cachedUserId;
+            }
+        }
+
+
+        private FixedString128Bytes cachedUserNameValue;
+        private string cachedUserName = "";
+
+        public string UserName
+        {
+            get
+            {
+                var value = userName.Value;
+                if (!value.Equals(cachedUserNameValue))
+                {
+                    cachedUserNameValue = value;
+                    cachedUserName = value.ToString();
+                }
+
+                return cachedUserName;
+            }
+        }
 
 
         private readonly NetworkVariable<FixedString64Bytes> roomMasterId = new NetworkVariable<FixedString64Bytes>();
+        private FixedString64Bytes cachedRoomMasterUserIdValue;
+        private string cachedRoomMasterUserId = "";
 
-        public string RoomMasterUserId => roomMasterId.Value.ToString();
+        public string RoomMasterUserId
+        {
+            get
+            {
+                var value = roomMasterId.Value;
+                if (!value.Equals(cachedRoomMasterUserIdValue))
+                {
+                    cachedRoomMasterUserIdValue = value;
+                    cachedRoomMasterUserId = value.ToString();
+                }
+
+                return cachedRoomMasterUserId;
+            }
+        }
+
 
         public bool IsRoomMaster => !string.IsNullOrEmpty(UserId) && UserId == RoomMasterUserId;
 
@@ -332,6 +408,40 @@ namespace SmartTraining
         }
 
 
+        // 카메라나 씬을 조회하지 않고 소유 측이 전달한 수평 시선 방향만 반영합니다.
+        public void SetViewYaw(float yaw)
+        {
+            if (!IsSpawned || !IsOwner || !RoomIsRunning || PhasePending || !Finite(yaw))
+            {
+                return;
+            }
+
+            yaw = Mathf.Repeat(yaw, 360);
+            transform.rotation = Quaternion.Euler(0, yaw, 0);
+            if (Mathf.Abs(Mathf.DeltaAngle(facingYaw.Value, yaw)) >= 0.25f)
+            {
+                facingYaw.Value = yaw;
+            }
+        }
+
+
+        private void LateUpdate()
+        {
+            if (!IsSpawned)
+            {
+                return;
+            }
+
+            if (!IsOwner && Finite(facingYaw.Value))
+            {
+                var rotation = Quaternion.Euler(0, Mathf.Repeat(facingYaw.Value, 360), 0);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 1 - Mathf.Exp(-16 * Time.unscaledDeltaTime));
+            }
+
+            avatarView?.Refresh(UserName, presentationCamera, presentationDetail, Time.unscaledDeltaTime);
+        }
+
+
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         // 서버 Tick마다 위치를 갱신합니다. 오래된 입력은 중지하고 이동 영역을 제한합니다.
@@ -387,8 +497,10 @@ namespace SmartTraining
 
 
         // 콘텐츠 수명주기 측이 표시 가능 여부를 전달합니다. 네트워크 참가자는 특정 씬의 상태를 조회하지 않습니다.
-        public void SetPresentationVisible(bool visible)
+        public void SetPresentationVisible(bool visible, Camera viewCamera = null, string detail = "")
         {
+            presentationCamera = visible ? viewCamera : null;
+            presentationDetail = visible ? detail : "";
             if (presentationVisible == visible)
             {
                 return;
@@ -404,11 +516,12 @@ namespace SmartTraining
 #if !UNITY_SERVER
             if (IsSpawned && IsClient && RoomIsRunning && presentationVisible)
             {
-                avatarView ??= new PlayerAvatarView(transform);
+                avatarView ??= new PlayerAvatarView(transform, avatarRoot, avatarAnimator);
                 if (!avatarView.HasVisual)
                 {
                     transform.position = position.Value;
                     avatarView.Show(IsOwner);
+                    avatarView.Refresh(UserName, presentationCamera, presentationDetail);
                 }
             }
             else

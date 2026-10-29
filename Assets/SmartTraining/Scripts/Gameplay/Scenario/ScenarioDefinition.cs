@@ -4,6 +4,19 @@ using UnityEngine;
 
 namespace SmartTraining
 {
+    public enum ScenarioAction
+    {
+        Check,
+        Loosen,
+        Tighten,
+        Strike,
+        Drill,
+        Grip,
+        Saw,
+        Chop
+    }
+
+
     // 단계 하나는 필요한 공구와 작업 대상의 조합입니다. 공구 선택은 별도 단계가 아닙니다.
     // 진행 상태가 아닌 콘텐츠 원본입니다. 참가자별 상태를 이 에셋에 저장하지 않습니다.
     [CreateAssetMenu(menuName = "Smart Training/Scenario Definition", fileName = "ScenarioDefinition")]
@@ -16,6 +29,22 @@ namespace SmartTraining
             private string id = "";
             [SerializeField]
             private string title = "";
+            [SerializeField, Tooltip("손에 표시할 일반 모델 프리팹입니다. NetworkObject 없이 손의 Grip 기준으로 배치합니다.")]
+            private GameObject heldPrefab;
+            [SerializeField, Tooltip("작업 대상에 손과 공구를 가져가는 동작을 사용할지 정합니다.")]
+            private bool animateWork;
+            [SerializeField, Tooltip("공구 모델의 로컬 좌표로 작성한 실제 접촉점입니다.")]
+            private Vector3 workContactPoint;
+            [SerializeField, Tooltip("대상의 Work Anchor를 기준으로 한 공구의 작업 방향입니다.")]
+            private Vector3 workRotation;
+
+            public bool AnimateWork => animateWork;
+
+            public Vector3 WorkContactPoint => workContactPoint;
+
+            public Quaternion WorkRotation => Quaternion.Euler(workRotation);
+
+            public GameObject HeldPrefab => heldPrefab;
 
             public string Id => id;
 
@@ -36,6 +65,18 @@ namespace SmartTraining
             private string toolId = "";
             [SerializeField, Tooltip("작업할 대상의 ScenarioObject ID입니다. 공구가 없는 목표도 필수입니다.")]
             private string targetId = "";
+            [SerializeField, Tooltip("확인은 즉시 완료하고, 다른 작업은 설정한 시간 동안 공구별 모션을 재생합니다.")]
+            private ScenarioAction action;
+            [SerializeField, Range(0.25f, 10)]
+            private float durationSeconds = 1.5f;
+            [SerializeField, Tooltip("협동 실습의 담당 역할입니다. None이면 기존 개인·공동 실습처럼 누구나 수행합니다.")]
+            private ScenarioRole requiredRole;
+
+            public ScenarioRole RequiredRole => requiredRole;
+
+            public ScenarioAction Action => action;
+
+            public float DurationSeconds => action == ScenarioAction.Check ? 0 : durationSeconds;
 
             public string Id => id;
 
@@ -62,11 +103,46 @@ namespace SmartTraining
 
         public string Id => id;
 
+
+        public ScenarioRole Roles
+        {
+            get
+            {
+                var roles = ScenarioRole.None;
+                foreach (var step in Steps)
+                {
+                    if (step != null)
+                    {
+                        roles |= step.RequiredRole;
+                    }
+                }
+
+                return roles;
+            }
+        }
+
+
+        public bool RequiresRoles => Roles != ScenarioRole.None;
+
         public string Title => title;
 
         public IReadOnlyList<Step> Steps => steps ?? Array.Empty<Step>();
 
         public IReadOnlyList<Tool> Tools => tools ?? Array.Empty<Tool>();
+
+
+        public Tool GetTool(string toolId)
+        {
+            foreach (var tool in Tools)
+            {
+                if (tool != null && tool.Id == toolId)
+                {
+                    return tool;
+                }
+            }
+
+            return null;
+        }
 
 
         public bool HasTool(string toolId)
@@ -129,7 +205,14 @@ namespace SmartTraining
                     string.IsNullOrWhiteSpace(step.Instruction) ||
                     string.IsNullOrWhiteSpace(step.TargetId) ||
                     (step.RequiresTool &&
-                    !toolIds.Contains(step.ToolId)))
+                    !toolIds.Contains(step.ToolId)) ||
+                    !Enum.IsDefined(typeof(ScenarioAction), step.Action) ||
+                    !Enum.IsDefined(typeof(ScenarioRole), step.RequiredRole) ||
+                    (step.Action != ScenarioAction.Check &&
+                    (float.IsNaN(step.DurationSeconds) ||
+                    float.IsInfinity(step.DurationSeconds) ||
+                    step.DurationSeconds < .25f ||
+                    step.DurationSeconds > 10)))
                 {
                     message = "각 단계에 중복되지 않는 ID·제목·안내·대상 ID를 지정하고, 필요한 공구는 Tools에 등록해주세요.";
                     return false;

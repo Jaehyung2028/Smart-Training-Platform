@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -30,6 +31,7 @@ namespace SmartTraining
         private readonly List<AudioListener> previousListeners = new();
         private readonly ClientPreferences preferences = new();
         private ContentHudController hud;
+        private ContentParticipantState[] participantStates = System.Array.Empty<ContentParticipantState>();
 
         private bool InputBlocked => hud?.BlocksGameplayInput == true;
 
@@ -303,6 +305,8 @@ namespace SmartTraining
                 return;
             }
 
+            // 공통 카메라의 시선 결과만 네트워크 참가자에 전달합니다. 회전 계산은 카메라 모듈에 둡니다.
+            screen.UiLocalPlayer.SetViewYaw(firstPersonCamera.Yaw);
             // 카메라 갱신은 공통 컴포넌트가 담당하고, 이곳에서는 콘텐츠 상호작용에 결과만 전달합니다.
             modelViewer?.UpdateInteraction(PlayerCamera, screen.UiLocalPlayer, firstPersonCamera.CanInteract);
             scenarioViewer?.UpdateInteraction(PlayerCamera, screen.UiLocalPlayer, firstPersonCamera.CanInteract);
@@ -338,7 +342,13 @@ namespace SmartTraining
                 transform,
                 font,
                 preferences,
-                new ContentHudActions { SettingsChanged = ApplyPreferences, ReturnToWaiting = () => screen.UiTogglePhase(), LeaveRoom = () => screen.UiLeaveRoom() }
+                new ContentHudActions
+                {
+                    SettingsChanged = ApplyPreferences,
+                    ReturnToWaiting = () => screen.UiTogglePhase(),
+                    LeaveRoom = () => screen.UiLeaveRoom(),
+                    SendChat = (text, completed) => screen.UiSendContentChat(text, completed)
+                }
             );
         }
 
@@ -352,7 +362,7 @@ namespace SmartTraining
 
             foreach (var participant in screen.UiRoomPlayers)
             {
-                participant.SetPresentationVisible(visible);
+                participant.SetPresentationVisible(visible, PlayerCamera, scenarioViewer?.ParticipantRoleLabel(participant.OwnerClientId) ?? "");
             }
         }
 
@@ -383,8 +393,31 @@ namespace SmartTraining
                 Video = videoViewer,
                 Scenario = scenarioViewer,
                 Progress = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.GetComponent<TrainingProgress>() : null,
+                RoomId = screen.UiActiveRoomId,
+                LocalUserId = screen.UiSelfId,
+                ChatMessages = screen.UiContentRoomMessages,
+                ChatStatus = screen.UiContentChatStatus,
+                CanSendChat = screen.UiCanSendContentChat,
+                Participants = GetParticipantStates(),
                 Camera = PlayerCamera
             });
+        }
+
+
+        private ContentParticipantState[] GetParticipantStates()
+        {
+            var players = screen.UiRoomPlayers;
+            if (participantStates.Length != players.Length)
+            {
+                participantStates = new ContentParticipantState[players.Length];
+            }
+            for (int index = 0; index < players.Length; index++)
+            {
+                var player = players[index];
+                participantStates[index] = new ContentParticipantState(
+                    player.UserId, player.UserName, player.IsOwner, player.IsRoomMaster, player.ConnectionStatusLabel);
+            }
+            return participantStates;
         }
 
 

@@ -282,14 +282,6 @@ namespace SmartTraining
         }
 
 
-        private IEnumerator SelectLobby(string id)
-        {
-            selectedLobbyId = id;
-            ClearLobbyData();
-            yield return LoadLobbyData();
-        }
-
-
         // 카탈로그 트리를 선택용 목록으로도 펼칩니다. children 관계는 그대로 보존해 트리 UI에 사용합니다.
         private IEnumerator LoadLobbyData()
         {

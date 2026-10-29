@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 
@@ -32,7 +33,7 @@ namespace SmartTraining
 
         internal string UiSelfId => api?.User?.id ?? "";
 
-        internal LobbyChatMessage[] UiChatMessages => chatMessages.ToArray();
+        internal IReadOnlyList<LobbyChatMessage> UiChatMessages => chatMessages;
 
         internal string UiChatInput { get => chatInput; set => chatInput = value; }
 

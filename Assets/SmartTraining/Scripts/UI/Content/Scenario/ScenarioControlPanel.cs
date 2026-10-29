@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace SmartTraining
 {
-    // 목표·진행·공구 조건을 나눠 표시하는 읽기 전용 카드입니다. 실습 판정은 서비스에 맡깁니다.
+    // 목표·진행·공구 조건과 작업 취소 버튼을 표시합니다. 권한·작업 판정은 서버에 맡깁니다.
     internal sealed class ScenarioControlPanel
     {
         private readonly GameObject root;
@@ -12,6 +12,10 @@ namespace SmartTraining
         private readonly Text title, progress, currentTitle, instruction, requirement, myTool, actor;
         private readonly Image requirementBackground;
         private readonly RectTransform progressFill;
+        private readonly GameObject workRoot;
+        private readonly Text workStatus;
+        private readonly RectTransform workFill;
+        private readonly Button cancelWork;
         private readonly ScrollRect stepScroll;
         private readonly RectTransform stepContent;
         private readonly List<(GameObject Root, Image Background, Text Text)> rows = new();
@@ -62,6 +66,9 @@ namespace SmartTraining
             requirement = Label("Scenario Requirement", requirementBackground.transform, 14);
             Stretch(requirement.rectTransform, 10, 2);
             myTool = CreateText("Scenario My Tool", "", 14, 288, 20);
+            myTool.resizeTextForBestFit = true;
+            myTool.resizeTextMinSize = 9;
+            myTool.resizeTextMaxSize = 14;
             myTool.color = Muted;
             CreateText("Scenario Steps Caption", "진행 단계", 12, 320, 18).color = Muted;
             var viewport = new GameObject(
@@ -100,6 +107,36 @@ namespace SmartTraining
             stepScroll.content = stepContent;
             actor = CreateText("Scenario Last Actor", "진행 결과는 참가자 모두에게 공유됩니다.", 12, 414, 18);
             actor.color = Muted;
+            workRoot = new GameObject("Scenario Work", typeof(RectTransform));
+            workRoot.transform.SetParent(root.transform, false);
+            Place(workRoot.GetComponent<RectTransform>(), 20, 440, 336, 48);
+            workStatus = Label("Scenario Work Status", workRoot.transform, 13);
+            Place(workStatus.rectTransform, 0, 0, 224, 20);
+            workStatus.color = Accent;
+            var workTrack = Box("Scenario Work Track", workRoot.transform, new Color32(51, 65, 85, 255));
+            Place(workTrack.rectTransform, 0, 28, 224, 6);
+            workFill = Box("Scenario Work Fill", workTrack.transform, Accent).rectTransform;
+            workFill.anchorMin = Vector2.zero;
+            workFill.anchorMax = new Vector2(0, 1);
+            workFill.offsetMin = workFill.offsetMax = Vector2.zero;
+            var cancelImage = Box("Scenario Cancel Work", workRoot.transform, new Color32(185, 60, 60, 255));
+            Place(cancelImage.rectTransform, 236, 0, 100, 36);
+            cancelImage.raycastTarget = true;
+            UguiVisualStyle.Round(cancelImage);
+            cancelWork = cancelImage.gameObject.AddComponent<Button>();
+            cancelWork.targetGraphic = cancelImage;
+            var cancelLabel = Label("Scenario Cancel Label", cancelImage.transform, 14);
+            cancelLabel.text = "작업 취소";
+            cancelLabel.alignment = TextAnchor.MiddleCenter;
+            Stretch(cancelLabel.rectTransform, 4, 2);
+            cancelWork.onClick.AddListener(() =>
+            {
+                if (cancelWork.IsInteractable())
+                {
+                    previous?.CancelWork();
+                }
+            });
+            workRoot.SetActive(false);
             feedbackRoot = new GameObject("Scenario Feedback", typeof(RectTransform), typeof(Image));
             feedbackRoot.transform.SetParent(parent, false);
             var feedbackRect = feedbackRoot.GetComponent<RectTransform>();
@@ -173,15 +210,49 @@ namespace SmartTraining
             {
                 var step = definition.Steps[completed];
                 currentTitle.text = step.Title;
-                instruction.text = step.Instruction;
+                instruction.text = scenario.IsWorking ? "작업 중입니다. 완료될 때까지 기다려주세요." : step.Instruction;
                 requirement.text = step.RequiresTool ? "필요 공구  ·  " + definition.GetToolTitle(step.ToolId) : "공구 불필요  ·  대상만 클릭";
                 requirement.color = step.RequiresTool ? Accent : Success;
+                if (definition.RequiresRoles)
+                {
+                    requirement.text = ScenarioRoles.Label(step.RequiredRole) + " · " + (step.RequiresTool ? definition.GetToolTitle(step.ToolId) : "공구 불필요");
+                    if ((scenario.SelectedRoles & step.RequiredRole) != step.RequiredRole)
+                    {
+                        instruction.text += "\n담당자는 역할 메뉴에서 확인할 수 있습니다.";
+                    }
+                }
+
                 myTool.text = step.RequiresTool ? "내 공구: " + definition.GetToolTitle(scenario.SelectedTool) : "공구를 선택하거나 해제할 필요가 없습니다.";
+                if (definition.RequiresRoles)
+                {
+                    myTool.text = "내 역할: " + ScenarioRoles.Label(scenario.SelectedRoles) + " · 공구: " + definition.GetToolTitle(scenario.SelectedTool);
+                }
+
                 myTool.color = step.RequiresTool && scenario.SelectedTool != step.ToolId ? new Color32(251, 191, 36, 255) : Muted;
+            }
+
+            if (scenario.IsWorking)
+            {
+                requirement.text = scenario.CanCancelWork ? "내 작업 진행 중  ·  취소 가능" : "다른 참가자 작업 중";
+                requirement.color = Accent;
             }
 
             currentTitle.color = scenario.IsComplete ? Success : Color.white;
             actor.text = scenario.LastActor.Length > 0 ? "최근 진행  ·  " + scenario.LastActor : "진행 결과는 참가자 모두에게 공유됩니다.";
+            workRoot.SetActive(scenario.IsWorking);
+            root.GetComponent<RectTransform>().sizeDelta = new Vector2(376, scenario.IsWorking ? 500 : 440);
+            cancelWork.interactable = scenario.CanCancelWork;
+            if (scenario.IsWorking)
+            {
+                actor.text = scenario.LastActor + " 님이 ‘" + definition.Steps[completed].Title + "’ 작업 중";
+                actor.resizeTextForBestFit = true;
+                actor.resizeTextMinSize = 10;
+                actor.resizeTextMaxSize = 12;
+                float amount = scenario.WorkProgress;
+                workStatus.text = "작업 진행  " + Mathf.RoundToInt(amount * 100) + "%";
+                workFill.anchorMax = new Vector2(amount, 1);
+            }
+
             for (int index = 0; index < rows.Count; index++)
             {
                 bool done = index < completed;

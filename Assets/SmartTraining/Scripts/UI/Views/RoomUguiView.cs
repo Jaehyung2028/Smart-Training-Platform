@@ -31,10 +31,10 @@ namespace SmartTraining
         private GraphicRaycaster raycaster;
         private Font runtimeFont;
         private bool wired, wasVisible, showLobbyParticipants;
-        private string context = "", messagesContext = "";
+        private string context = "";
         private float nextLists;
         private readonly Dictionary<string, RectTransform> rows = new();
-        private readonly Dictionary<string, Text> messages = new();
+        private ChatMessageListView chatList;
 
         public void Bind(ApiLobbyScreen controller)
         {
@@ -177,11 +177,11 @@ namespace SmartTraining
             }
 
             UguiViewUtility.RemoveMissing(rows, new HashSet<string>());
-            UguiViewUtility.RemoveMissing(messages, new HashSet<string>());
+            chatList?.Clear();
             confirmationText.text = notices.text = settingsStatus.text = "";
             emptyParticipants.gameObject.SetActive(true);
             emptyChat.gameObject.SetActive(true);
-            context = messagesContext = "";
+            context = "";
             nextLists = 0;
             showLobbyParticipants = false;
             wasVisible = false;
@@ -373,41 +373,16 @@ namespace SmartTraining
 
         private void UpdateChat()
         {
-            string current = context + "|" + screen.UiRoomChatChannel;
-            if (messagesContext != current)
-            {
-                UguiViewUtility.RemoveMissing(messages, new HashSet<string>());
-                messagesContext = current;
-            }
-
+            chatList ??= new ChatMessageListView(chatScroll, () => Instantiate(chatTemplate, chatContent), chatTemplate.color);
             var displayed = screen.UiRoomScreenMessages;
-            bool follow = messages.Count == 0 || chatScroll.verticalNormalizedPosition < .05f;
-            bool changed = UguiViewUtility.RemoveMissing(messages, new HashSet<string>(displayed.Select(x => x.id)));
-            emptyChat.gameObject.SetActive(displayed.Length == 0);
-            foreach (var message in displayed)
-            {
-                if (messages.ContainsKey(message.id))
-                {
-                    continue;
-                }
-
-                var row = Instantiate(chatTemplate, chatContent);
-                row.gameObject.SetActive(true);
-                ChatMessagePresentation.SetChatMessage(row, message, screen.UiSelfId, chatTemplate.color);
-                messages[message.id] = row;
-                changed = true;
-            }
-
-            if (changed && follow)
-            {
-                Canvas.ForceUpdateCanvases();
-                chatScroll.verticalNormalizedPosition = 0;
-            }
+            emptyChat.gameObject.SetActive(displayed.Count == 0);
+            chatList.Refresh(displayed, screen.UiSelfId, context + "|" + screen.UiRoomChatChannel);
         }
 
 
         private void OnDestroy()
         {
+            chatList?.Dispose();
             if (runtimeFont != null)
             {
                 Destroy(runtimeFont);

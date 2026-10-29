@@ -59,12 +59,52 @@ namespace SmartTraining
             public bool partListVisible, partListSelectionVisible;
             public bool contentMenuOpen, contentOptionsOpen, contentCameraCanInteract;
             public float contentVolume;
+            public bool contentParticipantsVisible;
+            public int contentParticipantRows;
+            public string[] contentParticipantLabels;
+            public string contentParticipantButton;
+            public bool contentChatVisible, contentChatCanSend, contentChatFocused;
+            public int contentChatRows, contentChatOwnGreenRows;
+            public string contentChatText, contentChatDraft;
+            public string[] avatarUserNames, nameTagTexts;
+            public float[] avatarYaws;
+            public int nameTagCount, ownNameTagCount;
+            public float nameTagFacingError;
             public int contentCameraCount, contentAvatarCount;
             public int roomContentNodeId;
             public int learningPercent, learningRun, observedParts, requiredParts, observationNodeCount;
             public bool learningComplete;
             public string learningLabel;
             public string[] participantLearning;
+            public string[] scenarioHeldTools;
+            public Vector3 scenarioLocalHandPosition, scenarioLocalHandRestPosition, scenarioWorkHandPosition;
+            public Quaternion scenarioWorkHandRotation;
+            public float scenarioWorkContactError, scenarioWorkRotationError, scenarioToolSpinAngle, scenarioToolGrip;
+            public string[] scenarioVisibleToolIds;
+            public bool scenarioWorkHandPresent, scenarioToolSelectionEnabled;
+            public bool scenarioResultVisible, scenarioResultRestartEnabled, scenarioResultReturnEnabled;
+            public double scenarioElapsed;
+            public int scenarioToolErrors, scenarioTargetErrors, scenarioRunRevision, scenarioResultRows;
+            public string scenarioResultSummary;
+            public string[] scenarioResultActors;
+            public int[] scenarioResultToolErrors, scenarioResultTargetErrors;
+            public string scenarioRole, scenarioInspector, scenarioTechnician;
+            public bool scenarioInspectorEnabled, scenarioTechnicianEnabled;
+            public string scenarioInspectorButton, scenarioTechnicianButton;
+            public string[] nameTagDetails, scenarioVisibleObjects, scenarioRoleAssignments;
+            public bool playerStringCacheStable, playerListCacheStable;
+            public string[] avatarModels;
+            public float[] avatarAnimationSpeeds;
+            public bool scenarioContactReplaced, scenarioMachineReady;
+            public bool scenarioWorking;
+            public bool scenarioCanCancel, scenarioCancelVisible;
+            public string scenarioActorText, scenarioWorkStatus;
+            public float scenarioWorkFill;
+            public float scenarioWorkProgress;
+            public Vector3 scenarioBoltPosition, scenarioScrewPosition, scenarioPinPosition;
+            public Quaternion scenarioScrewRotation;
+            public float scenarioHammerLift;
+            public Quaternion scenarioBoltRotation;
             public bool scenarioReady, scenarioComplete, scenarioToolMenuVisible;
             public int scenarioToolOptions;
             public string scenarioCardTitle, scenarioCardGoal, scenarioCardRequirement, scenarioCardProgress;
@@ -85,9 +125,6 @@ namespace SmartTraining
             public string[] selectedPartNames = Array.Empty<string>();
             public float modelMinimumY;
             public Vector3[] disassemblyPartPositions = Array.Empty<Vector3>();
-            public int modelStepIndex = -1, modelStepCount;
-            public string modelStepTitle = "";
-            public bool modelStepVisible, modelStepHighlighted, modelStepPreviousEnabled, modelStepNextEnabled;
             public int playbackDirection;
             public string playbackStatus = "";
             public bool playbackForwardEnabled, playbackPauseEnabled, playbackReverseEnabled;
@@ -269,9 +306,26 @@ namespace SmartTraining
                                 var hud = (ContentHudController)typeof(ContentSceneSession).GetField("hud", Flags).GetValue(session);
                                 hud.HandleBack();
                                 break;
+                            case "scenarioWorldCapture":
+                                CaptureWorld(Path.Combine(directory, Path.GetFileName(command.value)));
+                                break;
                             case "scenarioCapture":
                                 CaptureCanvas(screen.GetComponentsInChildren<Canvas>().First(canvas => canvas.name == "Content HUD"),
                                     Path.Combine(directory, "scenario.png"));
+                                break;
+                            case "scenarioToolScroll":
+                                screen.GetComponentsInChildren<UnityEngine.UI.ScrollRect>().First(item => item.name == "Tool List Scroll").verticalNormalizedPosition = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
+                                break;
+                            case "scenarioLookAt":
+                                var lookTarget = UnityEngine.Object.FindAnyObjectByType<ScenarioContent>().GetComponentsInChildren<ScenarioObject>().First(item => item.Id == command.value);
+                                var scenarioCamera = UnityEngine.Object.FindAnyObjectByType<FirstPersonCameraController>();
+                                var lookAngles = Quaternion.LookRotation(lookTarget.WorkAnchor.position - scenarioCamera.ViewCamera.transform.position).eulerAngles;
+                                typeof(FirstPersonCameraController).GetField("yaw", Flags).SetValue(scenarioCamera, lookAngles.y);
+                                typeof(FirstPersonCameraController).GetField("pitch", Flags).SetValue(scenarioCamera, Mathf.DeltaAngle(0, lookAngles.x));
+                                break;
+                            case "scenarioRawRole":
+                                var roleArguments = command.value.Split('|');
+                                SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).SelectRoleRpc((ScenarioRole)int.Parse(roleArguments[0]), int.Parse(roleArguments[1]));
                                 break;
                             case "scenarioSelectTool":
                                 var toolButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
@@ -286,6 +340,35 @@ namespace SmartTraining
                                 var toolParts = command.value.Split('|');
                                 SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).SelectToolRpc(toolParts[0], int.Parse(toolParts[1]));
                                 break;
+                            case "playerLookYaw":
+                                var lookCamera = UnityEngine.Object.FindAnyObjectByType<FirstPersonCameraController>();
+                                typeof(FirstPersonCameraController).GetField("yaw", Flags).SetValue(
+                                    lookCamera, float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture)
+                                );
+                                break;
+                            case "remotePlayerYaw":
+                                screen.UiRoomPlayers.First(item => !item.IsOwner).SetViewYaw(240);
+                                break;
+                            case "contentParticipantsToggle":
+                                screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Participants Toggle").onClick.Invoke();
+                                break;
+                            case "contentChatToggle":
+                                screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Toggle").onClick.Invoke();
+                                break;
+                            case "contentChatDraft":
+                                var contentInput = screen.GetComponentsInChildren<UnityEngine.UI.InputField>().First(item => item.name == "Content Chat Input");
+                                contentInput.text = command.value;
+                                if (command.enabled)
+                                {
+                                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(contentInput.gameObject);
+                                    contentInput.ActivateInputField();
+                                }
+                                break;
+                            case "contentChatSend":
+                                var contentSend = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Send");
+                                if (!contentSend.IsInteractable()) throw new InvalidOperationException("콘텐츠 채팅 전송이 비활성화되어 있습니다.");
+                                contentSend.onClick.Invoke();
+                                break;
                             case "scenarioWalk":
                                 operation = WalkToScenarioWorkBench();
                                 break;
@@ -295,6 +378,28 @@ namespace SmartTraining
                             case "scenarioRawInteract":
                                 var rawParts = command.value.Split('|');
                                 SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).InteractRpc(rawParts[0], int.Parse(rawParts[1]));
+                                break;
+                            case "scenarioCancel":
+                                var cancelWork = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                                    .First(item => item.name == "Scenario Cancel Work");
+                                if (!cancelWork.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("작업 취소 버튼이 비활성화되어 있습니다.");
+                                }
+                                cancelWork.onClick.Invoke();
+                                break;
+                            case "scenarioRawCancel":
+                                SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).CancelWorkRpc(int.Parse(command.value));
+                                break;
+                            case "scenarioResultRestart":
+                            case "scenarioResultReturn":
+                                string resultButtonName = command.action == "scenarioResultRestart" ? "Scenario Result Restart" : "Scenario Result Return";
+                                var resultButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == resultButtonName);
+                                if (!resultButton.IsInteractable())
+                                {
+                                    throw new InvalidOperationException("결과 화면의 방장 버튼을 사용할 수 없습니다.");
+                                }
+                                resultButton.onClick.Invoke();
                                 break;
                             case "scenarioReset":
                                 SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).ResetRpc(
@@ -416,16 +521,6 @@ namespace SmartTraining
                                     throw new InvalidOperationException("부품 목록 행을 선택할 수 없습니다.");
                                 }
                                 listRow.onClick.Invoke();
-                                break;
-                            case "stepNext":
-                            case "stepPrevious":
-                                string stepButtonName = command.action == "stepNext" ? "Next Model Step" : "Previous Model Step";
-                                var stepButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == stepButtonName);
-                                if (!stepButton.IsInteractable())
-                                {
-                                    throw new InvalidOperationException("단계 이동 버튼이 비활성화되어 있습니다.");
-                                }
-                                stepButton.onClick.Invoke();
                                 break;
                             case "playback":
                                 int playbackDirection = int.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
@@ -614,12 +709,64 @@ namespace SmartTraining
             snapshot.contentCameraCount = cameras.Length;
             snapshot.contentCameraCanInteract = cameras.Length > 0 && cameras[0].CanInteract;
             snapshot.contentVolume = AudioListener.volume;
+            var contentParticipants = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Content Participants");
+            snapshot.contentParticipantsVisible = contentParticipants != null;
+            snapshot.contentParticipantLabels = contentParticipants == null ? Array.Empty<string>() :
+                contentParticipants.GetComponentsInChildren<UnityEngine.UI.Text>().Where(item => item.name == "Content Participant Row").Select(item => item.text).ToArray();
+            snapshot.contentParticipantRows = snapshot.contentParticipantLabels.Length;
+            snapshot.contentParticipantButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                .FirstOrDefault(item => item.name == "Content Participants Toggle")?.GetComponentInChildren<UnityEngine.UI.Text>().text ?? "";
+            var contentChat = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Content Room Chat");
+            snapshot.contentChatVisible = contentChat != null;
+            if (contentChat != null)
+            {
+                var contentMessages = contentChat.GetComponentsInChildren<UnityEngine.UI.Text>().Where(item => item.name == "Content Chat Message").ToArray();
+                snapshot.contentChatRows = contentMessages.Length;
+                snapshot.contentChatText = string.Join("\n", contentMessages.Select(item => item.text));
+                snapshot.contentChatOwnGreenRows = contentMessages.Count(item => item.color.g > item.color.r && item.color.g > item.color.b);
+                var contentInput = contentChat.GetComponentInChildren<UnityEngine.UI.InputField>();
+                snapshot.contentChatDraft = contentInput.text;
+                snapshot.contentChatFocused = contentInput.isFocused;
+                snapshot.contentChatCanSend = contentChat.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Send").IsInteractable();
+            }
+            var avatars = screen.UiRoomPlayers.OrderBy(item => item.UserName).ToArray();
+            snapshot.playerStringCacheStable = avatars.All(item => ReferenceEquals(item.UserName, item.UserName) &&
+                ReferenceEquals(item.UserId, item.UserId) && ReferenceEquals(item.RoomMasterUserId, item.RoomMasterUserId));
+            snapshot.playerListCacheStable = ReferenceEquals(screen.UiRoomPlayers, screen.UiRoomPlayers);
+            snapshot.avatarUserNames = avatars.Select(item => item.UserName).ToArray();
+            snapshot.avatarYaws = avatars.Select(item => item.transform.eulerAngles.y).ToArray();
+            snapshot.avatarModels = avatars.Select(item => item.AvatarRoot != null ? item.AvatarRoot.name : "").ToArray();
+            snapshot.avatarAnimationSpeeds = avatars.Select(item => item.AvatarRoot != null && item.AvatarRoot.gameObject.activeInHierarchy ? item.AvatarRoot.GetComponent<Animator>().GetFloat("Speed") : 0).ToArray();
+            var nameTags = avatars.SelectMany(item => item.GetComponentsInChildren<UnityEngine.UI.Text>())
+                .Where(item => item.name == "Player Name").ToArray();
+            snapshot.nameTagCount = nameTags.Length;
+            snapshot.nameTagTexts = nameTags.Select(item => item.text).ToArray();
+            snapshot.nameTagDetails = avatars.SelectMany(item => item.GetComponentsInChildren<UnityEngine.UI.Text>())
+                .Where(item => item.name == "Player Detail").Select(item => item.text).ToArray();
+            snapshot.ownNameTagCount = player == null ? 0 : player.GetComponentsInChildren<UnityEngine.UI.Text>()
+                .Count(item => item.name == "Player Name");
+            snapshot.nameTagFacingError = cameras.Length == 0 || nameTags.Length == 0 ? 0 :
+                nameTags.Max(item => Quaternion.Angle(item.transform.rotation, cameras[0].transform.rotation));
             snapshot.contentMenuOpen = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Content Menu Overlay");
             snapshot.contentOptionsOpen = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Content Options");
-            snapshot.contentAvatarCount = screen.UiRoomPlayers.Count(participant => participant.transform.Find("PlayerVisual")?.gameObject.activeInHierarchy == true);
+            snapshot.contentAvatarCount = screen.UiRoomPlayers.Count(participant => participant.AvatarRoot != null && participant.AvatarRoot.gameObject.activeInHierarchy);
             var scenario = UnityEngine.Object.FindAnyObjectByType<ScenarioContent>();
             snapshot.localPosition = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.ServerPosition : Vector3.zero;
             snapshot.scenarioPresent = scenario != null;
+            var resultRoot = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Scenario Results");
+            snapshot.scenarioResultVisible = resultRoot != null && resultRoot.gameObject.activeInHierarchy;
+            if (resultRoot != null)
+            {
+                var resultButtons = resultRoot.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+                snapshot.scenarioResultRestartEnabled = snapshot.scenarioResultVisible && resultButtons.First(item => item.name == "Scenario Result Restart").IsInteractable();
+                snapshot.scenarioResultReturnEnabled = snapshot.scenarioResultVisible && resultButtons.First(item => item.name == "Scenario Result Return").IsInteractable();
+                snapshot.scenarioResultSummary = resultRoot.GetComponentsInChildren<UnityEngine.UI.Text>(true).First(item => item.name == "Scenario Result Summary").text;
+            }
+            snapshot.scenarioHeldTools = UnityEngine.Object.FindObjectsByType<HandheldItemRig>(FindObjectsSortMode.None)
+                .Where(rig => rig.gameObject.activeInHierarchy && rig.Grip != null && rig.Grip.childCount > 0)
+                .Select(rig => rig.name + "|" + rig.Grip.GetChild(0).name + "|" +
+                    (rig.transform.parent != null && rig.transform.parent.GetComponent<Camera>() != null ? "local" : "remote"))
+                .OrderBy(value => value).ToArray();
             if (scenario != null)
             {
                 var menu = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Scenario Tool Menu");
@@ -630,11 +777,98 @@ namespace SmartTraining
                 snapshot.scenarioCardGoal = cardLabels.FirstOrDefault(item => item.name == "Scenario Current Title")?.text ?? "";
                 snapshot.scenarioCardRequirement = cardLabels.FirstOrDefault(item => item.name == "Scenario Requirement")?.text ?? "";
                 snapshot.scenarioCardProgress = cardLabels.FirstOrDefault(item => item.name == "Scenario Progress")?.text ?? "";
+                snapshot.scenarioToolErrors = scenario.ToolErrors;
+                snapshot.scenarioTargetErrors = scenario.TargetErrors;
+                snapshot.scenarioElapsed = scenario.ElapsedSeconds;
+                snapshot.scenarioRunRevision = scenario.RunRevision;
+                var outcomes = scenario.Outcomes.ToArray();
+                snapshot.scenarioResultRows = outcomes.Length;
+                snapshot.scenarioResultActors = outcomes.Select(row => row.ActorName.ToString()).ToArray();
+                snapshot.scenarioResultToolErrors = outcomes.Select(row => row.ToolErrors).ToArray();
+                snapshot.scenarioResultTargetErrors = outcomes.Select(row => row.TargetErrors).ToArray();
+                snapshot.scenarioRole = scenario.SelectedRoles.ToString();
+                snapshot.scenarioRoleAssignments = ScenarioRoles.Enumerate(scenario.Definition.Roles)
+                    .Select(role => role + "|" + scenario.RoleParticipantName(role)).ToArray();
+                snapshot.scenarioVisibleObjects = scenario.GetComponentsInChildren<Transform>().Select(item => item.name).ToArray();
+                var roleButtons = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+                var inspectorButton = roleButtons.FirstOrDefault(item => item.name == "Scenario Role Inspector");
+                var technicianButton = roleButtons.FirstOrDefault(item => item.name == "Scenario Role Technician");
+                snapshot.scenarioInspectorEnabled = inspectorButton != null && inspectorButton.IsInteractable();
+                snapshot.scenarioTechnicianEnabled = technicianButton != null && technicianButton.IsInteractable();
+                snapshot.scenarioInspectorButton = inspectorButton?.GetComponentInChildren<UnityEngine.UI.Text>().text;
+                snapshot.scenarioTechnicianButton = technicianButton?.GetComponentInChildren<UnityEngine.UI.Text>().text;
+                snapshot.scenarioInspector = scenario.RoleParticipantName(ScenarioRole.Inspector);
+                snapshot.scenarioTechnician = scenario.RoleParticipantName(ScenarioRole.Technician);
+                snapshot.scenarioContactReplaced = scenario.transform.Find("Contact/Replaced Contact")?.gameObject.activeInHierarchy == true;
+                snapshot.scenarioMachineReady = scenario.transform.Find("Fault Indicator/Ready Light")?.gameObject.activeInHierarchy == true;
+                snapshot.scenarioWorking = scenario.IsWorking;
+                snapshot.scenarioToolSelectionEnabled = scenario.CanSelectTool;
+                var rigs = UnityEngine.Object.FindObjectsByType<HandheldItemRig>(FindObjectsSortMode.None);
+                var localRig = rigs.FirstOrDefault(rig => rig.transform.parent != null && rig.transform.parent.GetComponent<Camera>() != null);
+                if (localRig != null)
+                {
+                    snapshot.scenarioLocalHandPosition = localRig.transform.position;
+                    snapshot.scenarioLocalHandRestPosition = localRig.transform.parent.TransformPoint(new Vector3(.3f, -.27f, .55f));
+                }
+                var scenarioShared = screen.UiLocalPlayer != null ? SharedScenario.Find(screen.UiLocalPlayer.NetworkManager) : null;
+                if (scenario.IsWorking && scenarioShared != null)
+                {
+                    var worker = rigs.FirstOrDefault(rig => rig.name == "Held Tool " + scenarioShared.State.WorkClientId);
+                    var step = scenario.Definition.Steps[scenario.CompletedSteps];
+                    var target = scenario.GetComponentsInChildren<ScenarioObject>().First(item => item.Id == step.TargetId);
+                    var tool = scenario.Definition.GetTool(step.ToolId);
+                    if (worker != null && worker.Grip.childCount > 0 && tool != null)
+                    {
+                        var item = worker.Grip.GetChild(0);
+                        snapshot.scenarioWorkHandPresent = true;
+                        snapshot.scenarioWorkHandPosition = worker.transform.position;
+                        snapshot.scenarioWorkHandRotation = worker.transform.rotation;
+                        ScenarioWorkMotion.ToolPose(step.Action, scenario.WorkProgress, out var offset, out var rotation);
+                        snapshot.scenarioWorkContactError = Vector3.Distance(item.TransformPoint(tool.WorkContactPoint), target.WorkAnchor.position + target.WorkAnchor.rotation * offset);
+                        snapshot.scenarioWorkRotationError = Quaternion.Angle(item.rotation, target.WorkAnchor.rotation * rotation * tool.WorkRotation);
+                        var parts = item.GetComponent<ToolArticulation>();
+                        snapshot.scenarioToolSpinAngle = parts != null ? parts.SpinAngle : 0;
+                        snapshot.scenarioToolGrip = parts != null ? parts.GripAmount : 0;
+                    }
+                }
+                var cancelWork = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true)
+                    .FirstOrDefault(item => item.name == "Scenario Cancel Work");
+                snapshot.scenarioCancelVisible = cancelWork != null && cancelWork.gameObject.activeInHierarchy;
+                snapshot.scenarioCanCancel = snapshot.scenarioCancelVisible && cancelWork.IsInteractable();
+                snapshot.scenarioActorText = cardLabels.FirstOrDefault(item => item.name == "Scenario Last Actor")?.text ?? "";
+                snapshot.scenarioWorkStatus = cardLabels.FirstOrDefault(item => item.name == "Scenario Work Status")?.text ?? "";
+                var workFill = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Scenario Work Fill");
+                snapshot.scenarioWorkFill = workFill != null ? workFill.anchorMax.x : 0;
+                snapshot.scenarioWorkProgress = scenario.WorkProgress;
+                var bolt = scenario.transform.Find("Bolt A");
+                if (bolt != null)
+                {
+                    snapshot.scenarioBoltPosition = bolt.localPosition;
+                    snapshot.scenarioBoltRotation = bolt.localRotation;
+                }
+                var screw = scenario.transform.Find("Screw A");
+                var pin = scenario.transform.Find("Pin A");
+                if (screw != null)
+                {
+                    snapshot.scenarioScrewPosition = screw.localPosition;
+                    snapshot.scenarioScrewRotation = screw.localRotation;
+                }
+                if (pin != null)
+                {
+                    snapshot.scenarioPinPosition = pin.localPosition;
+                }
+                snapshot.scenarioHammerLift = scenario.IsWorking &&
+                    scenario.Definition.Steps[scenario.CompletedSteps].Action == ScenarioAction.Strike
+                    ? ScenarioWorkMotion.HammerLift(scenario.WorkProgress) : 0;
                 snapshot.scenarioReady = scenario.IsReady;
                 snapshot.scenarioComplete = scenario.IsComplete;
                 snapshot.scenarioCompletedSteps = scenario.CompletedSteps;
                 snapshot.scenarioRevision = scenario.Revision;
                 snapshot.scenarioSelectedTool = scenario.SelectedTool;
+                var toolScroll = screen.GetComponentsInChildren<UnityEngine.UI.ScrollRect>().FirstOrDefault(item => item.name == "Tool List Scroll");
+                snapshot.scenarioVisibleToolIds = toolScroll == null ? Array.Empty<string>() : toolScroll.content.GetComponentsInChildren<UnityEngine.UI.Button>().Where(button =>
+                    toolScroll.viewport.rect.Contains(toolScroll.viewport.InverseTransformPoint(((RectTransform)button.transform).TransformPoint(((RectTransform)button.transform).rect.center))))
+                    .Select(button => button.name.Substring("Scenario Tool ".Length)).ToArray();
                 snapshot.scenarioFeedback = scenario.Feedback;
                 var notice = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true).FirstOrDefault(item => item.name == "Scenario Feedback Text");
                 snapshot.scenarioNotice = notice != null ? notice.text : "";
@@ -666,33 +900,12 @@ namespace SmartTraining
             {
                 snapshot.selectedNodeCount = selectedViewer.SelectedNodes.Count;
                 snapshot.selectedPartNames = selectedViewer.SelectedNodes.Select(node => node.Transform.name).ToArray();
-                snapshot.modelStepIndex = selectedViewer.CurrentStepIndex;
-                snapshot.modelStepCount = selectedViewer.StepCount;
                 snapshot.modelMinimumY = selectedViewer.GetComponentsInChildren<Renderer>().Min(renderer => renderer.bounds.min.y);
                 var disassembly = selectedViewer.GetComponent<ModelDisassemblyAnimation>();
                 if (disassembly != null)
                 {
                     snapshot.disassemblyPartPositions = disassembly.GetOrderedSteps().SelectMany(step => step.Targets)
                         .Where(target => target != null).Distinct().Select(target => target.localPosition).ToArray();
-                }
-                snapshot.modelStepTitle = selectedViewer.CurrentStep?.Title ?? "";
-                snapshot.modelStepVisible = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Model Step Guide");
-                var stepButtons = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true);
-                snapshot.modelStepPreviousEnabled = stepButtons.Any(button => button.name == "Previous Model Step" && button.interactable);
-                snapshot.modelStepNextEnabled = stepButtons.Any(button => button.name == "Next Model Step" && button.interactable);
-                if (selectedViewer.CurrentStep != null)
-                {
-                    var guided = selectedViewer.CurrentStep.Targets.Where(target => target != null).SelectMany(target => target.GetComponentsInChildren<Renderer>()).Distinct().ToArray();
-                    snapshot.modelStepHighlighted = guided.Length > 0 && guided.All(renderer =>
-                    {
-                        var block = new MaterialPropertyBlock();
-                        renderer.GetPropertyBlock(block, 0);
-                        int colorId = Shader.PropertyToID(renderer.sharedMaterial.HasProperty("_BaseColor") ? "_BaseColor" : "_Color");
-                        var color = block.GetColor(colorId);
-                        bool selected = selectedViewer.SelectedRenderers.Contains(renderer);
-                        var expected = new Color(1, 0.55f, 0.1f);
-                        return selected && Mathf.Abs(color.r - expected.r) < 0.01f && Mathf.Abs(color.g - expected.g) < 0.01f && Mathf.Abs(color.b - expected.b) < 0.01f;
-                    });
                 }
                 snapshot.explosionAmount = selectedViewer.ExplosionAmount;
                 snapshot.playbackDirection = selectedViewer.PlaybackDirection;
@@ -855,6 +1068,32 @@ namespace SmartTraining
             var events=UnityEngine.EventSystems.EventSystem.current;
             UnityEngine.EventSystems.ExecuteEvents.Execute(button.gameObject,new UnityEngine.EventSystems.PointerEventData(events){button=UnityEngine.EventSystems.PointerEventData.InputButton.Left},UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
         }
+        private static void CaptureWorld(string path)
+        {
+            var camera = UnityEngine.Object.FindAnyObjectByType<FirstPersonCameraController>().ViewCamera;
+            var target = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
+            var previous = camera.targetTexture;
+            var active = RenderTexture.active;
+            var texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+            try
+            {
+                camera.targetTexture = target;
+                camera.Render();
+                RenderTexture.active = target;
+                texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
+                texture.Apply();
+                File.WriteAllBytes(path, texture.EncodeToPNG());
+            }
+            finally
+            {
+                camera.targetTexture = previous;
+                RenderTexture.active = active;
+                RenderTexture.ReleaseTemporary(target);
+                UnityEngine.Object.Destroy(texture);
+            }
+        }
+
+
         private static void CaptureCanvas(Canvas canvas, string path)
         {
             // 숨겨진 검사 창은 화면 버퍼가 없을 수 있으므로 해당 Canvas만 텍스처로 렌더링합니다.
