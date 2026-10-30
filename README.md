@@ -1,134 +1,131 @@
 # Smart Training Platform
 
-ASP.NET Core 백엔드와 연동해 로그인·로비·방 입장 및 실시간 멀티플레이를 처리하는 Unity 클라이언트와 전용 방 서버 프로젝트입니다.
+Unity 기반 멀티플레이 교육 플랫폼입니다. 참가자가 같은 3D 공간에서 장비를 관찰하고, 영상을 함께 시청하고, 역할을 나눠 공구 실습을 진행합니다. **Unity 클라이언트·전용 서버와 ASP.NET Core 백엔드를 연결하는 전체 흐름**을 구현했습니다.
 
-멀티 접속·방 관리 기반에 Addressables 콘텐츠를 연결하고 있습니다. 현재 3D 모델 관찰, 공유 영상 재생, 공구로 볼트 2개를 푼 뒤 공구 없이 결과를 확인하는 공동 시나리오 실습 예시를 구현했습니다. 실제 교육용 정밀 공구 조작·장치 연동·결과 기록은 후속 개발 범위입니다.
+- 작성자: 고재형
+- [ASP.NET Core 서버 저장소](https://github.com/Jaehyung2028/Smart-Training-Server)
+- [1분 시연 영상](docs/media/demo-60s.mp4) · [교육과정과 리소스 구성](Assets/SmartTraining/Documentation/Guides/CourseSamples.md)
 
-- 백엔드: [Smart Training Server](https://github.com/Jaehyung2028/Smart-Training-Server)
-- 개발 범위: API 연동, 입장 예약 기반 접속, 전용 서버, 플레이어 동기화, 방장 관리 화면, 종료 및 재접속 처리
+[![멀티플레이 교육 콘텐츠 시연](docs/images/model.png)](docs/media/demo-60s.mp4)
 
-## 기술과 역할
+## 사용 흐름
 
-| 기술 | 역할 |
+**서버 주소·닉네임·교육과정 선택 → 로그인 → 방 생성/참가 → 참가자 준비 → 방장 시작 → 콘텐츠 체험 → 대기실 복귀**
+
+교육과정은 서버의 `catalog.json`에서 읽습니다. 방을 만들 때 트리 창에서 최하위 콘텐츠를 선택하며, 대기실에서 방장이 콘텐츠를 바꿀 수 있습니다. 다른 콘텐츠를 체험하기 위해 방을 다시 만들 필요가 없습니다.
+
+## 구현 기능
+
+| 영역 | 동작 |
 |---|---|
-| Unity `6000.4.7f1` / C# | 클라이언트 및 전용 서버 실행 |
-| Netcode for GameObjects `2.12.0` | 플레이어 생성·소유권·상태 동기화 및 RPC |
-| Unity Transport `2.7.2` (embedded) | 클라이언트와 전용 서버 사이의 UDP 통신 |
-| Input System `1.19.0` | 이동 입력 |
-| UnityWebRequest | 로그인·로비·방 관리 API 요청 |
-| Microsoft ASP.NET Core SignalR Client | 전용 서버 관리 통신, 로비 변경 알림과 채팅 |
-| URP `17.4.0` | 프로젝트 렌더링 환경 |
+| 접속·방 관리 | 토큰 세션, 자동 입장, 접속 예약/취소, 재접속 및 연결 종료 정리 |
+| 방장·대기실 | 최초 방장, 자동/수동 위임, 강퇴, 입장 잠금, 이름·정원·비밀번호, 준비·시작·대기 복귀 |
+| 멀티플레이 | 전용 서버 기반 이동·회전, Rigidbody 충돌, 플레이어 애니메이션, 이름표, 채팅·참가자 목록 |
+| 모델 관찰 | 공유 회전과 조작권, 회전 초기화, 분해·재조립·재생 위치, 부품 트리·설명·하위 부품 강조, 주변 부품 투명도 |
+| 공동 영상 | 모든 참가자의 재생·일시정지·정지·±5초·탐색, 재생 시점 동기화, 자막·개인 음량 |
+| 시나리오 실습 | 개인별 공구 선택, 대상·공구·거리·역할 검사, 공구별 작업 모션, 공구 없는 확인 단계, 진행·결과 표시 |
+| 협동 실습 | 역할별 작업, 담당자 표시, 이미 배정된 역할 선택 차단, 미배정 역할 추가 담당 |
+| 공통 화면 | UGUI 프리팹, 콘텐츠별 기능 메뉴, 1인칭 카메라·응시 확대, 설정 저장/취소 |
 
-`RoomHubConnection`은 Microsoft SignalR 클라이언트를 사용합니다. 연결·프로토콜·핑·요청 대응은 라이브러리에 맡기고, Unity 메인 스레드 이벤트 전달과 프로젝트의 요청 제한 시간을 연결합니다. HTTP·SignalR JSON은 `System.Text.Json`으로 처리합니다.
+### 교육과정 샘플
 
-## 구조와 설계
+3개 교육과정에 **12개 실행 콘텐츠**를 연결했습니다. 분류 노드는 선택할 수 없고, 실행 노드는 `contentType`과 Addressables `assetId`로 리소스를 찾습니다.
 
-```mermaid
-flowchart LR
-    UI[ApiLobbyScreen] --> REST[TrainingApiClient]
-    REST <-->|HTTP| API[ASP.NET Core API]
-    UI --> NC[RoomNetworkClient]
-    NC <-->|UDP / Netcode| DS[RoomDedicatedServer]
-    DS <-->|WebSocket / SignalR| API
-    DS --> P[RoomPlayer: 서버 권한 상태 동기화]
-```
+| 교육과정 | 모델 | 영상 | 개인/공동 실습 | 역할 분담 실습 |
+|---|---|---|---|---|
+| 장비 기초 | 전동 드릴 | 장비 사용 순서 | 작업 전 공구 점검 | 장비 접점 정비 · 2역할 |
+| 작업 안전 | 보호 장비 | 작업 전 안전 수칙 | 체결·타격 작업 | 방호 덮개 복구 · 2역할 |
+| 비상 대응 | 소화기 | 비상 대응 순서 | 대피 전 안전 확인 | 비상 유도등 복구 · 4역할 |
 
-ASP.NET에서 사용자·입장 권한을 확인하고, 전용 서버에서 실제 연결과 플레이어 상태를 관리합니다. 클라이언트가 닉네임이나 방장 권한을 스스로 확정하지 않고 서버가 확인한 값으로 표시합니다.
+실습에는 스패너·드라이버·망치·드릴·플라이어·파이프 렌치·톱·도끼와 공구 없는 확인 단계를 섞었습니다. 협동 콘텐츠의 2인/4인 표기는 역할 구성 기준이며, 한 사람이 미배정 역할을 여러 개 맡을 수 있습니다.
 
-방장은 전용 서버와 별개의 참가자 역할입니다. 방장 퇴장 시 남아 있는 참가자에게 권한을 위임하며, 전용 서버가 계속 실행되므로 다른 참가자의 연결을 유지합니다.
-
-## 현재 구현 기능
-
-- 닉네임 로그인, 토큰 갱신, 종료·인증 만료 시 세션 정리
-- 서버 `catalog.json` 기반 콘텐츠 로비 목록과 ASP.NET 직접 입장 처리
-- 로비 안의 방 생성·검색·필터·정렬, 비밀번호와 정원 확인
-- 접속 예약·검증·연결 확정, 입장 취소와 연결 실패 정리
-- 플레이어 생성·이동 동기화, 연결 지연·준비 상태 표시
-- 방장 자동·수동 위임, 강퇴, 입장 잠금, 방 설정·비밀번호 변경, 방 닫기
-- 전원 준비 후 방장 시작, 대기 복귀와 준비 상태 초기화
-- 로비·방 채팅, 참가자 목록, 방 목록과 운영 상태 자동 갱신
-- 로비·방별 SignalR 그룹 전송과 재입장 시 이전 방 채팅 메시지 제외
-- 연결 끊김 감지와 사용자 요청에 따른 이전 방 재접속
-- 로그인·콘텐츠 로비·로비 내부·방 내부의 UGUI 화면과 공통 테마
-- 씬 UI 편집·미리보기, 해상도 대응, 중복 입력 차단과 화면 전환 시 입력값 정리
-- Windows Development 클라이언트·전용 서버 통합 빌드 메뉴
-
-입장 잠금과 진행 중 상태에서는 신규 입장을 제한합니다. 재접속에도 현재 정원·비밀번호·입장 조건을 다시 확인하며, 강퇴와 직접 퇴장에는 연결 복구 대상을 남기지 않습니다.
-
-Unity Transport는 프로젝트에 포함한 embedded 패키지를 사용합니다. 비정상 종료 뒤 수신 버퍼가 소진되는 문제의 수정 범위와 원본 라이선스는 [패치 안내](Packages/com.unity.transport/SMART-TRAINING-PATCH.md)와 패키지 내 `LICENSE.md`에서 확인할 수 있습니다.
-방 만들기의 콘텐츠 선택 창은 카탈로그를 부모·자식 트리로 표시합니다. 가지를 펼치거나 접고 항목을 선택한 뒤 적용할 수 있으며, 취소하면 기존 선택을 유지합니다. 서버에는 루트 ID와 노드 ID를 함께 전달합니다.
-
-## 주요 파일과 함수
-
-| 파일 | 주요 역할 |
-|---|---|
-| `Scripts/Client/Api/TrainingApiClient.cs` | 인증된 API 요청과 세션 갱신, `LogoutOnShutdown` |
-| `Scripts/Client/Controllers/ApiLobbyScreen.cs` | 확인용 UI, `JoinRoom`, `HandleConnectionLost`, `ReconnectRoom` |
-| `Scripts/UI/Views/ContentTreePopup.cs` | 방 생성 콘텐츠 트리의 펼침·접기, 임시 선택과 적용·취소 |
-| `Scripts/Client/Networking/RoomNetworkClient.cs` | 예약 검증·Netcode 연결, `Connect`, `Dispose` |
-| `Scripts/Servers/RoomDedicatedServer.cs` | 입장 승인·ASP.NET 확인·플레이어 생성, `SynchronizeRoomMaster` |
-| `Scripts/Client/Networking/RoomHubConnection.cs` | 전용 서버의 RoomHub 연결과 요청·응답 처리 |
-| `Scripts/Gameplay/RoomPlayer.cs` | 소유자 입력 RPC, 서버 권한 이동, 닉네임·방장·잠금 동기화 |
-| `Scripts/Diagnostics/EditorSessionCleanup.cs` | Play 종료 후 에디터에서 로그아웃 정리 요청 처리 |
-| `Editor/Tests/Integration/RoomServerEndToEndTest.cs` | 실제 ASP.NET·별도 전용 서버·다중 클라이언트 통합 검증 |
-
-위 경로의 기준 폴더는 `Assets/SmartTraining`입니다.
-
-## 해결한 문제
-
-### 에디터 종료 후 닉네임이 사용 중으로 남는 문제
-
-Play를 종료하면 코루틴도 종료되어 일반 로그아웃 요청을 끝내지 못할 수 있었습니다. 에디터 실행 루프에서 종료 정리를 처리하고, 서버의 세션 만료 정리를 보완 경로로 사용했습니다.
-
-### 실제 연결과 API 참가 상태의 불일치
-
-API 예약 후 UDP 연결에 실패하면 예약만 남을 수 있습니다. 실패 시 예약·참가 정보를 정리하고, 전용 서버가 실제 연결을 확인한 뒤 플레이어를 생성하도록 연결 흐름을 나누었습니다.
-
-### 연결 끊김과 재접속
-
-전송 계층 heartbeat와 약 10초 무응답 기준을 설정했습니다. 연결 종료 후 이전 참가 상태를 확인하고 새 예약으로 재접속합니다. 기존 입장 토큰을 재사용하지 않으며, 자동 위임된 방장 권한도 되찾지 않습니다.
-
-재접속은 자동 반복하지 않고 사용자가 **이전 방에 다시 접속** 버튼을 눌러 시도합니다. 마지막 참가자가 나가 방이 삭제된 경우에는 새 방을 선택해야 합니다.
-
-## 실행 방법
-
-1. Unity Hub에서 `6000.4.7f1`과 Windows Dedicated Server 빌드 모듈을 설치합니다.
-2. 프로젝트를 열고 패키지 가져오기가 끝나면 `Smart Training > Build > Build Windows Test Bundle`을 실행합니다.
-3. `Builds/TestBundles/날짜-고유번호`의 `RoomServer` 폴더 전체를 API 실행 폴더에 배치하거나 API의 실행 경로를 지정합니다. 방 서버의 실행 경로는 `Room:ServerExecutablePath`로 지정합니다.
-4. [백엔드 실행 안내](https://github.com/Jaehyung2028/Smart-Training-Server#실행-방법)에 따라 ASP.NET을 실행합니다.
-5. `Client/Smart Training Client.exe`를 실행하거나 `Assets/SmartTraining/Scenes/ApiLobby.unity`에서 Play합니다.
-6. 서버 주소를 입력하고 로그인 → 콘텐츠 로비 선택 → 입장 → 방 생성 또는 선택 → 방 참가 순서로 확인합니다.
-
-다른 PC에서는 localhost 대신 API 서버 PC의 주소를 사용합니다. 실행 파일 하나가 아니라 `_Data`와 DLL을 포함한 폴더 전체가 필요합니다. 클라이언트는 Development Build이며 정식 서비스 배포용 설정은 별도 작업 대상입니다.
-
-[통합 빌드 안내](Assets/SmartTraining/Documentation/Guides/BUILD-TEST-BUNDLE.md) · [폴더 구조](Assets/SmartTraining/Documentation/README.md)
-
-`Library`, `Temp`, `Logs`, `Builds`는 Git에서 제외합니다. 기존 개별 서버·클라이언트 빌드 메뉴도 유지합니다.
+콘텐츠와 영상은 기능 설명을 위한 샘플입니다. 실제 산업 장비의 정밀한 작업 절차나 전문 교육 인증을 제공하는 자료는 아닙니다.
 
 ## 화면
 
-![콘텐츠 로비 목록](Tests/UI/CATALOG-PREVIEW.png)
+### 교육과정 선택
 
-![방 내부와 준비 상태](Tests/UI/ROOM-PREVIEW.png)
+![로그인과 교육과정 선택](docs/images/login.png)
 
-## 앞으로 개발할 부분
+### 방 내부와 준비 상태
 
-- 실제 교육 자산을 활용한 시나리오 확장·정밀 공구 조작·훈련 장치 연동
-- 사용자 피드백에 따른 UI 사용성 개선
-- 훈련 결과 기록·조회 화면
-- 외부 네트워크 배포 및 장애 상황 검증
-- 실제 사용 흐름의 데모 영상 추가
+![두 참가자가 접속한 대기실](docs/images/room.png)
 
-## 변경 기록과 업로드 방식
+### 모델과 부품 트리
 
-첫 업로드는 현재 멀티 접속 기반을 하나의 커밋으로 정리합니다. 이후에는 업로드 요청 시 변경 파일과 검증 결과를 확인하고 README를 갱신한 뒤 커밋·푸시합니다. 개발 중 변경을 자동으로 공개하지 않습니다. 서버 API가 바뀌면 두 저장소의 연결 방식과 실행 안내도 함께 확인합니다.
+![부품 선택과 설명](docs/images/parts.png)
 
-- 방 생성 후 생성자의 초기 예약을 이어받아 자동 접속합니다. 접속 실패·취소 시 예약을 해제하고, 빈 방 정리는 서버가 담당합니다.
+### 공동 영상 시청
 
-## 교육과정 샘플
+![동기화된 영상과 자막](docs/images/video.png)
 
-장비 기초·작업 안전·비상 대응의 3개 교육과정에 모델·영상·실습 9개, 협동 실습 3개를 구성했습니다. 총 12개 최하위 콘텐츠가 각각 Addressables 프리팹에 연결됩니다. [콘텐츠 트리와 리소스 목록](Assets/SmartTraining/Documentation/Guides/CourseSamples.md)을 참고하세요.
+### 역할 분담과 공구 실습
 
-## 학습 진행 표시
+![협동 실습](docs/images/scenario.png)
 
-영상 시청과 지정 부품 관찰은 개인별로, 시나리오 실습은 공동으로 진행·완료 상태를 표시합니다. 콘텐츠 화면에서 본인 진행을 확인하고 대기실에서 참가자별 결과를 볼 수 있습니다. 대기 복귀에서는 유지하고 새 시작에서 초기화하며, 방 퇴장·방 서버 종료 이후의 영구 기록은 지원하지 않습니다. 개인 시청·관찰은 클라이언트 보고를 사용합니다. [완료 기준과 수정 위치](Assets/SmartTraining/Documentation/Guides/LearningProgress.md)를 참고하세요.
+## 기술과 구조
+
+| 기술 | 담당 |
+|---|---|
+| Unity 6.4 / C# / URP | 3D 공간·플레이어·콘텐츠 화면 |
+| Netcode for GameObjects / Unity Transport | 전용 서버, NetworkObject, NetworkTransform, NetworkRigidbody, 콘텐츠 상태 동기화 |
+| Microsoft SignalR Client | ASP.NET과의 관리 이벤트·채팅·서버 등록 통신 |
+| Addressables | 콘텐츠 프리팹과 추가 리소스 로딩 |
+| UGUI / Input System | 로그인·방·콘텐츠 UI와 입력 |
+| ASP.NET Core 8 | 사용자·교육과정·방 권한, 예약, 전용 서버 프로세스 관리 |
+
+```mermaid
+flowchart LR
+    C[Unity 클라이언트] -->|HTTP: 세션·교육과정·방| A[ASP.NET Core]
+    C <-->|SignalR: 목록·채팅| A
+    C <-->|Unity Transport: 이동·콘텐츠 상태| R[Unity 전용 방 서버]
+    R <-->|SignalR: 서버 등록·입장 확인| A
+    A -->|필요 시 프로세스 실행| R
+    C -->|assetId| P[Addressables 콘텐츠 프리팹]
+```
+
+방장은 사용자 권한이며 네트워크 호스트는 전용 서버입니다. 방장 퇴장 시 다른 참가자가 호스트를 새로 열 필요가 없습니다. 로비는 ASP.NET의 데이터로 관리하고, 방 서버 프로세스만 요청에 맞춰 실행합니다.
+
+### 주요 설계
+
+- **예약과 접속 확정 분리:** API에서 자리를 예약한 뒤 전용 서버의 승인·접속 보고로 참가를 확정합니다. 실패·취소·만료 시 예약을 정리합니다.
+- **이동의 서버 권한:** 서버가 Rigidbody 이동과 충돌을 처리하고 NetworkTransform/NetworkRigidbody로 전달합니다. 클라이언트는 입력을 보냅니다.
+- **모델 조작권:** 조작할 때 소유권을 받고 NetworkTransform으로 회전을 동기화합니다. 조작 종료·이탈 후 서버가 권한을 회수합니다.
+- **공유 상태와 개인 상태 분리:** 영상 재생 위치·실습 단계는 공동 상태이고, 음량·자막 표시·공구 선택·관찰 선택은 개인 상태입니다.
+- **데이터 기반 콘텐츠:** 서버는 타입·리소스 ID를 전달하고 Unity는 대응 프리팹을 로드합니다. 공통 입력·카메라·UI와 콘텐츠 로직을 분리했습니다.
+- **편집 가능한 배치:** 공통 맵·이름표·UI를 프리팹으로 관리하고 씬에 배치합니다. 동적 목록 행과 콘텐츠만 필요할 때 생성합니다.
+
+## 주요 코드
+
+| 위치 | 역할 |
+|---|---|
+| [Client/Controllers](Assets/SmartTraining/Scripts/Client/Controllers) | 로그인·교육과정·방 생성/입장/퇴장 흐름 |
+| [TrainingApiClient.cs](Assets/SmartTraining/Scripts/Client/Api/TrainingApiClient.cs) | HTTP 요청과 응답 처리 |
+| [Client/Networking](Assets/SmartTraining/Scripts/Client/Networking) | SignalR 연결과 Netcode 클라이언트 연결 |
+| [RoomPlayer.cs](Assets/SmartTraining/Scripts/Gameplay/Room/RoomPlayer.cs) | 서버 이동·회전 및 플레이어 상태 |
+| [Gameplay/Model](Assets/SmartTraining/Scripts/Gameplay/Model) | 공유 모델·부품·분해 동작 |
+| [Gameplay/Video](Assets/SmartTraining/Scripts/Gameplay/Video) | 재생 상태·영상 출력·자막 |
+| [Gameplay/Scenario](Assets/SmartTraining/Scripts/Gameplay/Scenario) | 역할·공구·대상·작업 진행 |
+| [Servers](Assets/SmartTraining/Scripts/Servers) | 전용 서버의 콘텐츠 상태 처리 |
+| [UI](Assets/SmartTraining/Scripts/UI) | UGUI 화면 및 콘텐츠별 패널 |
+
+[문서 모음](Assets/SmartTraining/Documentation/README.md)에서 기능별 수정 위치를 확인할 수 있습니다.
+
+## 실행 방법
+
+1. Unity **6000.4.7f1**로 프로젝트를 열고 패키지와 에셋 가져오기가 끝날 때까지 기다립니다.
+2. `Smart Training > Build > Build Windows Test Bundle`로 클라이언트와 전용 서버를 빌드합니다.
+3. 생성된 `RoomServer` 폴더 전체를 ASP.NET의 `Room:ServerExecutablePath` 설정 경로에 배치합니다.
+4. [서버 실행 안내](https://github.com/Jaehyung2028/Smart-Training-Server#실행-방법)에 따라 API를 실행합니다.
+5. 클라이언트를 실행하거나 `Assets/SmartTraining/Scenes/ApiLobby.unity`를 Play합니다.
+6. API 주소·닉네임·교육과정을 선택하고 방을 생성합니다. 다른 클라이언트가 참가해 준비하면 방장이 시작할 수 있습니다.
+
+다른 PC에서는 API 서버의 LAN 주소를 사용하고 API TCP 포트와 방 서버 UDP 포트에 접근할 수 있어야 합니다. 실행 파일은 `_Data`·DLL을 포함한 폴더 전체가 필요합니다. 빌드 산출물은 Git에 포함하지 않습니다.
+
+[빌드 안내](Assets/SmartTraining/Documentation/Guides/BUILD-TEST-BUNDLE.md)
+
+## 현재 범위와 확장 계획
+
+현재 사용자·방·훈련 진행은 메모리 중심입니다. 방을 떠나거나 서버가 종료된 뒤 학습 결과를 영구 보관하는 DB는 없습니다. 시청·관찰 진척은 클라이언트 보고를 사용합니다.
+
+향후에는 실제 교육 자산과 상세 작업 절차, 계정·결과 DB, 기록 조회, 외부 배포 환경을 확장할 수 있습니다. 플레이어·공구·맵에는 외부 에셋이 포함되어 있으며, 프로젝트 로직과 교육 샘플 구성의 역할을 구분합니다.
