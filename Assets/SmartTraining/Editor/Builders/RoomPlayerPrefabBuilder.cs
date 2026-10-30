@@ -1,56 +1,42 @@
-using System.IO;
-using Unity.Netcode;
+using System;
 using UnityEditor;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 namespace SmartTraining.Editor
 {
     public static class RoomPlayerPrefabBuilder
     {
-        [MenuItem("Smart Training/Create Room Player Prefab")]
+        // 사용자 모델·Animator·이름표 참조를 그대로 사용합니다. 빌드 중 재생성하거나 재배치하지 않습니다.
         public static void Create()
         {
             const string path = "Assets/SmartTraining/Resources/SmartTraining/RoomPlayer.prefab";
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var transform = prefab != null ? prefab.GetComponent<NetworkTransform>() : null;
+            var body = prefab != null ? prefab.GetComponent<Rigidbody>() : null;
+            var physics = prefab != null ? prefab.GetComponent<NetworkRigidbody>() : null;
+            var capsule = prefab != null ? prefab.GetComponent<CapsuleCollider>() : null;
+            if (body == null ||
+                physics == null ||
+                capsule == null ||
+                capsule.isTrigger ||
+                !physics.AutoUpdateKinematicState ||
+                !physics.UseRigidBodyForMotion ||
+                prefab?.GetComponent<RoomPlayer>() == null ||
+                transform == null ||
+                transform.AuthorityMode != NetworkTransform.AuthorityModes.Server ||
+                !transform.Interpolate ||
+                !transform.SyncPositionX ||
+                !transform.SyncPositionY ||
+                !transform.SyncPositionZ ||
+                transform.SyncRotAngleX ||
+                !transform.SyncRotAngleY ||
+                transform.SyncRotAngleZ ||
+                transform.SyncScaleX ||
+                transform.SyncScaleY ||
+                transform.SyncScaleZ)
             {
-                var existing = PrefabUtility.LoadPrefabContents(path);
-                try
-                {
-                    bool changed = RoomPlayerAvatarBuilder.Configure(existing);
-                    if (existing.GetComponent<TrainingProgress>() == null)
-                    {
-                        existing.AddComponent<TrainingProgress>();
-                        changed = true;
-                    }
-
-                    if (changed)
-                    {
-                        PrefabUtility.SaveAsPrefabAsset(existing, path);
-                    }
-                }
-                finally
-                {
-                    PrefabUtility.UnloadPrefabContents(existing);
-                }
-
-                return;
-            }
-
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            AssetDatabase.Refresh();
-            var root = new GameObject("RoomPlayer");
-            try
-            {
-                root.AddComponent<NetworkObject>();
-                root.AddComponent<RoomPlayer>();
-                root.AddComponent<TrainingProgress>();
-                RoomPlayerAvatarBuilder.Configure(root);
-                PrefabUtility.SaveAsPrefabAsset(root, path);
-                AssetDatabase.SaveAssets();
-            }
-            finally
-            {
-                Object.DestroyImmediate(root);
+                throw new InvalidOperationException("RoomPlayer 프리팹의 Rigidbody·CapsuleCollider·NetworkRigidbody와 서버 권한 NetworkTransform 설정을 확인해주세요: " + path);
             }
         }
     }

@@ -135,7 +135,7 @@ namespace SmartTraining
 
         internal string UiStatus => WaitingForExitCleanup ? "이전 접속을 정리하는 중…" : busy ? "처리 중… " + (roomJoinCancelRequested || lobbyJoinCancelRequested ? "입장 취소 정보를 정리하고 있습니다." : operationMessage) : status;
 
-        internal string UiAddressNotice => (string.IsNullOrEmpty(serverAddressMessage) ? "다른 PC에서는 localhost 대신 서버 PC의 IP 주소를 입력해주세요." : serverAddressMessage) + (string.IsNullOrEmpty(savedServerUrl) ? "" : "\n저장된 주소: " + savedServerUrl);
+        internal string UiAddressNotice => "다른 PC에서는 localhost 대신 서버 PC의 IP 주소를 입력해주세요.";
 
         internal LobbySummary[] UiLobbies => lobbies;
 
@@ -209,8 +209,6 @@ namespace SmartTraining
         }
 
         internal void UiCloseFailure() => ClearLobbyJoinFailure();
-
-        internal void UiSaveAddress() => SaveServerAddress();
 
         internal void UiResetAddress() => ResetServerAddress();
 

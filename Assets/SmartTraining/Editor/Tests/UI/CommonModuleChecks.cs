@@ -31,6 +31,7 @@ namespace SmartTraining.Editor
             {
                 int changes = 0, saves = 0, cancels = 0;
                 preferences.BeginEdit();
+                UiPrefab.Instantiate("ClientSettingsPanel", parent.transform);
                 var panel = new ClientSettingsPanel(parent.transform, Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"), preferences, () => changes++, () => saves++, () =>
                 {
                     preferences.CancelEdit();

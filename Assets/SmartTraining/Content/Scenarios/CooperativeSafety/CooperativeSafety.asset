@@ -15,49 +15,64 @@ MonoBehaviour:
   id: cooperative-safety
   title: "\uD611\uB3D9 \uBC29\uD638 \uB36E\uAC1C \uBCF5\uAD6C"
   steps:
-  - id: inspect-guard
+  - id: mixed-0
     title: "\uBC29\uD638 \uB36E\uAC1C \uC774\uC0C1 \uD655\uC778"
-    instruction: "\uC810\uAC80 \uB2F4\uB2F9: WARN \uD45C\uC2DC\uB4F1\uC5D0\uC11C
-      \uD6C8\uB828\uC6A9 \uC815\uC9C0 \uC7A5\uBE44\uC758 \uB36E\uAC1C \uC774\uC0C1\uC744
+    instruction: "\uC810\uAC80 \uB2F4\uB2F9: \uACF5\uAD6C \uC5C6\uC774 WARN \uD45C\uC2DC\uB4F1\uC744
       \uD655\uC778\uD558\uC138\uC694."
-    toolId: 
+    toolId:
     targetId: guard-warning
     action: 0
     durationSeconds: 1.5
     requiredRole: 1
-  - id: release-guard
-    title: "\uB36E\uAC1C \uACE0\uC815 \uBCFC\uD2B8 \uD480\uAE30"
-    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2A4\uD328\uB108\uB85C BOLT\uB97C
-      \uD480\uC5B4 \uB36E\uAC1C\uB97C \uC870\uC815\uD560 \uC900\uBE44\uB97C \uD558\uC138\uC694."
-    toolId: spanner
-    targetId: guard-bolt
+  - id: mixed-1
+    title: "\uBCF4\uC870 \uBC30\uAD00 \uC5F0\uACB0\uBD80 \uD480\uAE30"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uD30C\uC774\uD504 \uB80C\uCE58\uB85C
+      PIPE\uB97C \uD480\uC5B4 \uBAA8\uD615 \uC791\uC5C5 \uACF5\uAC04\uC744 \uD655\uBCF4\uD558\uC138\uC694."
+    toolId: pipe-wrench
+    targetId: practice-pipe
     action: 1
     durationSeconds: 1.5
     requiredRole: 2
-  - id: close-guard
+  - id: mixed-2
+    title: "\uB36E\uAC1C \uACE0\uC815 \uD540 \uC7A5\uCC29"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uB9DD\uCE58\uB85C PIN\uC744 \uACE0\uC815\uD558\uC138\uC694."
+    toolId: hammer
+    targetId: practice-pin
+    action: 3
+    durationSeconds: 2.4
+    requiredRole: 2
+  - id: mixed-3
     title: "\uBC29\uD638 \uB36E\uAC1C \uB2EB\uAE30"
-    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uBD89\uC740 GUARD\uB97C \uD074\uB9AD\uD574
-      \uBC29\uD638 \uB36E\uAC1C\uB97C \uB2EB\uC73C\uC138\uC694. \uACF5\uAD6C\uB294
-      \uD544\uC694 \uC5C6\uC2B5\uB2C8\uB2E4."
-    toolId: 
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uACF5\uAD6C \uC5C6\uC774 \uBD89\uC740
+      GUARD\uB97C \uD074\uB9AD\uD574 \uB36E\uAC1C\uB97C \uB2EB\uC73C\uC138\uC694."
+    toolId:
     targetId: guard-cover
     action: 0
     durationSeconds: 1.5
     requiredRole: 2
-  - id: secure-guard
-    title: "\uBC29\uD638 \uB36E\uAC1C \uACE0\uC815"
-    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2A4\uD328\uB108\uB85C BOLT\uB97C
-      \uCCB4\uACB0\uD574 \uB36E\uAC1C\uB97C \uACE0\uC815\uD558\uC138\uC694."
-    toolId: spanner
-    targetId: guard-bolt
-    action: 2
+  - id: mixed-4
+    title: "\uBCF4\uAC15\uD310 \uAD6C\uBA4D \uAC00\uACF5"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC804\uB3D9 \uB4DC\uB9B4\uB85C PLATE\uB97C
+      \uAC00\uACF5\uD558\uC138\uC694."
+    toolId: drill
+    targetId: practice-plate
+    action: 4
     durationSeconds: 1.5
     requiredRole: 2
-  - id: test-interlock
+  - id: mixed-5
+    title: "\uBCF4\uD638 \uD310\uC7AC \uAE38\uC774 \uC870\uC815"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uD1B1\uC73C\uB85C BOARD\uB97C \uC798\uB77C
+      \uBCF4\uD638 \uD310\uC7AC\uB97C \uC900\uBE44\uD558\uC138\uC694."
+    toolId: saw
+    targetId: practice-board
+    action: 6
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: mixed-6
     title: "\uB36E\uAC1C \uD655\uC778 \uC2A4\uC704\uCE58 \uC810\uAC80"
-    instruction: "\uC810\uAC80 \uB2F4\uB2F9: TEST \uBC84\uD2BC\uC744 \uB20C\uB7EC
-      \uBC29\uD638 \uB36E\uAC1C\uAC00 \uB2EB\uD78C \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uC138\uC694."
-    toolId: 
+    instruction: "\uC810\uAC80 \uB2F4\uB2F9: \uACF5\uAD6C \uC5C6\uC774 TEST \uBC84\uD2BC\uC73C\uB85C
+      \uBCF5\uAD6C \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uC138\uC694."
+    toolId:
     targetId: guard-test
     action: 0
     durationSeconds: 1.5

@@ -50,11 +50,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a0a111378ee2a194b93947353f1579ef
-    m_Address: content/scenario/workplace-tools
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d223fb72383c36b4ca62078c6efe81a3
     m_Address: content/scenario/tool-check
     m_ReadOnly: 0

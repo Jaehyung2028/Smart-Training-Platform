@@ -106,11 +106,11 @@ namespace SmartTraining.Editor
         private static void CheckToolActions(ScenarioDefinition definition)
         {
             Check(
-                definition.Steps.Count == 6 &&
+                definition.Steps.Count == 9 &&
                 definition.Steps[2].ToolId == "screwdriver" &&
                 definition.Steps[4].Action == ScenarioAction.Strike &&
                 !definition.Steps[5].RequiresTool,
-                "공구별 6단계 원본"
+                "공구·점검 혼합 9단계 원본"
             );
             Check(
                 definition.GetTool("screwdriver").AnimateWork && definition.GetTool("hammer").AnimateWork,
@@ -138,7 +138,7 @@ namespace SmartTraining.Editor
             );
             var progress = new ScenarioProgress(definition);
             double time = 10;
-            for (int index = 0; index < 5; index++)
+            for (int index = 0; index < definition.Steps.Count - 1; index++)
             {
                 var step = definition.Steps[index];
                 Check(
@@ -146,6 +146,11 @@ namespace SmartTraining.Editor
                     progress.TryInteract(1, step.TargetId, progress.Revision, time, out _),
                     "각 공구의 올바른 작업 시작"
                 );
+                if (!step.RequiresTool)
+                {
+                    continue;
+                }
+
                 Check(!progress.TryCompleteWork(time + step.DurationSeconds - .01), "완료 시간 이전 단계 유지");
                 if (step.Action == ScenarioAction.Strike)
                 {
@@ -166,7 +171,14 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                progress.TryInteract(2, "pin-a", progress.Revision, time, out _) && progress.IsComplete,
+                progress.TryInteract(
+                2,
+                definition.Steps[definition.Steps.Count - 1].TargetId,
+                progress.Revision,
+                time,
+                out _
+            ) &&
+                progress.IsComplete,
                 "다른 참가자가 공구 없이 최종 확인"
             );
             Check(
@@ -196,7 +208,7 @@ namespace SmartTraining.Editor
                 ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, true, .9f) == 0,
                 "손 복귀 전 체결 자세 완성"
             );
-            var rig = AssetDatabase.LoadAssetAtPath<GameObject>(ScenarioToolPrefabBuilder.RigPath).GetComponent<HandheldItemRig>();
+            var rig = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/SmartTraining/Content/Scenarios/Tools/RightHand.prefab").GetComponent<HandheldItemRig>();
             var parent = new GameObject("Contact Pose Check").transform;
             var view = new HeldItemView(rig, "Contact Pose Rig");
             try
@@ -215,7 +227,10 @@ namespace SmartTraining.Editor
                     "실제 모델 접촉점이 작업점과 일치"
                 );
                 Check(Quaternion.Angle(instance.rotation, targetRotation) < .01f, "실제 모델 작업 방향 일치");
-                Check(instance.GetComponentsInChildren<Collider>().All(collider => !collider.enabled), "공구가 작업 클릭을 가로채지 않음");
+                Check(
+                    instance.GetComponentsInChildren<Collider>().All(collider => !collider.enabled),
+                    "공구가 작업 클릭을 가로채지 않음"
+                );
             }
             finally
             {

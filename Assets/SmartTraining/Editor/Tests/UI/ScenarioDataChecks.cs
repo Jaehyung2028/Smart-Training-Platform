@@ -12,7 +12,7 @@ namespace SmartTraining.Editor
             ScenarioContentBuilder.Prepare();
             var definition = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(ScenarioContentBuilder.DefinitionPath);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ScenarioContentBuilder.PrefabPath);
-            Check(definition.TryValidate(out _) && definition.Steps.Count == 6, "예시 단계 데이터");
+            Check(definition.TryValidate(out _) && definition.Steps.Count == 9, "예시 단계 데이터");
             Check(prefab.GetComponent<ScenarioContent>().TryInitialize(out _), "프리팹 공구·대상 연결");
             var empty = ScriptableObject.CreateInstance<ScenarioDefinition>();
             try

@@ -78,6 +78,7 @@ namespace SmartTraining.Editor
                     content.GetComponentsInChildren<Text>().All(row => row.color == ChatMessagePresentation.OwnMessageColor),
                     "사용자 변경 시 본인 색상 갱신"
                 );
+                UiPrefab.Instantiate("ContentParticipantPanel", root.transform);
                 var panel = new ContentParticipantPanel(root.transform, Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
                 panel.Toggle();
                 var participants = new[]

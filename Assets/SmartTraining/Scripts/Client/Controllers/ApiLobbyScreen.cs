@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace SmartTraining
 {
+    [RequireComponent(typeof(ContentSceneSession))]
     public sealed partial class ApiLobbyScreen : MonoBehaviour
     {
         [SerializeField]
@@ -13,6 +14,7 @@ namespace SmartTraining
         private string maxUsersText = "4";
         private string createRoomPassword = "", joinRoomPassword = "", reconnectPassword = "";
         private string editRoomPassword = "";
+        private string operationError = "";
         private string status = "서버 연결을 확인한 뒤 로그인해주세요.";
         private TrainingApiClient api;
         private LobbySummary[] lobbies = Array.Empty<LobbySummary>();
@@ -38,7 +40,7 @@ namespace SmartTraining
         {
             previousRunInBackground = Application.runInBackground;
             Application.runInBackground = true;
-            LoadServerAddress();
+            InitializeServerAddress();
             EnsureUgui();
         }
 
@@ -66,6 +68,7 @@ namespace SmartTraining
             }
 
             busy = true;
+            operationError = "";
             operationMessage = message;
             RefreshUguiState();
             StartCoroutine(Execute(operation));
@@ -106,6 +109,7 @@ namespace SmartTraining
 
         private void ClearView()
         {
+            operationError = "";
             ClearCourses();
             ClearLobbyJoinProgress();
             ClearLobbyJoinFailure();
@@ -159,6 +163,8 @@ namespace SmartTraining
 
         private void Failure(string message)
         {
+            // 하단 상태 줄 대신 기존 상단 공지 영역에서 필요한 실패 안내만 표시합니다.
+            operationError = message ?? "";
             status = message;
             if (api?.IsLoggedIn == true)
             {
@@ -312,7 +318,6 @@ namespace SmartTraining
             {
                 rooms = items;
                 selectedRoom = Array.Find(rooms, item => item.id == selectedRoom?.id);
-                status = "방 " + rooms.Length + "개를 조회했습니다.";
             }, Failure);
         }
 
@@ -324,7 +329,6 @@ namespace SmartTraining
             yield return api.GetRoom(selectedLobbyId, roomId, room =>
             {
                 selectedRoom = room;
-                status = "방 상세를 조회했습니다.";
             }, Failure);
         }
 
@@ -450,7 +454,7 @@ namespace SmartTraining
         {
             if (contentSession == null)
             {
-                contentSession = gameObject.AddComponent<ContentSceneSession>();
+                contentSession = GetComponent<ContentSceneSession>();
             }
 
             bool running = isActiveAndEnabled && network?.IsConnected == true && network.LocalPlayer?.RoomIsRunning == true;

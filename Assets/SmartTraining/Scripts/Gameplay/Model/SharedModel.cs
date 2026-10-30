@@ -74,7 +74,7 @@ namespace SmartTraining
             return NetworkManager.ConnectedClients.TryGetValue(clientId, out var client) &&
                 client.PlayerObject != null && client.PlayerObject.TryGetComponent<RoomPlayer>(out var player) &&
                 player.RoomIsRunning && !player.PhasePending &&
-                Vector3.Distance(player.ServerPosition, transform.position) <= InteractionDistance + 1f;
+                Vector3.Distance(player.Position, transform.position) <= InteractionDistance + 1f;
         }
 
         // 서버가 먼저 받은 요청 하나만 승인합니다. 다른 사용자가 조작 중이면 소유권을 빼앗지 않습니다.

@@ -25,22 +25,26 @@ namespace SmartTraining
 
         public ScenarioRoleMenu(Transform parent, Font font)
         {
-            root = parent.gameObject;
-            status = new GameObject(
-                "Scenario Roles",
-                typeof(RectTransform),
-                typeof(Text),
-                typeof(LayoutElement)
-            ).GetComponent<Text>();
-            status.transform.SetParent(parent, false);
-            status.font = font;
-            status.fontSize = 13;
-            status.color = Color.white;
-            status.supportRichText = false;
-            status.GetComponent<LayoutElement>().preferredHeight = 36;
+            var view = UiPrefab.Instantiate("ScenarioRoleMenu", parent);
+            root = view.Get<GameObject>("root");
+            status = view.Get<Text>("status");
             foreach (var role in ScenarioRoles.Enumerate(ScenarioRole.Inspector | ScenarioRole.Technician | ScenarioRole.SafetyOfficer | ScenarioRole.Coordinator))
             {
-                buttons.Add(role, Create(parent, font, role));
+                var button = view.Get<Button>("Scenario Role " + role + ":Button");
+                var item = new RoleButton
+                {
+                    Button = button,
+                    Label = button.GetComponentInChildren<Text>(true),
+                    Background = button.GetComponent<Image>()
+                };
+                button.onClick.AddListener(() =>
+                {
+                    if (button.IsInteractable())
+                    {
+                        current?.SelectRole(role);
+                    }
+                });
+                buttons.Add(role, item);
             }
         }
 
@@ -82,49 +86,6 @@ namespace SmartTraining
                 view.Label.text = ScenarioRoles.Label(role) + "\n" + (assigned ? name + (selected ? " (나)" : " · 담당 중") : "선택하기");
                 view.Background.color = selected ? new Color32(37, 99, 235, 255) : assigned ? new Color32(71, 85, 105, 255) : new Color32(51, 65, 85, 255);
             }
-        }
-
-
-        private RoleButton Create(Transform parent, Font font, ScenarioRole role)
-        {
-            var button = new GameObject(
-                "Scenario Role " + role,
-                typeof(RectTransform),
-                typeof(Image),
-                typeof(Button),
-                typeof(LayoutElement)
-            ).GetComponent<Button>();
-            button.transform.SetParent(parent, false);
-            button.targetGraphic = button.GetComponent<Image>();
-            button.GetComponent<LayoutElement>().preferredHeight = 56;
-            var label = new GameObject("Role Label", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
-            label.transform.SetParent(button.transform, false);
-            label.font = font;
-            label.fontSize = 15;
-            label.resizeTextForBestFit = true;
-            label.resizeTextMinSize = 11;
-            label.resizeTextMaxSize = 15;
-            label.supportRichText = false;
-            label.color = Color.white;
-            label.text = ScenarioRoles.Label(role) + " 선택";
-            label.alignment = TextAnchor.MiddleCenter;
-            label.raycastTarget = false;
-            label.rectTransform.anchorMin = Vector2.zero;
-            label.rectTransform.anchorMax = Vector2.one;
-            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
-            button.onClick.AddListener(() =>
-            {
-                if (button.IsInteractable())
-                {
-                    current?.SelectRole(role);
-                }
-            });
-            return new RoleButton
-            {
-                Button = button,
-                Label = label,
-                Background = button.GetComponent<Image>()
-            };
         }
     }
 }

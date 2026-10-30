@@ -25,33 +25,41 @@
 
 ## 단계별 진행
 
-### 장비 기초: 협동 장비 접점 정비
+### 협동 장비 접점 정비
 
-1. 점검: FAULT 표시등 확인
-2. 정비: 스패너로 COVER BOLT 풀기
-3. 정비: CONTACT 클릭으로 접점 교체 (공구 불필요)
-4. 정비: 스패너로 볼트 체결
-5. 점검: TEST 버튼으로 작동 확인
+1. fault-lamp: 고장 표시 확인 (공구 없음)
+2. cover-bolt: 덮개 볼트 풀기 (콤비네이션 렌치)
+3. practice-clip: 접점 고정 클립 제거 (플라이어)
+4. contact: 불량 접점 교체 (공구 없음)
+5. practice-plate: 보강판 구멍 가공 (전동 드릴)
+6. practice-screw: 보강판 점검 나사 풀기 (십자 드라이버)
+7. practice-screw: 보강판 점검 나사 체결 (십자 드라이버)
+8. test-button: 공동 작동 확인 (공구 없음)
 
-### 작업 안전: 협동 방호 덮개 복구
+### 협동 방호 덮개 복구
 
-1. 점검: WARN 표시등 확인
-2. 정비: 스패너로 BOLT 풀기
-3. 정비: GUARD 클릭으로 덮개 닫기 (공구 불필요)
-4. 정비: 스패너로 볼트 고정
-5. 점검: TEST 버튼으로 덮개 확인 스위치 점검
+1. guard-warning: 방호 덮개 이상 확인 (공구 없음)
+2. practice-pipe: 보조 배관 연결부 풀기 (파이프 렌치)
+3. practice-pin: 덮개 고정 핀 장착 (망치)
+4. guard-cover: 방호 덮개 닫기 (공구 없음)
+5. practice-plate: 보강판 구멍 가공 (전동 드릴)
+6. practice-board: 보호 판재 길이 조정 (톱)
+7. guard-test: 덮개 확인 스위치 점검 (공구 없음)
 
-### 비상 대응: 협동 비상 유도등 복구
+### 협동 비상 유도등 복구
 
-1. 진행: 아래쪽 CHECK 판에서 복구 순서 확인
-2. 안전 확인: 아래쪽 POWER 스위치에서 훈련용 전원 차단 확인
-3. 점검: EXIT LIGHT 상태 확인
-4. 정비: 드라이버로 SCREW 풀기
-5. 정비: BATTERY 클릭으로 배터리 교체 (공구 불필요)
-6. 정비: 드라이버로 나사 체결
-7. 점검: TEST 버튼으로 점등 확인
+1. recovery-plan: 복구 순서 확인 (공구 없음)
+2. power-isolation: 훈련용 전원 차단 확인 (공구 없음)
+3. exit-light: 비상 유도등 상태 확인 (공구 없음)
+4. practice-log: 목재 장애물 분리 (도끼)
+5. practice-board: 보호 판재 자르기 (톱)
+6. practice-clip: 고정 클립 제거 (플라이어)
+7. battery-screw: 배터리 덮개 나사 풀기 (십자 드라이버)
+8. exit-battery: 훈련용 배터리 교체 (공구 없음)
+9. battery-screw: 배터리 덮개 나사 체결 (십자 드라이버)
+10. exit-test: 비상 유도등 점등 확인 (공구 없음)
 
-덮개·접점·배터리 교체와 마지막 초록 표시등 변화는 승인된 공동 단계에 맞춰 모두에게 표시됩니다. 완료 결과에는 실제 단계 수행자가 기록됩니다.
+새 단계에 맞춰 접점·덮개·배터리 교체와 최종 표시등의 전환 시점을 함께 조정했습니다. 전체 공구 배분은 [공구 실습 구성](WorkplaceTools.md)을 참고합니다.
 
 ## 편집 위치
 
@@ -63,11 +71,11 @@
 
 폴더는 `Assets/SmartTraining` 아래입니다. 단계는 `ScenarioDefinition.Step.RequiredRole`에서 단일 역할을 설정합니다. 콘텐츠가 사용하는 역할 목록은 실제 단계의 역할에서 구하므로, 두 역할 콘텐츠에는 네 역할 버튼이 모두 나타나지 않습니다.
 
-- 최초 생성·등록: `CooperativeMaintenanceBuilder.Prepare()`, `CooperativeCourseBuilder.Prepare()`
-- 공용 생성 함수: `CooperativeSampleUtility`
 - 배정·겸임·단계 규칙: `ScenarioProgress.TrySelectRole()`, `GetRoles()`, `TryInteract()`
 - 서버 승인·공유: `SharedScenario.SelectRoleRpc()`와 역할 NetworkList
 - 역할 메뉴: `ScenarioRoleMenu`
 - 단계별 모형 교체: `ScenarioStageVisuals`
 
 이미 생성된 파일은 일반 빌드에서 덮어쓰지 않습니다. 가상 장비와 기본 도형으로 구성한 협동 기능 샘플이며 실제 장비의 정비·전원 차단·배터리 교체 지침이 아닙니다.
+
+외형·단계 편집과 새 연결 방식은 [프리팹 편집 안내](PrefabEditing.md)를 참고합니다.

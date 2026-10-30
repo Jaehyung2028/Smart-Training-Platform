@@ -18,23 +18,25 @@ namespace SmartTraining.Editor
             Debug.Log("UNITY PASS: " + name);
         }
 
+
         private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
 
         private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
 
         private static void Call(ApiLobbyScreen screen, string method) => typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, null);
 
-        private static ApiLobbyScreen Screen(ServerAddressSettings settings, string initial)
+        private static ApiLobbyScreen Screen(string initial)
         {
             var root = new GameObject("address-settings-test");
             root.SetActive(false);
             var screen = root.AddComponent<ApiLobbyScreen>();
-            Set(screen, "serverAddressSettings", settings);
             Set(screen, "serverUrl", initial);
             root.SetActive(true);
             screen.enabled = false;
+            Call(screen, "InitializeServerAddress");
             return screen;
         }
+
 
         public static void Run()
         {
@@ -43,23 +45,33 @@ namespace SmartTraining.Editor
                 "server address normalizes host scheme surrounding spaces and trailing slash"
             );
             Check(
-                ServerAddress.Normalize("https://localhost:7087/swagger/index.html") == "https://localhost:7087" && ServerAddress.Normalize("https://example.test/training/swagger/") == "https://example.test/training",
+                ServerAddress.Normalize("https://localhost:7087/swagger/index.html") == "https://localhost:7087" &&
+                ServerAddress.Normalize("https://example.test/training/swagger/") == "https://example.test/training",
                 "server address removes default Swagger suffix and preserves API base path"
             );
             Check(
-                ServerAddress.Normalize("http://192.168.0.10:5229/") == "http://192.168.0.10:5229" && ServerAddress.Normalize("http://[::1]:5229/") == "http://[::1]:5229",
+                ServerAddress.Normalize("http://192.168.0.10:5229/") == "http://192.168.0.10:5229" &&
+                ServerAddress.Normalize("http://[::1]:5229/") == "http://[::1]:5229",
                 "server address accepts LAN IPv4 and loopback IPv6"
             );
             Check(
-                !ServerAddress.TryNormalize("localhost:5229", out _, out _) && !ServerAddress.TryNormalize("ftp://localhost", out _, out _) && !ServerAddress.TryNormalize("http://localhost:70000", out _, out _) && !ServerAddress.TryNormalize("http://localhost:0", out _, out _),
+                !ServerAddress.TryNormalize("localhost:5229", out _, out _) &&
+                !ServerAddress.TryNormalize("ftp://localhost", out _, out _) &&
+                !ServerAddress.TryNormalize("http://localhost:70000", out _, out _) &&
+                !ServerAddress.TryNormalize("http://localhost:0", out _, out _),
                 "server address rejects missing scheme unsupported transport and invalid ports"
             );
             Check(
-                !ServerAddress.TryNormalize("http://user:secret@localhost", out _, out _) && !ServerAddress.TryNormalize("http://localhost/?token=secret", out _, out _) && !ServerAddress.TryNormalize("http://localhost/#secret", out _, out _),
+                !ServerAddress.TryNormalize("http://user:secret@localhost", out _, out _) &&
+                !ServerAddress.TryNormalize("http://localhost/?token=secret", out _, out _) &&
+                !ServerAddress.TryNormalize("http://localhost/#secret", out _, out _),
                 "server address refuses embedded credentials query and fragment"
             );
             Check(
-                !ServerAddress.TryNormalize("http://localhost/path name", out _, out _) && !ServerAddress.TryNormalize("http://localhost\n", out _, out _) && !ServerAddress.TryNormalize("http://0.0.0.0:5229", out _, out _) && !ServerAddress.TryNormalize("http://[::]:5229", out _, out _),
+                !ServerAddress.TryNormalize("http://localhost/path name", out _, out _) &&
+                !ServerAddress.TryNormalize("http://localhost\n", out _, out _) &&
+                !ServerAddress.TryNormalize("http://0.0.0.0:5229", out _, out _) &&
+                !ServerAddress.TryNormalize("http://[::]:5229", out _, out _),
                 "server address rejects whitespace controls and wildcard bind hosts"
             );
             using (var client = new TrainingApiClient(" HTTPS://LOCALHOST:7087/swagger/index.html "))
@@ -70,60 +82,39 @@ namespace SmartTraining.Editor
                 );
             }
 
-            string key = "SmartTraining.Tests.ServerAddress." + Guid.NewGuid().ToString("N");
-            var settings = new ServerAddressSettings(key);
             ApiLobbyScreen first = null, second = null;
             try
             {
-                Check(!settings.TryLoad(out _, out _), "fresh settings contain no saved endpoint");
-                first = Screen(settings, "http://localhost:5229");
-                Set(first, "serverUrl", " HTTPS://LOCALHOST:7087/swagger/index.html ");
-                Call(first, "SaveServerAddress");
+                first = Screen("https://localhost:7087/swagger/index.html");
                 Check(
-                    PlayerPrefs.GetString(key) == "https://localhost:7087" && (string)Get(first, "serverUrl") == "https://localhost:7087",
-                    "save button persists only the normalized public endpoint"
+                    (string)Get(first, "serverUrl") == "https://localhost:7087",
+                    "scene default is normalized at startup"
                 );
-                UnityEngine.Object.DestroyImmediate(first.gameObject);
-                first = null;
-                second = Screen(new ServerAddressSettings(key), "http://localhost:5229");
+                Set(first, "serverUrl", "http://localhost:7999");
+                Set(first, "busy", true);
+                Call(first, "ResetServerAddress");
                 Check(
-                    (string)Get(second, "serverUrl") == "https://localhost:7087",
-                    "new screen instance restores saved endpoint without login session"
+                    (string)Get(first, "serverUrl") == "http://localhost:7999",
+                    "busy screen cannot reset endpoint"
                 );
-                Set(second, "serverUrl", "https://user:secret@localhost/");
-                Call(second, "SaveServerAddress");
-                Check(PlayerPrefs.GetString(key) == "https://localhost:7087", "invalid save preserves previously saved address");
-                Set(second, "serverUrl", "https://localhost:7999");
-                Set(second, "busy", true);
-                Call(second, "SaveServerAddress");
-                Check(PlayerPrefs.GetString(key) == "https://localhost:7087", "active operation blocks endpoint change");
-                Set(second, "busy", false);
-                Call(second, "ResetServerAddress");
+                Set(first, "busy", false);
+                Call(first, "ResetServerAddress");
                 Check(
-                    !PlayerPrefs.HasKey(key) && (string)Get(second, "serverUrl") == "http://localhost:5229",
-                    "reset button deletes only its endpoint preference and restores scene default"
+                    (string)Get(first, "serverUrl") == "https://localhost:7087",
+                    "reset restores this scenes default endpoint"
                 );
-                PlayerPrefs.SetString(key, "not-an-endpoint");
-                PlayerPrefs.Save();
-                Call(second, "LoadServerAddress");
+                second = Screen(ServerAddress.DefaultUrl);
                 Check(
-                    (string)Get(second, "serverUrl") == "http://localhost:5229" && ((string)Get(second, "serverAddressMessage")).Contains("기본 주소"),
-                    "malformed stored endpoint falls back to default with explanation"
+                    (string)Get(second, "serverUrl") == ServerAddress.DefaultUrl,
+                    "new screen does not inherit another screens address"
                 );
             }
             finally
             {
                 if (first != null)
-                {
                     UnityEngine.Object.DestroyImmediate(first.gameObject);
-                }
-
                 if (second != null)
-                {
                     UnityEngine.Object.DestroyImmediate(second.gameObject);
-                }
-
-                settings.Reset();
             }
         }
     }

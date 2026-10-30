@@ -193,10 +193,16 @@ namespace SmartTraining
                 return false;
             }
 
-            // 공구가 없는 목표에서는 개인 선택을 검사하지 않습니다. 이전에 고른 공구도 그대로 유지합니다.
+            string tool = GetSelectedTool(participantId);
+            if (!step.RequiresTool && tool.Length > 0)
+            {
+                error = ScenarioInteractionError.WrongTool;
+                message = "이 단계는 공구 없이 진행해야 합니다. 기능 메뉴에서 공구 선택을 해제해주세요.";
+                return false;
+            }
+
             if (step.RequiresTool)
             {
-                string tool = GetSelectedTool(participantId);
                 if (tool.Length == 0)
                 {
                     error = ScenarioInteractionError.WrongTool;

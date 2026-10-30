@@ -15,59 +15,86 @@ MonoBehaviour:
   id: tool-assembly
   title: "\uACF5\uAD6C\uBCC4 \uCCB4\uACB0\xB7\uD0C0\uACA9 \uC2E4\uC2B5"
   steps:
-  - id: loosen-first
+  - id: mixed-0
     title: "\uBCFC\uD2B8 \uD480\uAE30"
-    instruction: "\uC2A4\uD328\uB108\uB85C \uAC15\uC870\uB41C \uBCFC\uD2B8\uB97C
-      \uD478\uC138\uC694."
+    instruction: "\uCF64\uBE44\uB124\uC774\uC158 \uB80C\uCE58\uB85C \uAC00\uC6B4\uB370
+      \uBCFC\uD2B8\uB97C \uD478\uC138\uC694."
     toolId: spanner
     targetId: bolt-a
     action: 1
     durationSeconds: 1.5
     requiredRole: 0
-  - id: tighten-first
+  - id: mixed-1
     title: "\uBCFC\uD2B8 \uB2E4\uC2DC \uCCB4\uACB0"
-    instruction: "\uC2A4\uD328\uB108\uB85C \uAC19\uC740 \uBCFC\uD2B8\uB97C \uB2E4\uC2DC
-      \uCCB4\uACB0\uD558\uC138\uC694."
+    instruction: "\uCF64\uBE44\uB124\uC774\uC158 \uB80C\uCE58\uB85C \uAC19\uC740
+      \uBCFC\uD2B8\uB97C \uB2E4\uC2DC \uCCB4\uACB0\uD558\uC138\uC694."
     toolId: spanner
     targetId: bolt-a
     action: 2
     durationSeconds: 1.5
     requiredRole: 0
-  - id: loosen-screw
-    title: "\uB4DC\uB77C\uC774\uBC84\uB85C \uB098\uC0AC \uD480\uAE30"
-    instruction: "\uB4DC\uB77C\uC774\uBC84\uB97C \uC120\uD0DD\uD558\uACE0 \uC67C\uCABD
-      \uB098\uC0AC\uB97C \uD478\uC138\uC694."
+  - id: mixed-2
+    title: "\uB098\uC0AC \uD480\uAE30"
+    instruction: "\uC2ED\uC790 \uB4DC\uB77C\uC774\uBC84\uB85C \uC67C\uCABD \uB098\uC0AC\uB97C
+      \uD478\uC138\uC694."
     toolId: screwdriver
     targetId: screw-a
     action: 1
-    durationSeconds: 1.8
+    durationSeconds: 1.5
     requiredRole: 0
-  - id: tighten-screw
-    title: "\uB4DC\uB77C\uC774\uBC84\uB85C \uB098\uC0AC \uCCB4\uACB0"
-    instruction: "\uAC19\uC740 \uB098\uC0AC\uB97C \uB4DC\uB77C\uC774\uBC84\uB85C
-      \uB2E4\uC2DC \uCCB4\uACB0\uD558\uC138\uC694."
+  - id: mixed-3
+    title: "\uB098\uC0AC \uB2E4\uC2DC \uCCB4\uACB0"
+    instruction: "\uC2ED\uC790 \uB4DC\uB77C\uC774\uBC84\uB85C \uAC19\uC740 \uB098\uC0AC\uB97C
+      \uCCB4\uACB0\uD558\uC138\uC694."
     toolId: screwdriver
     targetId: screw-a
     action: 2
-    durationSeconds: 1.8
+    durationSeconds: 1.5
     requiredRole: 0
-  - id: strike-pin
-    title: "\uB9DD\uCE58\uB85C \uD540 \uACE0\uC815"
-    instruction: "\uB9DD\uCE58\uB97C \uC120\uD0DD\uD558\uACE0 \uC624\uB978\uCABD
-      \uD540\uC744 \uC138 \uBC88 \uB450\uB4DC\uB824 \uACE0\uC815\uD558\uC138\uC694."
+  - id: mixed-4
+    title: "\uD540 \uACE0\uC815"
+    instruction: "\uB9DD\uCE58\uB85C \uC624\uB978\uCABD \uD540\uC744 \uC138 \uBC88
+      \uB450\uB4DC\uB824 \uACE0\uC815\uD558\uC138\uC694."
     toolId: hammer
     targetId: pin-a
     action: 3
     durationSeconds: 2.4
     requiredRole: 0
-  - id: inspect-result
-    title: "\uC804\uCCB4 \uC791\uC5C5 \uACB0\uACFC \uD655\uC778"
-    instruction: "\uACF5\uAD6C \uC5C6\uC774 \uACE0\uC815\uD55C \uD540\uC744 \uD074\uB9AD\uD574
-      \uC791\uC5C5 \uACB0\uACFC\uB97C \uD655\uC778\uD558\uC138\uC694."
+  - id: mixed-5
+    title: "\uD540 \uACE0\uC815 \uC0C1\uD0DC \uD655\uC778"
+    instruction: "\uACF5\uAD6C \uC5C6\uC774 \uD540\uC744 \uD074\uB9AD\uD574 \uACE0\uC815
+      \uC0C1\uD0DC\uB97C \uD655\uC778\uD558\uC138\uC694."
     toolId:
     targetId: pin-a
     action: 0
-    durationSeconds: 0
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-6
+    title: "\uBC30\uAD00 \uC5F0\uACB0\uBD80 \uD480\uAE30"
+    instruction: "\uD30C\uC774\uD504 \uB80C\uCE58\uB85C PIPE \uC5F0\uACB0\uBD80\uB97C
+      \uD478\uC138\uC694."
+    toolId: pipe-wrench
+    targetId: practice-pipe
+    action: 1
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-7
+    title: "\uBCF4\uAC15 \uD310\uC7AC \uC790\uB974\uAE30"
+    instruction: "\uD1B1\uC73C\uB85C BOARD\uB97C \uC798\uB77C \uBCF4\uAC15 \uD310\uC7AC\uB97C
+      \uC900\uBE44\uD558\uC138\uC694."
+    toolId: saw
+    targetId: practice-board
+    action: 6
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-8
+    title: "\uC804\uCCB4 \uC791\uC5C5 \uACB0\uACFC \uD655\uC778"
+    instruction: "\uACF5\uAD6C \uC5C6\uC774 \uAC00\uC6B4\uB370 \uBCFC\uD2B8\uB97C
+      \uD074\uB9AD\uD574 \uC791\uC5C5 \uACB0\uACFC\uB97C \uD655\uC778\uD558\uC138\uC694."
+    toolId:
+    targetId: bolt-a
+    action: 0
+    durationSeconds: 1.5
     requiredRole: 0
   tools:
   - id: spanner

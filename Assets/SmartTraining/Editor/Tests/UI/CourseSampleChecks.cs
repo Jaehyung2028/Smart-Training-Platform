@@ -21,9 +21,9 @@ namespace SmartTraining.Editor
             var catalog = JArray.Parse(File.ReadAllText(path));
             Require(catalog.Count == 3, "교육과정 3개");
             var leaves = catalog.Descendants().OfType<JObject>().Where(item => item["children"] is JArray children && children.Count == 0).ToArray();
-            Require(leaves.Length == 13, "실행 콘텐츠 13개");
+            Require(leaves.Length == 12, "실행 콘텐츠 12개");
             Require(
-                leaves.Select(item => (string)item["assetId"]).Distinct().Count() == 13,
+                leaves.Select(item => (string)item["assetId"]).Distinct().Count() == 12,
                 "샘플마다 독립된 주소"
             );
             var cooperativeAddresses = new HashSet<string>();
@@ -81,12 +81,12 @@ namespace SmartTraining.Editor
 
                                 Require(
                                     progress.TryInteract(
-                                        actor,
-                                        step.TargetId,
-                                        progress.Revision,
-                                        workTime,
-                                        out _
-                                    ),
+                                    actor,
+                                    step.TargetId,
+                                    progress.Revision,
+                                    workTime,
+                                    out _
+                                ),
                                     "단계 완료: " + step.Title
                                 );
                                 if (progress.IsWorking)
@@ -111,12 +111,11 @@ namespace SmartTraining.Editor
 
             foreach (var course in catalog.OfType<JObject>())
             {
-                int count = course.Descendants().OfType<JObject>().Count(node =>
-                    cooperativeAddresses.Contains((string)node["assetId"] ?? ""));
+                int count = course.Descendants().OfType<JObject>().Count(node => cooperativeAddresses.Contains((string)node["assetId"] ?? ""));
                 Require(count == 1, "교육과정마다 협동 콘텐츠 1개: " + (string)course["title"]);
             }
 
-            Debug.Log("ALL COURSE SAMPLE CHECKS PASSED (3 courses / 13 contents)");
+            Debug.Log("ALL COURSE SAMPLE CHECKS PASSED (3 courses / 12 contents)");
         }
 
 

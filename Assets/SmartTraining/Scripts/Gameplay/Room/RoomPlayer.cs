@@ -1,22 +1,29 @@
 using System;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 namespace SmartTraining
 {
+    [RequireComponent(typeof(NetworkObject), typeof(NetworkTransform), typeof(NetworkRigidbody))]
+    [RequireComponent(typeof(CapsuleCollider))]
     public sealed class RoomPlayer : NetworkBehaviour
     {
         [SerializeField, Tooltip("RoomPlayer 하위에 배치한 표시 전용 모델입니다.")]
         private Transform avatarRoot;
         [SerializeField]
         private Animator avatarAnimator;
+        [SerializeField, Tooltip("콘텐츠에서 다른 참가자의 머리 위에 표시할 이름표 프리팹입니다.")]
+        private WorldNameTagReferences nameTagPrefab;
 
         internal Transform AvatarRoot => avatarRoot;
 
 
         private void Awake()
         {
+            networkTransform = GetComponent<NetworkTransform>();
+            body = GetComponent<Rigidbody>();
             // 전용 서버·대기실·본인 1인칭에서 모델이 먼저 노출되지 않도록 합니다.
             if (avatarRoot != null)
             {
@@ -28,15 +35,16 @@ namespace SmartTraining
         public const float MoveSpeed = 4f;
         public const float ArenaHalfSize = 12f;
         public const float InputTimeout = 0.3f;
-        private readonly NetworkVariable<Vector3> position = new NetworkVariable<Vector3>(Vector3.zero);
+        private NetworkTransform networkTransform;
+        private Rigidbody body;
+        private float inputYaw;
+
+        // 카메라가 전달한 로컬 입력입니다. 위치·회전 결과의 공유는 NetworkTransform이 담당합니다.
+        public float ViewYaw { get; private set; }
+
+
         private readonly NetworkVariable<FixedString64Bytes> userId = new NetworkVariable<FixedString64Bytes>();
         private readonly NetworkVariable<FixedString128Bytes> userName = new NetworkVariable<FixedString128Bytes>();
-        // 수평 시선 방향은 소유자만 기록하며 Netcode Tick을 통해 다른 참가자에게 전달합니다.
-        private readonly NetworkVariable<float> facingYaw = new(
-            0,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Owner
-        );
         private Camera presentationCamera;
         private string presentationDetail = "";
         private Vector2 input;
@@ -112,7 +120,8 @@ namespace SmartTraining
         }
 
 
-        public Vector3 ServerPosition => position.Value;
+        // 서버에서는 판정에 사용하는 원본 좌표이고, 클라이언트에서는 NetworkTransform이 보간한 좌표입니다.
+        public Vector3 Position => IsServer ? body.position : transform.position;
 
 
         private FixedString64Bytes cachedUserIdValue;
@@ -256,8 +265,10 @@ namespace SmartTraining
                 // 대기 복귀와 새 시작에서 이전 입력과 좌표를 다음 훈련에 넘기지 않습니다.
                 input = Vector2.zero;
                 inputReceivedAt = 0;
-                position.Value = SpawnPosition(spawnIndex);
-                transform.position = position.Value;
+                inputYaw = 0;
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+                networkTransform.Teleport(SpawnPosition(spawnIndex), Quaternion.identity, transform.localScale);
             }
 
             roomRunning.Value = running;
@@ -348,7 +359,8 @@ namespace SmartTraining
         {
             initialParticipant = participant;
             spawnIndex = participant.roomIndex;
-            transform.position = SpawnPosition(participant.roomIndex);
+            body.position = SpawnPosition(participant.roomIndex);
+            body.rotation = Quaternion.identity;
         }
 
 
@@ -363,15 +375,16 @@ namespace SmartTraining
             {
                 userId.Value = new FixedString64Bytes(initialParticipant.userId);
                 userName.Value = new FixedString128Bytes(initialParticipant.userName);
-                position.Value = SpawnPosition(initialParticipant.roomIndex);
                 ready.Value = false;
                 initialParticipant = null;
             }
 
-            transform.position = position.Value;
+            ViewYaw = transform.eulerAngles.y;
             if (IsServer)
             {
-                NetworkManager.NetworkTickSystem.Tick += ServerTick;
+                // 기본 NetworkTransform의 소유자 SetState 요청으로 이동 검사를 우회하지 못하게 합니다.
+                // 실제 좌표 변경은 서버 물리 계산과 Teleport에서만 확정합니다.
+                networkTransform.OnClientRequestChange = (_, _, _) => (body.position, body.rotation, transform.localScale);
             }
 
             // 늦게 상태를 받거나 재접속해도 현재 진행 상태에 맞춰 캐릭터를 표시합니다.
@@ -382,9 +395,9 @@ namespace SmartTraining
 
         public override void OnNetworkDespawn()
         {
-            if (IsServer && NetworkManager.NetworkTickSystem != null)
+            if (IsServer)
             {
-                NetworkManager.NetworkTickSystem.Tick -= ServerTick;
+                networkTransform.OnClientRequestChange = null;
             }
 
             roomRunning.OnValueChanged -= OnRoomRunningChanged;
@@ -395,20 +408,27 @@ namespace SmartTraining
 
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner, Delivery = RpcDelivery.Unreliable)]
-        // 소유자의 방향 입력만 받아 비정상 수치와 과도한 입력 크기를 검사합니다. 최종 위치는 서버가 계산합니다.
-        public void MoveRpc(Vector2 direction)
+        // 방향·시선 입력을 한 요청으로 받습니다. 서버가 검사·이동하고 NetworkTransform이 결과를 공유합니다.
+        public void MoveRpc(Vector2 direction, float viewYaw)
         {
-            if (!IsServer || !IsSpawned || !RoomIsRunning || PhasePending || !Finite(direction.x) || !Finite(direction.y))
+            if (!IsServer ||
+                !IsSpawned ||
+                !RoomIsRunning ||
+                PhasePending ||
+                !Finite(direction.x) ||
+                !Finite(direction.y) ||
+                !Finite(viewYaw))
             {
                 return;
             }
 
             input = Vector2.ClampMagnitude(direction, 1);
+            inputYaw = Mathf.Repeat(viewYaw, 360);
             inputReceivedAt = Time.realtimeSinceStartupAsDouble;
         }
 
 
-        // 카메라나 씬을 조회하지 않고 소유 측이 전달한 수평 시선 방향만 반영합니다.
+        // 카메라나 씬을 조회하지 않고 수평 시선 입력만 보관합니다. 기존 이동 요청에 함께 담아 보냅니다.
         public void SetViewYaw(float yaw)
         {
             if (!IsSpawned || !IsOwner || !RoomIsRunning || PhasePending || !Finite(yaw))
@@ -416,12 +436,7 @@ namespace SmartTraining
                 return;
             }
 
-            yaw = Mathf.Repeat(yaw, 360);
-            transform.rotation = Quaternion.Euler(0, yaw, 0);
-            if (Mathf.Abs(Mathf.DeltaAngle(facingYaw.Value, yaw)) >= 0.25f)
-            {
-                facingYaw.Value = yaw;
-            }
+            ViewYaw = Mathf.Repeat(yaw, 360);
         }
 
 
@@ -432,37 +447,30 @@ namespace SmartTraining
                 return;
             }
 
-            if (!IsOwner && Finite(facingYaw.Value))
-            {
-                var rotation = Quaternion.Euler(0, Mathf.Repeat(facingYaw.Value, 360), 0);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 1 - Mathf.Exp(-16 * Time.unscaledDeltaTime));
-            }
-
             avatarView?.Refresh(UserName, presentationCamera, presentationDetail, Time.unscaledDeltaTime);
         }
 
 
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
-        // 서버 Tick마다 위치를 갱신합니다. 오래된 입력은 중지하고 이동 영역을 제한합니다.
-        private void ServerTick()
+        // 물리 계산은 서버의 FixedUpdate에서만 합니다. 벽·바닥 충돌은 Rigidbody와 Collider가 판정합니다.
+        // NetworkRigidbody가 다른 클라이언트의 물리 계산을 끄고 NetworkTransform이 결과를 전달합니다.
+        private void FixedUpdate()
         {
-            if (!IsSpawned || !RoomIsRunning || PhasePending)
+            if (!IsSpawned || !IsServer || body.isKinematic)
             {
-                input = Vector2.zero;
                 return;
             }
 
-            if (Time.realtimeSinceStartupAsDouble - inputReceivedAt > InputTimeout)
-            {
-                input = Vector2.zero;
-            }
-
-            var next = position.Value + new Vector3(input.x, 0, input.y) * (MoveSpeed / NetworkManager.NetworkConfig.TickRate);
-            next.x = Mathf.Clamp(next.x, -ArenaHalfSize, ArenaHalfSize);
-            next.z = Mathf.Clamp(next.z, -ArenaHalfSize, ArenaHalfSize);
-            position.Value = next;
-            transform.position = next;
+            bool canMove = RoomIsRunning && !PhasePending && Time.realtimeSinceStartupAsDouble - inputReceivedAt <= InputTimeout;
+            var direction = canMove ? input : Vector2.zero;
+            var velocity = new Vector3(direction.x * MoveSpeed, body.linearVelocity.y, direction.y * MoveSpeed);
+            // 기존 훈련 영역 제한도 물리 속도로 적용합니다. Transform을 직접 옮겨 충돌을 건너뛰지 않습니다.
+            var next = body.position + velocity * Time.fixedDeltaTime;
+            velocity.x = (Mathf.Clamp(next.x, -ArenaHalfSize, ArenaHalfSize) - body.position.x) / Time.fixedDeltaTime;
+            velocity.z = (Mathf.Clamp(next.z, -ArenaHalfSize, ArenaHalfSize) - body.position.z) / Time.fixedDeltaTime;
+            body.linearVelocity = velocity;
+            body.MoveRotation(Quaternion.Euler(0, inputYaw, 0));
         }
 
 
@@ -478,20 +486,12 @@ namespace SmartTraining
             {
                 RefreshVisual();
             }
-
-            if (IsSpawned && !IsServer)
-            {
-                transform.position = Vector3.Lerp(
-                    transform.position,
-                    position.Value,
-                    1 - Mathf.Exp(-16 * Time.unscaledDeltaTime)
-                );
-            }
         }
 
 
         private void OnRoomRunningChanged(bool previous, bool current)
         {
+            ViewYaw = 0;
             RefreshVisual();
         }
 
@@ -516,10 +516,9 @@ namespace SmartTraining
 #if !UNITY_SERVER
             if (IsSpawned && IsClient && RoomIsRunning && presentationVisible)
             {
-                avatarView ??= new PlayerAvatarView(transform, avatarRoot, avatarAnimator);
+                avatarView ??= new PlayerAvatarView(transform, avatarRoot, avatarAnimator, nameTagPrefab);
                 if (!avatarView.HasVisual)
                 {
-                    transform.position = position.Value;
                     avatarView.Show(IsOwner);
                     avatarView.Refresh(UserName, presentationCamera, presentationDetail);
                 }

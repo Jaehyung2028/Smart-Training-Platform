@@ -20,6 +20,7 @@ namespace SmartTraining
         private int completed;
         private float nextPoll;
         private string error = "";
+        private bool movementRejected;
         private bool snapshotDue;
         private bool auditImmediateBlocked;
         private string auditCaption = "";
@@ -39,7 +40,7 @@ namespace SmartTraining
             public bool uiFailureVisible, uiFailureAtTop, uiCanvasSpaceValid;
             public bool uiInteriorVisible, uiInteriorLayoutValid, uiCreateVisible, uiRoomProgressVisible, uiJoinRoomEnabled, uiChatEnabled, uiInteriorInputEnabled, uiReconnectVisible;
             public int uiRoomRows, uiParticipantRows, uiChatLines;
-            public string uiRoomSelected, uiInteriorStatus, uiChatText, uiInteriorChatStatus, uiOperationNotice, uiChatDraft;
+            public string uiRoomSelected, uiChatText, uiInteriorChatStatus, uiOperationNotice, uiChatDraft;
             public bool uiInRoom, uiInRoomLayoutValid, uiSettingsVisible, uiConfirmVisible, uiMapVisible, uiRoomMasterControls, uiReadyEnabled, uiPhaseEnabled, uiRoomSendEnabled, uiRoomInputEnabled, uiTyping, uiMovementBlocked;
             public int uiMemberRows, uiRoomChannel;
             public float uiMoveX, uiMoveY;
@@ -68,6 +69,8 @@ namespace SmartTraining
             public string contentChatText, contentChatDraft;
             public string[] avatarUserNames, nameTagTexts;
             public float[] avatarYaws;
+            public Vector3[] avatarPositions;
+            public bool movementRejected;
             public int nameTagCount, ownNameTagCount;
             public float nameTagFacingError;
             public int contentCameraCount, contentAvatarCount;
@@ -162,15 +165,15 @@ namespace SmartTraining
             var destination = new Vector3(-0.4f, 1, 2.5f);
             float until = Time.unscaledTime + 20;
             while (player != null && player.RoomIsRunning &&
-                Vector3.Distance(player.ServerPosition, destination) > 0.2f && Time.unscaledTime < until)
+                Vector3.Distance(player.Position, destination) > 0.2f && Time.unscaledTime < until)
             {
-                var direction = destination - player.ServerPosition;
-                player.MoveRpc(Vector2.ClampMagnitude(new Vector2(direction.x, direction.z), 1));
+                var direction = destination - player.Position;
+                player.MoveRpc(Vector2.ClampMagnitude(new Vector2(direction.x, direction.z), 1), player.ViewYaw);
                 yield return new WaitForEndOfFrame();
             }
             if (player != null)
             {
-                player.MoveRpc(Vector2.zero);
+                player.MoveRpc(Vector2.zero, player.ViewYaw);
             }
         }
 
@@ -289,7 +292,7 @@ namespace SmartTraining
                             case "uiTestFailure": Set("lobbyJoinError",command.value);break;
                             // 실제 두 클라이언트에서 소유권 경쟁·Transform 동기화·반환을 확인하는 진단 명령입니다.
                             case "contentButton":
-                                var contentButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                                var contentButton = FindUi<UnityEngine.UI.Button>()
                                     .First(button => button.GetComponentInChildren<UnityEngine.UI.Text>()?.text == command.value);
                                 if (!contentButton.IsInteractable())
                                 {
@@ -298,7 +301,7 @@ namespace SmartTraining
                                 contentButton.onClick.Invoke();
                                 break;
                             case "contentVolume":
-                                var options = screen.GetComponentsInChildren<RectTransform>().First(item => item.name == "Content Options");
+                                var options = FindUi<RectTransform>().First(item => item.name == "Content Options");
                                 options.GetComponentsInChildren<UnityEngine.UI.Slider>()[2].value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
                                 break;
                             case "contentEscape":
@@ -310,11 +313,11 @@ namespace SmartTraining
                                 CaptureWorld(Path.Combine(directory, Path.GetFileName(command.value)));
                                 break;
                             case "scenarioCapture":
-                                CaptureCanvas(screen.GetComponentsInChildren<Canvas>().First(canvas => canvas.name == "Content HUD"),
+                                CaptureCanvas(UnityEngine.Object.FindAnyObjectByType<ContentSceneLayout>().Hud.GetComponent<Canvas>(),
                                     Path.Combine(directory, "scenario.png"));
                                 break;
                             case "scenarioToolScroll":
-                                screen.GetComponentsInChildren<UnityEngine.UI.ScrollRect>().First(item => item.name == "Tool List Scroll").verticalNormalizedPosition = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
+                                FindUi<UnityEngine.UI.ScrollRect>().First(item => item.name == "Tool List Scroll").verticalNormalizedPosition = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
                                 break;
                             case "scenarioLookAt":
                                 var lookTarget = UnityEngine.Object.FindAnyObjectByType<ScenarioContent>().GetComponentsInChildren<ScenarioObject>().First(item => item.Id == command.value);
@@ -328,7 +331,7 @@ namespace SmartTraining
                                 SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).SelectRoleRpc((ScenarioRole)int.Parse(roleArguments[0]), int.Parse(roleArguments[1]));
                                 break;
                             case "scenarioSelectTool":
-                                var toolButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                                var toolButton = FindUi<UnityEngine.UI.Button>()
                                     .First(item => item.name == "Scenario Tool " + command.value);
                                 if (!toolButton.IsInteractable())
                                 {
@@ -340,6 +343,23 @@ namespace SmartTraining
                                 var toolParts = command.value.Split('|');
                                 SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).SelectToolRpc(toolParts[0], int.Parse(toolParts[1]));
                                 break;
+                            case "movementInputMode":
+                                typeof(RoomNetworkClient).GetField("nextInputAt", Flags).SetValue(
+                                    Get("network"), command.enabled ? float.MaxValue : 0f);
+                                break;
+                            case "movementFor":
+                                operation = MoveFor(command.value);
+                                break;
+                            case "movementWarp":
+                                screen.UiLocalPlayer.GetComponent<Unity.Netcode.Components.NetworkTransform>().SetState(
+                                    command.enabled ? new Vector3(float.NaN, float.PositiveInfinity, 500) : Vector3.one * 500,
+                                    Quaternion.Euler(80, 220, 30), Vector3.one * 20, teleportDisabled: false);
+                                break;
+                            case "movementRemote":
+                                movementRejected = false;
+                                try { screen.UiRoomPlayers.First(item => !item.IsOwner).MoveRpc(Vector2.right, 180); }
+                                catch (RpcException) { movementRejected = true; }
+                                break;
                             case "playerLookYaw":
                                 var lookCamera = UnityEngine.Object.FindAnyObjectByType<FirstPersonCameraController>();
                                 typeof(FirstPersonCameraController).GetField("yaw", Flags).SetValue(
@@ -350,13 +370,13 @@ namespace SmartTraining
                                 screen.UiRoomPlayers.First(item => !item.IsOwner).SetViewYaw(240);
                                 break;
                             case "contentParticipantsToggle":
-                                screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Participants Toggle").onClick.Invoke();
+                                FindUi<UnityEngine.UI.Button>().First(item => item.name == "Content Participants Toggle").onClick.Invoke();
                                 break;
                             case "contentChatToggle":
-                                screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Toggle").onClick.Invoke();
+                                FindUi<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Toggle").onClick.Invoke();
                                 break;
                             case "contentChatDraft":
-                                var contentInput = screen.GetComponentsInChildren<UnityEngine.UI.InputField>().First(item => item.name == "Content Chat Input");
+                                var contentInput = FindUi<UnityEngine.UI.InputField>().First(item => item.name == "Content Chat Input");
                                 contentInput.text = command.value;
                                 if (command.enabled)
                                 {
@@ -365,7 +385,7 @@ namespace SmartTraining
                                 }
                                 break;
                             case "contentChatSend":
-                                var contentSend = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Send");
+                                var contentSend = FindUi<UnityEngine.UI.Button>().First(item => item.name == "Content Chat Send");
                                 if (!contentSend.IsInteractable()) throw new InvalidOperationException("콘텐츠 채팅 전송이 비활성화되어 있습니다.");
                                 contentSend.onClick.Invoke();
                                 break;
@@ -380,7 +400,7 @@ namespace SmartTraining
                                 SharedScenario.Find(screen.UiLocalPlayer.NetworkManager).InteractRpc(rawParts[0], int.Parse(rawParts[1]));
                                 break;
                             case "scenarioCancel":
-                                var cancelWork = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+                                var cancelWork = FindUi<UnityEngine.UI.Button>()
                                     .First(item => item.name == "Scenario Cancel Work");
                                 if (!cancelWork.IsInteractable())
                                 {
@@ -394,7 +414,7 @@ namespace SmartTraining
                             case "scenarioResultRestart":
                             case "scenarioResultReturn":
                                 string resultButtonName = command.action == "scenarioResultRestart" ? "Scenario Result Restart" : "Scenario Result Return";
-                                var resultButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(item => item.name == resultButtonName);
+                                var resultButton = FindUi<UnityEngine.UI.Button>().First(item => item.name == resultButtonName);
                                 if (!resultButton.IsInteractable())
                                 {
                                     throw new InvalidOperationException("결과 화면의 방장 버튼을 사용할 수 없습니다.");
@@ -451,7 +471,7 @@ namespace SmartTraining
                                 }
                                 break;
                             case "videoToggle":
-                                var videoToggle = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "Video Play Pause");
+                                var videoToggle = FindUi<UnityEngine.UI.Button>().First(button => button.name == "Video Play Pause");
                                 if (!videoToggle.IsInteractable())
                                 {
                                     throw new InvalidOperationException("영상 재생 버튼이 비활성화되어 있습니다.");
@@ -459,7 +479,7 @@ namespace SmartTraining
                                 videoToggle.onClick.Invoke();
                                 break;
                             case "videoControl":
-                                var videoControl = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == command.value);
+                                var videoControl = FindUi<UnityEngine.UI.Button>().First(button => button.name == command.value);
                                 if (!videoControl.IsInteractable())
                                 {
                                     throw new InvalidOperationException("영상 조작 버튼이 비활성화되어 있습니다.");
@@ -467,7 +487,7 @@ namespace SmartTraining
                                 videoControl.onClick.Invoke();
                                 break;
                             case "videoSeek":
-                                var videoSeek = screen.GetComponentsInChildren<UnityEngine.UI.Slider>().First(slider => slider.name == "Video Seek");
+                                var videoSeek = FindUi<UnityEngine.UI.Slider>().First(slider => slider.name == "Video Seek");
                                 if (!videoSeek.IsInteractable())
                                 {
                                     throw new InvalidOperationException("영상 구간 이동이 비활성화되어 있습니다.");
@@ -475,7 +495,7 @@ namespace SmartTraining
                                 videoSeek.value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
                                 break;
                             case "videoVolume":
-                                screen.GetComponentsInChildren<UnityEngine.UI.Slider>().First(slider => slider.name == "Video Local Volume").value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
+                                FindUi<UnityEngine.UI.Slider>().First(slider => slider.name == "Video Local Volume").value = float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
                                 break;
                             case "videoRawPlay":
                                 SharedVideo.Find(screen.UiLocalPlayer.NetworkManager).SetPlayingRpc(command.enabled);
@@ -494,7 +514,7 @@ namespace SmartTraining
                                 operation = Invoke("CreateRoom");
                                 break;
                             case "partListOpen":
-                                var listAction = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "부품 목록");
+                                var listAction = FindUi<UnityEngine.UI.Button>().First(button => button.name == "부품 목록");
                                 if (!listAction.IsInteractable())
                                 {
                                     throw new InvalidOperationException("부품 목록 메뉴가 비활성화되어 있습니다.");
@@ -502,10 +522,10 @@ namespace SmartTraining
                                 listAction.onClick.Invoke();
                                 break;
                             case "partListCloseClick":
-                                screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "Close Part List").onClick.Invoke();
+                                FindUi<UnityEngine.UI.Button>().First(button => button.name == "Close Part List").onClick.Invoke();
                                 break;
                             case "partListFold":
-                                var foldPanel = screen.GetComponentsInChildren<RectTransform>().First(item => item.name == "Model Part List");
+                                var foldPanel = FindUi<RectTransform>().First(item => item.name == "Model Part List");
                                 var foldButton = foldPanel.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "Expand - " + command.value);
                                 if (!foldButton.IsInteractable())
                                 {
@@ -514,7 +534,7 @@ namespace SmartTraining
                                 foldButton.onClick.Invoke();
                                 break;
                             case "partListSelect":
-                                var listPanel = screen.GetComponentsInChildren<RectTransform>().First(item => item.name == "Model Part List");
+                                var listPanel = FindUi<RectTransform>().First(item => item.name == "Model Part List");
                                 var listRow = listPanel.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "Part - " + command.value);
                                 if (!listRow.IsInteractable())
                                 {
@@ -525,7 +545,7 @@ namespace SmartTraining
                             case "playback":
                                 int playbackDirection = int.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture);
                                 string playbackLabel = playbackDirection > 0 ? "분해 재생" : playbackDirection < 0 ? "재조립" : "일시정지";
-                                var playbackButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == playbackLabel);
+                                var playbackButton = FindUi<UnityEngine.UI.Button>().First(button => button.name == playbackLabel);
                                 if (!playbackButton.IsInteractable())
                                 {
                                     throw new InvalidOperationException("재생 버튼이 비활성화되어 있습니다: " + playbackLabel);
@@ -536,7 +556,7 @@ namespace SmartTraining
                                 SharedModel.Find(screen.UiLocalPlayer.NetworkManager).SetPlaybackRpc(int.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture), 5);
                                 break;
                             case "explosionValue":
-                                var explosionSlider = screen.GetComponentsInChildren<UnityEngine.UI.Slider>().First(slider => slider.name == "Model Explosion");
+                                var explosionSlider = FindUi<UnityEngine.UI.Slider>().First(slider => slider.name == "Model Explosion");
                                 if (!explosionSlider.IsInteractable())
                                 {
                                     throw new InvalidOperationException("분해 보기 슬라이더가 비활성화되어 있습니다.");
@@ -547,7 +567,7 @@ namespace SmartTraining
                                 SharedModel.Find(screen.UiLocalPlayer.NetworkManager).SetExplosionRpc(float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture));
                                 break;
                             case "transparencyToggle":
-                                var transparencyToggle = screen.GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "주변 반투명: 꺼짐");
+                                var transparencyToggle = FindUi<UnityEngine.UI.Button>().First(button => button.name == "주변 반투명: 꺼짐");
                                 if (!transparencyToggle.IsInteractable())
                                 {
                                     throw new InvalidOperationException("투명 처리 버튼이 비활성화되어 있습니다.");
@@ -555,7 +575,7 @@ namespace SmartTraining
                                 transparencyToggle.onClick.Invoke();
                                 break;
                             case "transparencyValue":
-                                var transparencySlider = screen.GetComponentsInChildren<UnityEngine.UI.Slider>().First(slider => slider.name == "Surroundings Transparency");
+                                var transparencySlider = FindUi<UnityEngine.UI.Slider>().First(slider => slider.name == "Surroundings Transparency");
                                 if (!transparencySlider.IsInteractable())
                                 {
                                     throw new InvalidOperationException("투명도 슬라이더가 비활성화되어 있습니다.");
@@ -568,7 +588,7 @@ namespace SmartTraining
                                 typeof(ModelViewer).GetMethod("SelectPart", Flags).Invoke(viewer, new object[] { partRenderer });
                                 break;
                             case "partCloseClick":
-                                var closePart = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true).First(item => item.name == "Close Part Details");
+                                var closePart = FindUi<UnityEngine.UI.Button>(true).First(item => item.name == "Close Part Details");
                                 if (!closePart.IsInteractable())
                                 {
                                     throw new InvalidOperationException("부품 설명 닫기 버튼을 사용할 수 없습니다.");
@@ -587,7 +607,7 @@ namespace SmartTraining
                                 model.transform.rotation = Quaternion.Euler(20, float.Parse(command.value, System.Globalization.CultureInfo.InvariantCulture), 10);
                                 break;
                             case "contentActionsToggle":
-                                var menuRoot = screen.GetComponentsInChildren<RectTransform>(true).First(item => item.name == "Content Actions");
+                                var menuRoot = FindUi<RectTransform>(true).First(item => item.name == "Content Actions");
                                 var actionToggle = menuRoot.GetChild(0).GetComponent<UnityEngine.UI.Button>();
                                 if (!actionToggle.IsInteractable())
                                 {
@@ -596,7 +616,7 @@ namespace SmartTraining
                                 actionToggle.onClick.Invoke();
                                 break;
                             case "contentResetClick":
-                                var resetRoot = screen.GetComponentsInChildren<RectTransform>(true).First(item => item.name == "Content Actions");
+                                var resetRoot = FindUi<RectTransform>(true).First(item => item.name == "Content Actions");
                                 var resetButton = resetRoot.Find("Content Action List").GetComponentsInChildren<UnityEngine.UI.Button>().First(button => button.name == "회전 초기화");
                                 if (!resetButton.interactable)
                                 {
@@ -689,7 +709,7 @@ namespace SmartTraining
                 snapshot.modelVisible = shared.GetComponentsInChildren<Renderer>().Any(renderer => renderer.enabled);
 
             }
-            var partList = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Model Part List");
+            var partList = FindUi<RectTransform>(true).FirstOrDefault(item => item.name == "Model Part List");
             snapshot.partListVisible = partList != null && partList.gameObject.activeInHierarchy;
             if (partList != null)
             {
@@ -709,14 +729,14 @@ namespace SmartTraining
             snapshot.contentCameraCount = cameras.Length;
             snapshot.contentCameraCanInteract = cameras.Length > 0 && cameras[0].CanInteract;
             snapshot.contentVolume = AudioListener.volume;
-            var contentParticipants = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Content Participants");
+            var contentParticipants = FindUi<RectTransform>().FirstOrDefault(item => item.name == "Content Participants");
             snapshot.contentParticipantsVisible = contentParticipants != null;
             snapshot.contentParticipantLabels = contentParticipants == null ? Array.Empty<string>() :
                 contentParticipants.GetComponentsInChildren<UnityEngine.UI.Text>().Where(item => item.name == "Content Participant Row").Select(item => item.text).ToArray();
             snapshot.contentParticipantRows = snapshot.contentParticipantLabels.Length;
-            snapshot.contentParticipantButton = screen.GetComponentsInChildren<UnityEngine.UI.Button>()
+            snapshot.contentParticipantButton = FindUi<UnityEngine.UI.Button>()
                 .FirstOrDefault(item => item.name == "Content Participants Toggle")?.GetComponentInChildren<UnityEngine.UI.Text>().text ?? "";
-            var contentChat = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Content Room Chat");
+            var contentChat = FindUi<RectTransform>().FirstOrDefault(item => item.name == "Content Room Chat");
             snapshot.contentChatVisible = contentChat != null;
             if (contentChat != null)
             {
@@ -735,6 +755,8 @@ namespace SmartTraining
             snapshot.playerListCacheStable = ReferenceEquals(screen.UiRoomPlayers, screen.UiRoomPlayers);
             snapshot.avatarUserNames = avatars.Select(item => item.UserName).ToArray();
             snapshot.avatarYaws = avatars.Select(item => item.transform.eulerAngles.y).ToArray();
+            snapshot.avatarPositions = avatars.Select(item => item.Position).ToArray();
+            snapshot.movementRejected = movementRejected;
             snapshot.avatarModels = avatars.Select(item => item.AvatarRoot != null ? item.AvatarRoot.name : "").ToArray();
             snapshot.avatarAnimationSpeeds = avatars.Select(item => item.AvatarRoot != null && item.AvatarRoot.gameObject.activeInHierarchy ? item.AvatarRoot.GetComponent<Animator>().GetFloat("Speed") : 0).ToArray();
             var nameTags = avatars.SelectMany(item => item.GetComponentsInChildren<UnityEngine.UI.Text>())
@@ -747,13 +769,13 @@ namespace SmartTraining
                 .Count(item => item.name == "Player Name");
             snapshot.nameTagFacingError = cameras.Length == 0 || nameTags.Length == 0 ? 0 :
                 nameTags.Max(item => Quaternion.Angle(item.transform.rotation, cameras[0].transform.rotation));
-            snapshot.contentMenuOpen = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Content Menu Overlay");
-            snapshot.contentOptionsOpen = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Content Options");
+            snapshot.contentMenuOpen = FindUi<RectTransform>().Any(item => item.name == "Content Menu Overlay");
+            snapshot.contentOptionsOpen = FindUi<RectTransform>().Any(item => item.name == "Content Options");
             snapshot.contentAvatarCount = screen.UiRoomPlayers.Count(participant => participant.AvatarRoot != null && participant.AvatarRoot.gameObject.activeInHierarchy);
             var scenario = UnityEngine.Object.FindAnyObjectByType<ScenarioContent>();
-            snapshot.localPosition = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.ServerPosition : Vector3.zero;
+            snapshot.localPosition = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.Position : Vector3.zero;
             snapshot.scenarioPresent = scenario != null;
-            var resultRoot = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Scenario Results");
+            var resultRoot = FindUi<RectTransform>(true).FirstOrDefault(item => item.name == "Scenario Results");
             snapshot.scenarioResultVisible = resultRoot != null && resultRoot.gameObject.activeInHierarchy;
             if (resultRoot != null)
             {
@@ -769,10 +791,10 @@ namespace SmartTraining
                 .OrderBy(value => value).ToArray();
             if (scenario != null)
             {
-                var menu = screen.GetComponentsInChildren<RectTransform>().FirstOrDefault(item => item.name == "Scenario Tool Menu");
+                var menu = FindUi<RectTransform>().FirstOrDefault(item => item.name == "Scenario Tool Menu");
                 snapshot.scenarioToolMenuVisible = menu != null;
                 snapshot.scenarioToolOptions = menu != null ? menu.GetComponentsInChildren<UnityEngine.UI.Button>().Length : 0;
-                var cardLabels = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true);
+                var cardLabels = FindUi<UnityEngine.UI.Text>(true);
                 snapshot.scenarioCardTitle = cardLabels.FirstOrDefault(item => item.name == "Scenario Title")?.text ?? "";
                 snapshot.scenarioCardGoal = cardLabels.FirstOrDefault(item => item.name == "Scenario Current Title")?.text ?? "";
                 snapshot.scenarioCardRequirement = cardLabels.FirstOrDefault(item => item.name == "Scenario Requirement")?.text ?? "";
@@ -790,7 +812,7 @@ namespace SmartTraining
                 snapshot.scenarioRoleAssignments = ScenarioRoles.Enumerate(scenario.Definition.Roles)
                     .Select(role => role + "|" + scenario.RoleParticipantName(role)).ToArray();
                 snapshot.scenarioVisibleObjects = scenario.GetComponentsInChildren<Transform>().Select(item => item.name).ToArray();
-                var roleButtons = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+                var roleButtons = FindUi<UnityEngine.UI.Button>(true);
                 var inspectorButton = roleButtons.FirstOrDefault(item => item.name == "Scenario Role Inspector");
                 var technicianButton = roleButtons.FirstOrDefault(item => item.name == "Scenario Role Technician");
                 snapshot.scenarioInspectorEnabled = inspectorButton != null && inspectorButton.IsInteractable();
@@ -831,13 +853,13 @@ namespace SmartTraining
                         snapshot.scenarioToolGrip = parts != null ? parts.GripAmount : 0;
                     }
                 }
-                var cancelWork = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true)
+                var cancelWork = FindUi<UnityEngine.UI.Button>(true)
                     .FirstOrDefault(item => item.name == "Scenario Cancel Work");
                 snapshot.scenarioCancelVisible = cancelWork != null && cancelWork.gameObject.activeInHierarchy;
                 snapshot.scenarioCanCancel = snapshot.scenarioCancelVisible && cancelWork.IsInteractable();
                 snapshot.scenarioActorText = cardLabels.FirstOrDefault(item => item.name == "Scenario Last Actor")?.text ?? "";
                 snapshot.scenarioWorkStatus = cardLabels.FirstOrDefault(item => item.name == "Scenario Work Status")?.text ?? "";
-                var workFill = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Scenario Work Fill");
+                var workFill = FindUi<RectTransform>(true).FirstOrDefault(item => item.name == "Scenario Work Fill");
                 snapshot.scenarioWorkFill = workFill != null ? workFill.anchorMax.x : 0;
                 snapshot.scenarioWorkProgress = scenario.WorkProgress;
                 var bolt = scenario.transform.Find("Bolt A");
@@ -865,12 +887,12 @@ namespace SmartTraining
                 snapshot.scenarioCompletedSteps = scenario.CompletedSteps;
                 snapshot.scenarioRevision = scenario.Revision;
                 snapshot.scenarioSelectedTool = scenario.SelectedTool;
-                var toolScroll = screen.GetComponentsInChildren<UnityEngine.UI.ScrollRect>().FirstOrDefault(item => item.name == "Tool List Scroll");
+                var toolScroll = FindUi<UnityEngine.UI.ScrollRect>().FirstOrDefault(item => item.name == "Tool List Scroll");
                 snapshot.scenarioVisibleToolIds = toolScroll == null ? Array.Empty<string>() : toolScroll.content.GetComponentsInChildren<UnityEngine.UI.Button>().Where(button =>
                     toolScroll.viewport.rect.Contains(toolScroll.viewport.InverseTransformPoint(((RectTransform)button.transform).TransformPoint(((RectTransform)button.transform).rect.center))))
                     .Select(button => button.name.Substring("Scenario Tool ".Length)).ToArray();
                 snapshot.scenarioFeedback = scenario.Feedback;
-                var notice = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true).FirstOrDefault(item => item.name == "Scenario Feedback Text");
+                var notice = FindUi<UnityEngine.UI.Text>(true).FirstOrDefault(item => item.name == "Scenario Feedback Text");
                 snapshot.scenarioNotice = notice != null ? notice.text : "";
                 snapshot.scenarioNoticeVisible = notice != null && notice.gameObject.activeInHierarchy;
                 snapshot.scenarioValid = scenario.TryInitialize(out _);
@@ -879,7 +901,7 @@ namespace SmartTraining
             }
             var videoViewer = UnityEngine.Object.FindAnyObjectByType<VideoContentPlayer>();
             snapshot.videoPresent = videoViewer != null;
-            snapshot.videoControlsVisible = screen.GetComponentsInChildren<RectTransform>().Any(item => item.name == "Video Controls");
+            snapshot.videoControlsVisible = FindUi<RectTransform>().Any(item => item.name == "Video Controls");
             if (videoViewer != null)
             {
                 snapshot.videoReady = videoViewer.IsReady;
@@ -891,7 +913,7 @@ namespace SmartTraining
                 snapshot.videoVolume = videoViewer.Volume;
                 snapshot.videoError = videoViewer.Error;
                 snapshot.videoSubtitlesEnabled = videoViewer.SubtitlesEnabled;
-                var subtitleText = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true).FirstOrDefault(label => label.name == "Video Subtitle Text");
+                var subtitleText = FindUi<UnityEngine.UI.Text>(true).FirstOrDefault(label => label.name == "Video Subtitle Text");
                 snapshot.videoSubtitle = subtitleText != null ? subtitleText.text : "";
                 snapshot.videoSubtitleVisible = subtitleText != null && subtitleText.gameObject.activeInHierarchy;
             }
@@ -910,7 +932,7 @@ namespace SmartTraining
                 snapshot.explosionAmount = selectedViewer.ExplosionAmount;
                 snapshot.playbackDirection = selectedViewer.PlaybackDirection;
                 snapshot.playbackStatus = selectedViewer.PlaybackStatus;
-                var playbackButtons = screen.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+                var playbackButtons = FindUi<UnityEngine.UI.Button>(true);
                 snapshot.playbackForwardEnabled = playbackButtons.Any(button => button.name == "분해 재생" && button.interactable);
                 snapshot.playbackPauseEnabled = playbackButtons.Any(button => button.name == "일시정지" && button.interactable);
                 snapshot.playbackReverseEnabled = playbackButtons.Any(button => button.name == "재조립" && button.interactable);
@@ -953,17 +975,17 @@ namespace SmartTraining
                     return Mathf.Abs(color.r - 1f) < 0.01f && Mathf.Abs(color.g - 0.55f) < 0.01f && Mathf.Abs(color.b - 0.1f) < 0.01f;
                 });
             }
-            var partPanel = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Model Part Details");
+            var partPanel = FindUi<RectTransform>(true).FirstOrDefault(item => item.name == "Model Part Details");
             snapshot.partDetailsVisible = partPanel != null && partPanel.gameObject.activeInHierarchy;
             if (partPanel != null)
             {
                 snapshot.partTitle = partPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).First(item => item.name == "Part Title").text;
                 snapshot.partDescription = partPanel.GetComponentsInChildren<UnityEngine.UI.Text>(true).First(item => item.name == "Part Description").text;
             }
-            var controlStatus = screen.GetComponentsInChildren<UnityEngine.UI.Text>(true).FirstOrDefault(item => item.name == "Model Control Status");
+            var controlStatus = FindUi<UnityEngine.UI.Text>(true).FirstOrDefault(item => item.name == "Model Control Status");
             snapshot.modelControlText = controlStatus != null ? controlStatus.text : "";
             snapshot.modelControlVisible = controlStatus != null && controlStatus.gameObject.activeInHierarchy;
-            var actionRoot = screen.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(item => item.name == "Content Actions");
+            var actionRoot = FindUi<RectTransform>(true).FirstOrDefault(item => item.name == "Content Actions");
             snapshot.contentActionsPresent = actionRoot != null && actionRoot.gameObject.activeInHierarchy;
             snapshot.contentActionsEnabled = actionRoot != null && actionRoot.GetChild(0).GetComponent<UnityEngine.UI.Button>().IsInteractable();
             if (actionRoot != null)
@@ -982,7 +1004,7 @@ namespace SmartTraining
                 snapshot.uiFailureVisible=ui.failurePanel.activeInHierarchy;
                 var lobbyScroll=ui.lobbyContent.GetComponentInParent<UnityEngine.UI.ScrollRect>(true);
                 snapshot.uiFailureAtTop=ui.lobbyContent.rect.height<=lobbyScroll.viewport.rect.height+1||lobbyScroll.verticalNormalizedPosition>=.99f;
-                snapshot.uiCanvasSpaceValid=screen.GetComponentsInChildren<Canvas>().Where(x=>x.enabled).All(x=>((RectTransform)x.transform).rect.width>=1279&&((RectTransform)x.transform).rect.height>=799);
+                snapshot.uiCanvasSpaceValid=FindUi<Canvas>().Where(x=>x.enabled).All(x=>((RectTransform)x.transform).rect.width>=1279&&((RectTransform)x.transform).rect.height>=799);
                 snapshot.uiWidth = Screen.width; snapshot.uiHeight = Screen.height;
                 snapshot.uiProgressVisible = ui.progressPanel.activeSelf; snapshot.uiEnterEnabled = ui.enterButton.interactable;
                 snapshot.uiRows = ui.lobbyContent.GetComponentsInChildren<UnityEngine.UI.Button>().Length;
@@ -997,7 +1019,7 @@ namespace SmartTraining
                 snapshot.uiChatLines=interior.chatContent.GetComponentsInChildren<UnityEngine.UI.Text>().Count(x=>x!=interior.emptyChat);
                 snapshot.uiChatText=string.Join("\n",interior.chatContent.GetComponentsInChildren<UnityEngine.UI.Text>().Select(x=>x.text));
                 snapshot.uiRoomSelected=screen.UiRoom?.id??"";snapshot.uiJoinRoomEnabled=interior.join.interactable;snapshot.uiChatEnabled=interior.sendChat.interactable;
-                snapshot.uiInteriorStatus=interior.status.text;snapshot.uiInteriorChatStatus=interior.chatStatus.text;snapshot.uiInteriorInputEnabled=interior.GetComponent<CanvasGroup>().interactable;
+                snapshot.uiInteriorChatStatus=interior.chatStatus.text;snapshot.uiInteriorInputEnabled=interior.GetComponent<CanvasGroup>().interactable;
                 snapshot.auditBackgroundBlocked=!interior.mainInteraction.interactable;
                 snapshot.uiReconnectVisible=interior.reconnectPanel.activeSelf;
                 snapshot.uiOperationNotice=interior.notice.text;snapshot.uiChatDraft=interior.chatInput.text;
@@ -1020,15 +1042,15 @@ namespace SmartTraining
             }
             var layout=screen.GetComponentInChildren<UguiSceneLayout>(true);
             snapshot.uiHasSceneLayout=layout!=null;
-            snapshot.uiLoginViewCount=screen.GetComponentsInChildren<LobbyUguiView>(true).Length;
-            snapshot.uiInteriorViewCount=screen.GetComponentsInChildren<LobbyInteriorUguiView>(true).Length;
-            snapshot.uiRoomViewCount=screen.GetComponentsInChildren<RoomUguiView>(true).Length;
+            snapshot.uiLoginViewCount=FindUi<LobbyUguiView>(true).Length;
+            snapshot.uiInteriorViewCount=FindUi<LobbyInteriorUguiView>(true).Length;
+            snapshot.uiRoomViewCount=FindUi<RoomUguiView>(true).Length;
             snapshot.uiEventSystemCount=screen.gameObject.scene.GetRootGameObjects().Sum(root=>root.GetComponentsInChildren<UnityEngine.EventSystems.EventSystem>(true).Length);
             snapshot.uiUsesSceneInstances=layout!=null&&ui!=null&&interior!=null&&roomView!=null&&layout.controller==screen&&layout.loginView==ui&&layout.interiorView==interior&&layout.roomView==roomView&&
                 !ui.name.EndsWith("(Clone)")&&!interior.name.EndsWith("(Clone)")&&!roomView.name.EndsWith("(Clone)");
             snapshot.auditImmediateBlocked=auditImmediateBlocked;snapshot.auditCaption=auditCaption;
             snapshot.auditPasswordsEmpty=new[]{"joinRoomPassword","createRoomPassword","reconnectPassword","editRoomPassword"}.All(field=>string.IsNullOrEmpty(Get(field) as string));
-            snapshot.auditPasswordWidgetsEmpty=screen.GetComponentsInChildren<UnityEngine.UI.InputField>(true).Where(field=>field.contentType==UnityEngine.UI.InputField.ContentType.Password).All(field=>field.text.Length==0);
+            snapshot.auditPasswordWidgetsEmpty=FindUi<UnityEngine.UI.InputField>(true).Where(field=>field.contentType==UnityEngine.UI.InputField.ContentType.Password).All(field=>field.text.Length==0);
             snapshot.auditFocusClear=UnityEngine.EventSystems.EventSystem.current?.currentSelectedGameObject==null;
             var temporary = Path.Combine(directory, "state.tmp"); File.WriteAllText(temporary, JsonUtility.ToJson(snapshot));
             File.Copy(temporary, Path.Combine(directory, "state.json"), true);
@@ -1054,6 +1076,31 @@ namespace SmartTraining
             }
             yield return current.GetMe(_=>{},message=>typeof(ApiLobbyScreen).GetMethod("Failure",Flags).Invoke(screen,new object[]{message}));
         }
+        // 콘텐츠 HUD는 별도 콘텐츠 씬에 배치되어 있으므로 클라이언트 UI와 함께 조회합니다.
+        private T[] FindUi<T>(bool includeInactive = false) where T : Component
+        {
+            var client = screen.GetComponentsInChildren<T>(includeInactive);
+            var layout = UnityEngine.Object.FindAnyObjectByType<ContentSceneLayout>();
+            if (layout == null || layout.Hud == null || (!includeInactive && !layout.Hud.gameObject.activeInHierarchy))
+            {
+                return client;
+            }
+
+            return client.Concat(layout.Hud.GetComponentsInChildren<T>(includeInactive)).ToArray();
+        }
+
+        // 실제 클라이언트에서 입력 유실·이상 수치·권한 거절을 확인하는 개발 전용 조작입니다.
+        private IEnumerator MoveFor(string value)
+        {
+            var values = value.Split('|').Select(item => float.Parse(item, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            var until = Time.unscaledTime + values[3];
+            while (Time.unscaledTime < until)
+            {
+                screen.UiLocalPlayer.MoveRpc(new Vector2(values[0], values[1]), values[2]);
+                yield return new WaitForSecondsRealtime(.05f);
+            }
+        }
+
         private static Command ReadCommand(string path)
         {
             // 검사 도구가 파일을 교체하는 순간과 읽기가 겹치면 다음 주기에 다시 읽습니다.

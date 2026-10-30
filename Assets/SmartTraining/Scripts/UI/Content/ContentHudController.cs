@@ -71,7 +71,7 @@ namespace SmartTraining
 
 
         public ContentHudController(
-            Transform parent,
+            UiPrefabReferences view,
             Font font,
             ClientPreferences preferences,
             ContentHudActions actions
@@ -80,16 +80,55 @@ namespace SmartTraining
             this.font = font;
             this.preferences = preferences;
             this.actions = actions;
-            Root = new GameObject(
-                "Content HUD",
-                typeof(RectTransform),
-                typeof(Canvas),
-                typeof(CanvasScaler),
-                typeof(GraphicRaycaster)
+            pauseMenu = view.Get<GameObject>("pauseMenu");
+            menuCard = view.Get<GameObject>("menuCard");
+            modelControlPanel = view.Get<GameObject>("modelControlPanel");
+            chatButton = view.Get<Button>("chatButton");
+            participantsButton = view.Get<Button>("participantsButton");
+            notice = view.Get<Text>("notice");
+            modelControlStatus = view.Get<Text>("modelControlStatus");
+            learningStatus = view.Get<Text>("learningStatus");
+            learningPanel = view.Get<RectTransform>("learningPanel");
+            resumeButton = view.Get<Button>("resumeButton");
+            menuButton = view.Get<Button>("menuButton");
+            returnButton = view.Get<Button>("returnButton");
+            leaveButton = view.Get<Button>("leaveButton");
+            Root = view.Get<GameObject>("Root");
+            participantsButton.onClick.AddListener(() =>
+            {
+                chatPanel.Close();
+                participantsPanel.Toggle();
+            });
+            chatButton.onClick.AddListener(() =>
+            {
+                participantsPanel.Close();
+                chatPanel.Toggle();
+            });
+            menuButton.onClick.AddListener(() => SetMenuOpen(true));
+            resumeButton.onClick.AddListener(() => SetMenuOpen(false));
+            view.Get<Button>("설정:Button").onClick.AddListener(OpenOptions);
+            returnButton.onClick.AddListener(() => actions.ReturnToWaiting?.Invoke());
+            leaveButton.onClick.AddListener(() => actions.LeaveRoom?.Invoke());
+            partDetails = new ModelPartDetailsPanel(Root.transform, font, () => state.Model?.ClearSelection());
+            partList = new ModelPartListPanel(Root.transform, font);
+            actionMenu = new ContentActionMenu(Root.transform, font);
+            scenarioPanel = new ScenarioControlPanel(Root.transform, font);
+            scenarioResults = new ScenarioResultPanel(Root.transform, font, () => actions.ReturnToWaiting?.Invoke());
+            chatPanel = new ContentChatPanel(
+                Root.transform,
+                font,
+                (text, completed) => actions.SendChat?.Invoke(text, completed)
             );
-            Root.transform.SetParent(parent, false);
-            CreateHud();
-            UguiVisualStyle.PolishDark(Root.transform);
+            participantsPanel = new ContentParticipantPanel(Root.transform, font);
+            optionsPanel = new ClientSettingsPanel(
+                pauseMenu.transform,
+                font,
+                preferences,
+                ApplyPreferences,
+                SaveOptions,
+                CloseOptions
+            );
+            pauseMenu.transform.SetAsLastSibling();
             menuAction = new InputAction("Content Menu", InputActionType.Button, "<Keyboard>/escape");
             menuAction.performed += ToggleMenu;
             EnableInput();
@@ -157,7 +196,7 @@ namespace SmartTraining
             if (Root != null)
             {
                 Root.SetActive(false);
-                UnityEngine.Object.Destroy(Root);
+                // HUD 오브젝트는 콘텐츠 씬이 소유하므로 씬 언로드에서 함께 정리합니다.
             }
         }
 
@@ -183,7 +222,7 @@ namespace SmartTraining
                 state.CanSendChat
             );
             chatButton.GetComponentInChildren<Text>().text = chatPanel.IsOpen ? "채팅 닫기" : "방 채팅";
-            learningPanel.anchoredPosition = new Vector2(24, 24);
+            // 기본 위치는 HUD 프리팹에서 편집합니다.
             learningStatus.text = state.Progress == null ? "학습 준비 중" : state.Progress.Label;
             if (state.Model != null)
             {
@@ -312,104 +351,7 @@ namespace SmartTraining
         }
 
 
-        private void CreateHud()
-        {
-            var canvas = Root.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 200;
-            var panel = new GameObject("Toolbar", typeof(RectTransform), typeof(Image), typeof(HorizontalLayoutGroup));
-            panel.transform.SetParent(Root.transform, false);
-            var rect = panel.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0, 1);
-            rect.anchorMax = Vector2.one;
-            rect.pivot = Vector2.up;
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0, 56);
-            panel.GetComponent<Image>().color = new Color(0.08f, 0.12f, 0.18f, 0.92f);
-            var layout = panel.GetComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(12, 12, 8, 8);
-            layout.spacing = 12;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = false;
-            notice = CreateLabel("콘텐츠 씬 준비 중", panel.transform);
-            notice.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-            participantsButton = CreateButton("참가자 (0)", panel.transform, () =>
-            {
-                chatPanel.Close();
-                participantsPanel.Toggle();
-            });
-            participantsButton.name = "Content Participants Toggle";
-            chatButton = CreateButton("방 채팅", panel.transform, () =>
-            {
-                participantsPanel.Close();
-                chatPanel.Toggle();
-            });
-            chatButton.name = "Content Chat Toggle";
-            menuButton = CreateButton("메뉴 (Esc)", panel.transform, () => SetMenuOpen(true));
-            learningPanel = new GameObject(
-                "Learning Progress Card",
-                typeof(RectTransform),
-                typeof(Image)
-            ).GetComponent<RectTransform>();
-            learningPanel.SetParent(Root.transform, false);
-            learningPanel.anchorMin = learningPanel.anchorMax = learningPanel.pivot = Vector2.zero;
-            learningPanel.anchoredPosition = new Vector2(24, 24);
-            learningPanel.sizeDelta = new Vector2(280, 65);
-            learningPanel.GetComponent<Image>().color = new Color32(15, 23, 42, 242);
-            learningPanel.GetComponent<Image>().raycastTarget = false;
-            learningStatus = CreateLabel("학습 준비 중", learningPanel);
-            learningStatus.gameObject.name = "Learning Progress";
-            learningStatus.raycastTarget = false;
-            learningStatus.fontSize = 16;
-            learningStatus.alignment = TextAnchor.MiddleLeft;
-            var learningRect = learningStatus.rectTransform;
-            learningRect.anchorMin = Vector2.zero;
-            learningRect.anchorMax = Vector2.one;
-            learningRect.offsetMin = new Vector2(14, 8);
-            learningRect.offsetMax = new Vector2(-14, -8);
-            CreateModelControlStatus();
-            partDetails = new ModelPartDetailsPanel(Root.transform, font, () => state.Model?.ClearSelection());
-            partList = new ModelPartListPanel(Root.transform, font);
-            actionMenu = new ContentActionMenu(Root.transform, font);
-            scenarioPanel = new ScenarioControlPanel(Root.transform, font);
-            scenarioResults = new ScenarioResultPanel(Root.transform, font, () => actions.ReturnToWaiting?.Invoke());
-            chatPanel = new ContentChatPanel(
-                Root.transform,
-                font,
-                (text, completed) => actions.SendChat?.Invoke(text, completed)
-            );
-            participantsPanel = new ContentParticipantPanel(Root.transform, font);
-            CreatePauseMenu();
-        }
-
-
         // 조작 안내와 분리해 현재 소유자를 표시합니다. 레이캐스트를 받지 않아 모델 클릭을 가리지 않습니다.
-        private void CreateModelControlStatus()
-        {
-            modelControlPanel = new GameObject("Model Control Panel", typeof(RectTransform), typeof(Image));
-            modelControlPanel.transform.SetParent(Root.transform, false);
-            var rect = modelControlPanel.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1);
-            rect.pivot = new Vector2(0.5f, 1);
-            rect.anchoredPosition = new Vector2(0, -68);
-            rect.sizeDelta = new Vector2(600, 44);
-            var background = modelControlPanel.GetComponent<Image>();
-            background.color = new Color32(15, 23, 42, 230);
-            background.raycastTarget = false;
-            modelControlStatus = CreateLabel("모델 조작 가능", modelControlPanel.transform);
-            modelControlStatus.gameObject.name = "Model Control Status";
-            modelControlStatus.alignment = TextAnchor.MiddleCenter;
-            modelControlStatus.resizeTextForBestFit = true;
-            modelControlStatus.resizeTextMinSize = 14;
-            modelControlStatus.resizeTextMaxSize = 18;
-            modelControlStatus.rectTransform.anchorMin = Vector2.zero;
-            modelControlStatus.rectTransform.anchorMax = Vector2.one;
-            modelControlStatus.rectTransform.offsetMin = new Vector2(12, 4);
-            modelControlStatus.rectTransform.offsetMax = new Vector2(-12, -4);
-            modelControlPanel.SetActive(false);
-        }
-
-
         // 콘텐츠 유형별로 기능을 등록합니다. 영상·시나리오 기능도 구현 시 이 메뉴에 각각 추가할 수 있습니다.
         internal void ConfigureContentActions(string contentType)
         {
@@ -466,50 +408,6 @@ namespace SmartTraining
 
         // 화면 전체의 배경이 뒤쪽 UI 클릭을 막고, 중앙 창에서 계속하기·복귀·퇴장을 선택합니다.
         // 멀티플레이 시간은 멈추지 않으며, 메뉴를 연 사용자 자신의 이동과 시점 입력만 차단합니다.
-        private void CreatePauseMenu()
-        {
-            pauseMenu = new GameObject("Content Menu Overlay", typeof(RectTransform), typeof(Image));
-            pauseMenu.transform.SetParent(Root.transform, false);
-            var overlay = pauseMenu.GetComponent<RectTransform>();
-            overlay.anchorMin = Vector2.zero;
-            overlay.anchorMax = Vector2.one;
-            overlay.offsetMin = overlay.offsetMax = Vector2.zero;
-            pauseMenu.GetComponent<Image>().color = new Color(0, 0, 0, 0.6f);
-            var card = new GameObject("Content Menu", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
-            card.transform.SetParent(pauseMenu.transform, false);
-            menuCard = card;
-            var rect = card.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(480, 380);
-            rect.anchoredPosition = Vector2.zero;
-            card.GetComponent<Image>().color = new Color32(30, 41, 59, 255);
-            var layout = card.GetComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(24, 24, 20, 20);
-            layout.spacing = 12;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            var title = CreateLabel("콘텐츠 메뉴", card.transform);
-            title.fontSize = 24;
-            title.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
-            var hint = CreateLabel("메뉴를 연 동안 내 캐릭터의 조작이 중지됩니다.", card.transform);
-            hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
-            resumeButton = CreateButton("계속하기 (Esc)", card.transform, () => SetMenuOpen(false));
-            CreateButton("설정", card.transform, OpenOptions);
-            returnButton = CreateButton("대기로 복귀", card.transform, () => actions.ReturnToWaiting?.Invoke());
-            leaveButton = CreateButton("방 나가기", card.transform, () => actions.LeaveRoom?.Invoke());
-            optionsPanel = new ClientSettingsPanel(
-                pauseMenu.transform,
-                font,
-                preferences,
-                ApplyPreferences,
-                SaveOptions,
-                CloseOptions
-            );
-            pauseMenu.SetActive(false);
-        }
-
-
         internal void SetMenuOpen(bool value)
         {
             menuOpen = value;
@@ -557,46 +455,6 @@ namespace SmartTraining
             }
 
             optionsOpen = false;
-        }
-
-
-        private Text CreateLabel(string value, Transform parent)
-        {
-            var label = new GameObject("Label", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
-            label.transform.SetParent(parent, false);
-            label.font = font;
-            label.fontSize = 16;
-            label.color = Color.white;
-            label.supportRichText = false;
-            label.alignment = TextAnchor.MiddleLeft;
-            label.text = value;
-            label.raycastTarget = false;
-            return label;
-        }
-
-
-        private Button CreateButton(string value, Transform parent, UnityEngine.Events.UnityAction action)
-        {
-            var button = new GameObject(
-                value,
-                typeof(RectTransform),
-                typeof(Image),
-                typeof(Button),
-                typeof(LayoutElement)
-            ).GetComponent<Button>();
-            button.transform.SetParent(parent, false);
-            button.targetGraphic = button.GetComponent<Image>();
-            button.GetComponent<Image>().color = new Color32(51, 65, 85, 255);
-            var size = button.GetComponent<LayoutElement>();
-            size.preferredWidth = 140;
-            size.minHeight = size.preferredHeight = 42;
-            var label = CreateLabel(value, button.transform);
-            label.alignment = TextAnchor.MiddleCenter;
-            label.rectTransform.anchorMin = Vector2.zero;
-            label.rectTransform.anchorMax = Vector2.one;
-            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
-            button.onClick.AddListener(action);
-            return button;
         }
     }
 }

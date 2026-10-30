@@ -208,6 +208,6 @@ ScenarioDefinition에는 ID·제목·순서대로 실행할 Steps를 설정합�
 `Scripts/Common/Input/FirstPersonCameraInput`은 Unity Input System 바인딩만 관리합니다. `IFirstPersonCameraInput`을 통해 입력 구현을 교체할 수 있으며 카메라가 입력의 활성화·해제를 책임집니다. 전역 입력 관리자나 콘텐츠별 중복 카메라 로직은 두지 않습니다.
 `ContentSceneSession`은 씬 전환 시 카메라 모듈을 생성하고 로컬 플레이어·설정을 연결하며 종료 시 정리합니다. 모델 상호작용에는 모듈이 갱신한 Camera만 전달합니다. 메뉴 입력·씬 로딩·콘텐츠 입력은 각 역할에 남깁니다.
 
-전체 교육과정의 트리와 13개 실행 리소스는 [교육과정 샘플 목록](CourseSamples.md)을 참고합니다.
+전체 교육과정의 트리와 12개 실행 리소스는 [교육과정 샘플 목록](CourseSamples.md)을 참고합니다.
 
 영상의 재생·일시정지·5초 이동·정지·탐색 슬라이더·개인 음량·자막 설정은 오른쪽 기능 메뉴에서 조절합니다. 메뉴를 닫아도 자막과 공유 재생은 유지됩니다.

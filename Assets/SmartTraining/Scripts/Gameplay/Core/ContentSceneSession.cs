@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,7 @@ namespace SmartTraining
         private readonly List<AudioListener> previousListeners = new();
         private readonly ClientPreferences preferences = new();
         private ContentHudController hud;
+        private ContentSceneLayout sceneLayout;
         private ContentParticipantState[] participantStates = System.Array.Empty<ContentParticipantState>();
 
         private bool InputBlocked => hud?.BlocksGameplayInput == true;
@@ -131,9 +133,6 @@ namespace SmartTraining
             loadedRoomId = screen.UiActiveRoomId;
             var definition = screen.UiRoomContent;
             contentMessage = "";
-            EnsureHud();
-            hud.SetMenuOpen(false);
-            hud.ConfigureContentActions(definition?.contentType);
             if (!Application.CanStreamedLevelBeLoaded(ScenePath))
             {
                 loadError = "콘텐츠 씬을 찾을 수 없습니다. 빌드 씬 설정을 확인해주세요.";
@@ -150,6 +149,11 @@ namespace SmartTraining
                 yield break;
             }
 
+            sceneLayout = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<ContentSceneLayout>(true)).Single();
+            sceneLayout.ValidateReferences();
+            EnsureHud();
+            hud.SetMenuOpen(false);
+            hud.ConfigureContentActions(definition?.contentType);
             if (requested && loadedRoomId == screen.UiActiveRoomId)
             {
                 if (string.IsNullOrWhiteSpace(definition?.assetId))
@@ -160,16 +164,15 @@ namespace SmartTraining
                 {
                     contentMessage = "기본 콘텐츠 프리팹을 불러오고 있습니다…";
                     contentAssets = new ContentAssetScope();
-                    var container = new GameObject("Content Resources", typeof(ContentResourceContext));
-                    SceneManager.MoveGameObjectToScene(container, scene);
-                    container.GetComponent<ContentResourceContext>().Initialize(contentAssets, definition.contentType);
-                    yield return contentAssets.Instantiate(definition.assetId, container.transform, instance =>
+                    var resources = sceneLayout.Resources;
+                    resources.Initialize(contentAssets, definition.contentType);
+                    yield return contentAssets.Instantiate(definition.assetId, resources.transform, instance =>
                     {
                         contentMessage = "";
                         if (definition.contentType == "model")
                         {
                             // 모델도 공통 3D 공간에 고정 배치합니다. 관찰은 기존 네트워크 캐릭터로 이동하며 진행합니다.
-                            modelViewer = instance.GetComponent<ModelViewer>() ?? instance.AddComponent<ModelViewer>();
+                            modelViewer = instance.GetComponent<ModelViewer>();
                             if (!modelViewer.TryInitialize(out var modelError))
                             {
                                 loadError = modelError;
@@ -238,6 +241,9 @@ namespace SmartTraining
             SceneReady = false;
             SetPlayerPresentation(false);
             hud?.ClearContent();
+            hud?.Dispose();
+            hud = null;
+            sceneLayout = null;
             modelViewer = null;
             videoViewer = null;
             scenarioViewer = null;
@@ -275,14 +281,10 @@ namespace SmartTraining
                 }
             }
 
-            var cameraObject = new GameObject(
-                "Local First Person Camera",
-                typeof(Camera),
-                typeof(AudioListener),
-                typeof(FirstPersonCameraController)
-            );
-            SceneManager.MoveGameObjectToScene(cameraObject, scene);
-            firstPersonCamera = cameraObject.GetComponent<FirstPersonCameraController>();
+            firstPersonCamera = sceneLayout.PlayerCamera;
+            firstPersonCamera.gameObject.SetActive(true);
+            firstPersonCamera.ViewCamera.enabled = true;
+            firstPersonCamera.GetComponent<AudioListener>().enabled = true;
             firstPersonCamera.Bind(
                 screen.UiLocalPlayer.transform,
                 () => requested &&
@@ -339,16 +341,10 @@ namespace SmartTraining
 
             var font = screen.GetComponentInChildren<Text>(true)?.font ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             hud = new ContentHudController(
-                transform,
+                sceneLayout.Hud,
                 font,
                 preferences,
-                new ContentHudActions
-                {
-                    SettingsChanged = ApplyPreferences,
-                    ReturnToWaiting = () => screen.UiTogglePhase(),
-                    LeaveRoom = () => screen.UiLeaveRoom(),
-                    SendChat = (text, completed) => screen.UiSendContentChat(text, completed)
-                }
+                new ContentHudActions { SettingsChanged = ApplyPreferences, ReturnToWaiting = () => screen.UiTogglePhase(), LeaveRoom = () => screen.UiLeaveRoom(), SendChat = (text, completed) => screen.UiSendContentChat(text, completed) }
             );
         }
 
@@ -362,7 +358,11 @@ namespace SmartTraining
 
             foreach (var participant in screen.UiRoomPlayers)
             {
-                participant.SetPresentationVisible(visible, PlayerCamera, scenarioViewer?.ParticipantRoleLabel(participant.OwnerClientId) ?? "");
+                participant.SetPresentationVisible(
+                    visible,
+                    PlayerCamera,
+                    scenarioViewer?.ParticipantRoleLabel(participant.OwnerClientId) ?? ""
+                );
             }
         }
 
@@ -377,30 +377,7 @@ namespace SmartTraining
 
             videoViewer?.Bind(screen.UiLocalPlayer);
             scenarioViewer?.Bind(screen.UiLocalPlayer);
-            hud.Refresh(new ContentHudState
-            {
-                Active = IsActive,
-                Requested = requested,
-                SceneReady = SceneReady,
-                Busy = screen.UiProcessing,
-                CanInteract = !screen.UiProcessing && screen.UiLocalPlayer != null && !screen.UiLocalPlayer.PhasePending,
-                IsMaster = screen.UiLocalPlayer?.IsRoomMaster == true,
-                CanReturn = screen.UiRoomCanPhase,
-                CanLeave = screen.UiRoomCanAct,
-                Error = loadError,
-                ContentMessage = contentMessage,
-                Model = modelViewer,
-                Video = videoViewer,
-                Scenario = scenarioViewer,
-                Progress = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.GetComponent<TrainingProgress>() : null,
-                RoomId = screen.UiActiveRoomId,
-                LocalUserId = screen.UiSelfId,
-                ChatMessages = screen.UiContentRoomMessages,
-                ChatStatus = screen.UiContentChatStatus,
-                CanSendChat = screen.UiCanSendContentChat,
-                Participants = GetParticipantStates(),
-                Camera = PlayerCamera
-            });
+            hud.Refresh(new ContentHudState { Active = IsActive, Requested = requested, SceneReady = SceneReady, Busy = screen.UiProcessing, CanInteract = !screen.UiProcessing && screen.UiLocalPlayer != null && !screen.UiLocalPlayer.PhasePending, IsMaster = screen.UiLocalPlayer?.IsRoomMaster == true, CanReturn = screen.UiRoomCanPhase, CanLeave = screen.UiRoomCanAct, Error = loadError, ContentMessage = contentMessage, Model = modelViewer, Video = videoViewer, Scenario = scenarioViewer, Progress = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.GetComponent<TrainingProgress>() : null, RoomId = screen.UiActiveRoomId, LocalUserId = screen.UiSelfId, ChatMessages = screen.UiContentRoomMessages, ChatStatus = screen.UiContentChatStatus, CanSendChat = screen.UiCanSendContentChat, Participants = GetParticipantStates(), Camera = PlayerCamera });
         }
 
 
@@ -411,12 +388,19 @@ namespace SmartTraining
             {
                 participantStates = new ContentParticipantState[players.Length];
             }
+
             for (int index = 0; index < players.Length; index++)
             {
                 var player = players[index];
                 participantStates[index] = new ContentParticipantState(
-                    player.UserId, player.UserName, player.IsOwner, player.IsRoomMaster, player.ConnectionStatusLabel);
+                    player.UserId,
+                    player.UserName,
+                    player.IsOwner,
+                    player.IsRoomMaster,
+                    player.ConnectionStatusLabel
+                );
             }
+
             return participantStates;
         }
 
@@ -445,7 +429,6 @@ namespace SmartTraining
             if (PlayerCamera != null)
             {
                 PlayerCamera.gameObject.SetActive(false);
-                Destroy(PlayerCamera.gameObject);
                 firstPersonCamera = null;
             }
 
@@ -494,6 +477,7 @@ namespace SmartTraining
             SceneReady = false;
             hud?.Dispose();
             hud = null;
+            sceneLayout = null;
             modelViewer = null;
             EndFirstPerson();
         }

@@ -10,15 +10,22 @@ namespace SmartTraining
         private readonly Transform parent;
         private readonly GameObject visual;
         private readonly Animator animator;
+        private readonly WorldNameTagReferences nameTagPrefab;
         private WorldNameTagView nameTag;
         private Vector3 previousPosition;
         private bool shown;
 
-        public PlayerAvatarView(Transform parent, Transform visualRoot, Animator animator)
+        public PlayerAvatarView(
+            Transform parent,
+            Transform visualRoot,
+            Animator animator,
+            WorldNameTagReferences nameTagPrefab = null
+        )
         {
             this.parent = parent;
             visual = visualRoot != null ? visualRoot.gameObject : null;
             this.animator = animator;
+            this.nameTagPrefab = nameTagPrefab;
         }
 
 
@@ -36,9 +43,9 @@ namespace SmartTraining
             previousPosition = parent.position;
             // 1인칭에서는 자신의 전신이 카메라와 시야를 가리지 않게 합니다.
             visual.SetActive(!localFirstPerson);
-            if (!localFirstPerson)
+            if (!localFirstPerson && nameTagPrefab != null)
             {
-                nameTag ??= new WorldNameTagView(parent);
+                nameTag ??= new WorldNameTagView(parent, nameTagPrefab);
             }
         }
 

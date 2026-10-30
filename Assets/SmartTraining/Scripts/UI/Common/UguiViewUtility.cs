@@ -21,7 +21,13 @@ namespace SmartTraining
             }
         }
 
-        internal static void EnsureComponents(Component view, ref Canvas canvas, ref CanvasGroup interaction, ref GraphicRaycaster raycaster)
+
+        internal static void EnsureComponents(
+            Component view,
+            ref Canvas canvas,
+            ref CanvasGroup interaction,
+            ref GraphicRaycaster raycaster
+        )
         {
             // Unity의 null 비교로 컴포넌트 누락과 이미 파괴된 객체를 함께 확인합니다.
             if (canvas == null)
@@ -36,7 +42,7 @@ namespace SmartTraining
 
             if (interaction == null)
             {
-                interaction = view.gameObject.AddComponent<CanvasGroup>();
+                throw new InvalidOperationException(view.name + " 프리팹에 CanvasGroup을 연결해주세요.");
             }
 
             if (raycaster == null)
@@ -45,7 +51,14 @@ namespace SmartTraining
             }
         }
 
-        internal static void SetVisible(Component view, Canvas canvas, CanvasGroup interaction, GraphicRaycaster raycaster, bool visible)
+
+        internal static void SetVisible(
+            Component view,
+            Canvas canvas,
+            CanvasGroup interaction,
+            GraphicRaycaster raycaster,
+            bool visible
+        )
         {
             canvas.enabled = visible;
             interaction.interactable = interaction.blocksRaycasts = visible;
@@ -56,6 +69,7 @@ namespace SmartTraining
             }
         }
 
+
         internal static void ClearSelection(Transform root)
         {
             var selected = EventSystem.current?.currentSelectedGameObject;
@@ -65,6 +79,7 @@ namespace SmartTraining
             }
         }
 
+
         internal static void EnsureEventSystem(Transform parent)
         {
             if (EventSystem.current != null)
@@ -72,13 +87,19 @@ namespace SmartTraining
                 return;
             }
 
-            var events = new GameObject("UI Event System", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            events.transform.SetParent(parent, false);
+            UiPrefab.Instantiate("EventSystem", parent);
         }
+
 
         // View가 직접 만든 폰트만 반환합니다. 외부에서 지정한 폰트 에셋은 OnDestroy에서 파괴하지 않습니다.
         internal static Font ApplyFont(GameObject root, Font fontOverride)
         {
+            var labels = root.GetComponentsInChildren<Text>(true);
+            if (fontOverride == null && labels.All(label => label.font != null))
+            {
+                return null;
+            }
+
             Font font = fontOverride, ownedFont = null;
             if (font == null)
             {
@@ -103,14 +124,18 @@ namespace SmartTraining
 
             if (font != null)
             {
-                foreach (var label in root.GetComponentsInChildren<Text>(true))
+                foreach (var label in labels)
                 {
-                    label.font = font;
+                    if (fontOverride != null || label.font == null)
+                    {
+                        label.font = font;
+                    }
                 }
             }
 
             return ownedFont;
         }
+
 
         internal static bool RemoveMissing<T>(Dictionary<string, T> items, HashSet<string> ids)
             where T : Component

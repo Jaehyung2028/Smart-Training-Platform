@@ -126,7 +126,7 @@ namespace SmartTraining
             }
 
             nextInputAt = Time.unscaledTime + 0.05f;
-            player.MoveRpc(direction);
+            player.MoveRpc(direction, player.ViewYaw);
         }
 
 

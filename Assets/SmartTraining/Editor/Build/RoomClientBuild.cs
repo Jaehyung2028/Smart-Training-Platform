@@ -17,6 +17,7 @@ namespace SmartTraining.Editor
             VideoContentBuilder.Prepare();
             SampleCourseBuilder.Prepare();
             RoomPlayerPrefabBuilder.Create();
+            TrainingEnvironmentSetup.Validate();
             LobbyUguiBuilder.EnsureAssets();
             LobbyInteriorUguiBuilder.EnsureAssets();
             RoomUguiBuilder.EnsureAssets();

@@ -2,83 +2,126 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
 using UnityEngine;
 
 namespace SmartTraining.Editor
 {
+    // 별도 공구 콘텐츠 대신 여섯 기존 실습의 공구 분배·역할·작업 대상·초기화를 함께 검사합니다.
     public static class WorkplaceToolsChecks
     {
         [MenuItem("Smart Training/Content/Check Workplace Tools")]
         public static void Run()
         {
             SampleCourseBuilder.Prepare();
-            var definition = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(WorkplaceToolsContentBuilder.DefinitionPath);
-            Require(
-                definition.TryValidate(out _) && definition.Steps.Count == 9 && definition.Tools.Count == 8,
-                "8종 공구와 9단계"
-            );
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorkplaceToolsContentBuilder.PrefabPath);
-            Require(prefab.GetComponent<ScenarioContent>().TryInitialize(out _), "모든 작업 대상 연결");
-            var progress = new ScenarioProgress(definition);
-            var used = new HashSet<string>();
-            double time = 0;
-            foreach (var step in definition.Steps)
+            var used = new[]
             {
-                if (step.RequiresTool)
+                new HashSet<string>(),
+                new HashSet<string>()
+            };
+            int count = 0;
+            foreach (string guid in AssetDatabase.FindAssets(
+                "t:ScenarioDefinition",
+                new[] { ScenarioContentBuilder.DirectoryPath }
+            ))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var definition = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(path);
+                Require(definition.TryValidate(out _), "유효한 단계 데이터: " + path);
+                Require(definition.Tools.Count == 8, "모든 실습의 8종 선택 메뉴");
+                Require(definition.Steps.Count(step => !step.RequiresTool) >= 2, "콘텐츠마다 무공구 점검 혼합");
+                Require(
+                    definition.Steps.Where(step => step.RequiresTool).Select(step => step.ToolId).Distinct().Count() >= 3,
+                    "콘텐츠마다 세 종류 이상 공구 사용"
+                );
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path.Replace(".asset", ".prefab"));
+                Require(
+                    prefab.GetComponent<ScenarioContent>().TryInitialize(out var error),
+                    path + ": " + error
+                );
+                var progress = new ScenarioProgress(definition);
+                foreach (var role in ScenarioRoles.Enumerate(definition.Roles))
                 {
-                    var tool = definition.GetTool(step.ToolId);
+                    Require(progress.TrySelectRole((ulong)role, role, 0, out _), "역할 배정");
+                }
+
+                double time = 0;
+                foreach (var step in definition.Steps)
+                {
+                    ulong actor = step.RequiredRole == ScenarioRole.None ? 1ul : (ulong)step.RequiredRole;
+                    if (step.RequiresTool)
+                    {
+                        used[definition.RequiresRoles ? 1 : 0].Add(step.ToolId);
+                        Require(
+                            !progress.TryInteract(99, step.TargetId, progress.Revision, time, out _),
+                            "타인의 공구·역할 공유 불가"
+                        );
+                        Require(progress.TrySelectTool(actor, step.ToolId, 0, out _), "올바른 공구 선택");
+                    }
+                    else
+                    {
+                        Require(progress.TrySelectTool(actor, "", 0, out _), "공구 선택 해제");
+                    }
+
                     Require(
-                        AssetDatabase.GetAssetPath(tool.HeldPrefab).StartsWith(WorkplaceToolsBuilder.Folder),
-                        "가져온 공구 장착 프리팹"
+                        progress.TryInteract(actor, step.TargetId, progress.Revision, time, out _),
+                        "대상 승인: " + step.Title
                     );
+                    if (progress.IsWorking)
+                    {
+                        Require(!progress.TryCompleteWork(time + .1), "작업 시간 유지");
+                        Require(progress.TryCancelWork(actor, progress.Revision, time + .1, out _), "작업 취소");
+                        Require(
+                            progress.TryInteract(actor, step.TargetId, progress.Revision, time, out _) &&
+                            progress.TryCompleteWork(time + step.DurationSeconds + .01),
+                            "재시도와 완료"
+                        );
+                    }
+
+                    time += step.DurationSeconds + 1;
+                }
+
+                Require(progress.IsComplete && progress.TryReset(progress.Revision), "전체 완료 후 재실습");
+                Require(progress.CompletedSteps == 0 && !progress.IsWorking, "재실습 진행 초기화");
+                foreach (var tool in definition.Tools)
+                {
                     Require(
                         tool.AnimateWork && tool.HeldPrefab.transform.Find("Work Contact") != null,
-                        "모션과 접촉점"
+                        "공구 동작·접촉점"
                     );
                     Require(
-                        !progress.TryInteract(2, step.TargetId, progress.Revision, time, out _),
-                        "공구 없는 다른 참가자 거절"
+                        tool.HeldPrefab.GetComponentsInChildren<MeshFilter>(true).Any(mesh => AssetDatabase.GetAssetPath(mesh.sharedMesh).StartsWith("Assets/Workplace Tools/")),
+                        "공용 모델 사용"
                     );
-                    Require(progress.TrySelectTool(1, tool.Id, 0, out _), "개인 공구 선택");
-                    used.Add(tool.Id);
                 }
 
-                Require(
-                    progress.TryInteract(1, step.TargetId, progress.Revision, time, out _),
-                    "올바른 공구·대상 승인"
-                );
-                if (progress.IsWorking)
+                foreach (var visual in prefab.GetComponentsInChildren<ScenarioStageVisuals>(true))
                 {
-                    int revision = progress.Revision;
-                    Require(!progress.TryCompleteWork(time + .1), "작업 시간 유지");
-                    Require(progress.TryCancelWork(1, revision, time + .1, out _), "작업 취소");
-                    Require(
-                        progress.TryInteract(1, step.TargetId, progress.Revision, time, out _) &&
-                        progress.TryCompleteWork(time + step.DurationSeconds + .01),
-                        "재시작 후 완료"
-                    );
+                    var changes = new SerializedObject(visual).FindProperty("changes");
+                    for (int index = 0; index < changes.arraySize; index++)
+                    {
+                        int step = changes.GetArrayElementAtIndex(index).FindPropertyRelative("completedSteps").intValue;
+                        Require(step > 0 && step <= definition.Steps.Count, "시각 효과 전환 단계 범위");
+                    }
                 }
 
-                time += 4;
+                count++;
             }
 
-            Require(used.Count == 8 && progress.IsComplete, "모든 공구 사용 후 완료");
-            Require(progress.TryReset(progress.Revision) && progress.CompletedSteps == 0, "재실습 초기화");
-            ScenarioWorkMotion.ToolPose(ScenarioAction.Saw, .23f, out var first, out _);
-            ScenarioWorkMotion.ToolPose(ScenarioAction.Saw, .29f, out var second, out _);
-            Require(Mathf.Abs(first.z - second.z) > .05f, "톱 왕복 동작");
-            Require(ScenarioWorkMotion.SpinAngle(ScenarioAction.Drill, .6f) > 360, "드릴 회전");
-            Require(ScenarioWorkMotion.GripAmount(ScenarioAction.Grip, .4f) == 1, "플라이어 집기");
-            Require(ScenarioWorkMotion.TargetProgress(ScenarioAction.Chop, .5f) == .5f, "도끼 두 번 내려치기");
-            foreach (var tool in definition.Tools)
-            {
-                Require(
-                    tool.HeldPrefab.GetComponentsInChildren<MeshFilter>(true).Any(mesh => AssetDatabase.GetAssetPath(mesh.sharedMesh).StartsWith("Assets/Workplace Tools/")),
-                    "원본 에셋 메시 사용"
-                );
-            }
-
-            Debug.Log("WORKPLACE TOOLS CHECKS PASSED (8 tools / 9 steps)");
+            Require(
+                count == 6 &&
+                used.All(tools => tools.SetEquals(new[] { "spanner", "screwdriver", "hammer", "axe", "drill", "pipe-wrench", "pliers", "saw" })),
+                "일반·협동 실습 각각 8종 전체 사용"
+            );
+            Require(
+                !AssetDatabase.IsValidFolder(ScenarioContentBuilder.DirectoryPath + "/WorkplaceTools"),
+                "별도 종합 실습 삭제"
+            );
+            Require(
+                !AddressableAssetSettingsDefaultObject.Settings.groups.Where(group => group != null).SelectMany(group => group.entries).Any(entry => entry.address == "content/scenario/workplace-tools"),
+                "기존 주소 제거"
+            );
+            Debug.Log("MIXED SCENARIO CHECKS PASSED (6 scenarios / 8 tools in each family)");
         }
 
 

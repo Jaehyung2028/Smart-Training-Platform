@@ -31,7 +31,15 @@ namespace SmartTraining
                 yield return null;
             }
 
-            status = player != null && player.PhaseReply != reply ? player.PhaseMessage : "방 상태 변경 결과를 확인하지 못했습니다. 연결 상태를 확인해주세요.";
+            string message = player != null && player.PhaseReply != reply ? player.PhaseMessage : "방 상태 변경 결과를 확인하지 못했습니다. 연결 상태를 확인해주세요.";
+            if (player == null || player.RoomIsRunning != running || player.PhasePending)
+            {
+                Failure(message);
+            }
+            else
+            {
+                status = message;
+            }
         }
 
 
@@ -104,7 +112,7 @@ namespace SmartTraining
         {
             if (network?.IsConnected != true || !network.SetReady(value))
             {
-                status = "플레이어 접속을 확인한 후 준비해주세요.";
+                Failure("플레이어 접속을 확인한 후 준비해주세요.");
                 yield break;
             }
 
@@ -117,7 +125,14 @@ namespace SmartTraining
                 yield return null;
             }
 
-            status = network?.IsConnected == true && network.LocalPlayer != null && network.LocalPlayer.IsReady == value ? value ? "준비했습니다." : "준비를 취소했습니다." : "준비 상태 변경을 확인하지 못했습니다. 연결 상태를 확인해주세요.";
+            if (network?.IsConnected != true || network.LocalPlayer == null || network.LocalPlayer.IsReady != value)
+            {
+                Failure("준비 상태 변경을 확인하지 못했습니다. 연결 상태를 확인해주세요.");
+            }
+            else
+            {
+                status = value ? "준비했습니다." : "준비를 취소했습니다.";
+            }
         }
 
 

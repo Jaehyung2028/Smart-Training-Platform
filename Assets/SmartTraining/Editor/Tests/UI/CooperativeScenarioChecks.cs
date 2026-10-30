@@ -12,7 +12,7 @@ namespace SmartTraining.Editor
         {
             SampleCourseBuilder.Prepare();
             checks = 0;
-            var basic = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(CooperativeMaintenanceBuilder.DefinitionPath);
+            var basic = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>("Assets/SmartTraining/Content/Scenarios/CooperativeMaintenance/CooperativeMaintenance.asset");
             var progress = new ScenarioProgress(basic);
             Check(!progress.TryInteract(1, "fault-lamp", 0, out _), "역할 없는 요청 거절");
             Check(progress.TrySelectRole(1, ScenarioRole.Inspector, 0, out _), "점검 배정");
@@ -54,8 +54,8 @@ namespace SmartTraining.Editor
             Check(!progress.TrySelectRole(2, ScenarioRole.Technician, 0, out _), "이전 실습 요청 거절");
             var four = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>("Assets/SmartTraining/Content/Scenarios/CooperativeEmergency/CooperativeEmergency.asset");
             Check(
-                four.TryValidate(out _) && four.Steps.Count == 7 && (int)four.Roles == 15,
-                "네 역할 일곱 단계"
+                four.TryValidate(out _) && four.Steps.Count == 10 && (int)four.Roles == 15,
+                "네 역할 열 단계"
             );
             Complete(four, false);
             Complete(four, true);

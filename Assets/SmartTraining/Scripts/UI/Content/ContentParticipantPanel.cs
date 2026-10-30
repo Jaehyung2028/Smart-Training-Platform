@@ -37,9 +37,9 @@ namespace SmartTraining
     internal sealed class ContentParticipantPanel
     {
         private readonly GameObject root;
+        private readonly Vector2 preferredSize;
         private readonly Text title;
         private readonly RectTransform content;
-        private readonly Font font;
         private readonly Dictionary<string, Text> rows = new();
         private bool open;
         private readonly List<ContentParticipantState> displayed = new();
@@ -52,58 +52,11 @@ namespace SmartTraining
 
         public ContentParticipantPanel(Transform parent, Font font)
         {
-            this.font = font;
-            root = new GameObject("Content Participants", typeof(RectTransform), typeof(Image));
-            root.transform.SetParent(parent, false);
-            var rect = root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
-            rect.anchoredPosition = new Vector2(-16, -68);
-            rect.sizeDelta = new Vector2(360, 300);
-            root.GetComponent<Image>().color = new Color32(15, 23, 42, 245);
-            title = Label("Content Participants Title", rect, 19);
-            title.text = "함께 참여 중 · 0명";
-            title.rectTransform.anchorMin = Vector2.up;
-            title.rectTransform.anchorMax = Vector2.one;
-            title.rectTransform.offsetMin = new Vector2(12, -42);
-            title.rectTransform.offsetMax = new Vector2(-12, -10);
-            var viewport = new GameObject(
-                "Content Participants Scroll",
-                typeof(RectTransform),
-                typeof(Image),
-                typeof(RectMask2D),
-                typeof(ScrollRect)
-            );
-            viewport.transform.SetParent(rect, false);
-            var viewportRect = viewport.GetComponent<RectTransform>();
-            viewportRect.anchorMin = Vector2.zero;
-            viewportRect.anchorMax = Vector2.one;
-            viewportRect.offsetMin = new Vector2(12, 12);
-            viewportRect.offsetMax = new Vector2(-12, -48);
-            viewport.GetComponent<Image>().color = new Color32(30, 41, 59, 255);
-            content = new GameObject(
-                "Content Participants Rows",
-                typeof(RectTransform),
-                typeof(VerticalLayoutGroup),
-                typeof(ContentSizeFitter)
-            ).GetComponent<RectTransform>();
-            content.SetParent(viewportRect, false);
-            content.anchorMin = Vector2.up;
-            content.anchorMax = Vector2.one;
-            content.pivot = Vector2.up;
-            content.sizeDelta = Vector2.zero;
-            var layout = content.GetComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 8, 8);
-            layout.spacing = 8;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            content.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var scroll = viewport.GetComponent<ScrollRect>();
-            scroll.viewport = viewportRect;
-            scroll.content = content;
-            scroll.horizontal = false;
-            scroll.scrollSensitivity = 24;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
+            var view = UiPrefab.Bind("ContentParticipantPanel", parent);
+            root = view.Get<GameObject>("root");
+            preferredSize = ((RectTransform)root.transform).sizeDelta;
+            title = view.Get<Text>("title");
+            content = view.Get<RectTransform>("content");
             root.SetActive(false);
         }
 
@@ -138,8 +91,8 @@ namespace SmartTraining
             participants ??= Array.Empty<ContentParticipantState>();
             var parentSize = ((RectTransform)root.transform.parent).rect.size;
             root.GetComponent<RectTransform>().sizeDelta = new Vector2(
-                Mathf.Min(360, parentSize.x - 32),
-                Mathf.Min(300, parentSize.y - 150)
+                Mathf.Min(preferredSize.x, parentSize.x - 32),
+                Mathf.Min(preferredSize.y, parentSize.y - 150)
             );
             bool changed = displayed.Count != participants.Length;
             for (int position = 0; !changed && position < participants.Length; position++)
@@ -170,8 +123,7 @@ namespace SmartTraining
             {
                 if (!rows.TryGetValue(participant.Id, out var row))
                 {
-                    row = Label("Content Participant Row", content, 16);
-                    row.gameObject.AddComponent<LayoutElement>().minHeight = 48;
+                    row = UiPrefab.Instantiate("ContentParticipantRow", content).GetComponent<Text>();
                     rows.Add(participant.Id, row);
                 }
 
@@ -179,20 +131,6 @@ namespace SmartTraining
                 row.text = participant.Name + (participant.IsLocal ? " (나)" : "") + (participant.IsMaster ? " [방장]" : "") + "\n" + participant.ConnectionLabel;
                 row.color = participant.IsLocal ? new Color32(74, 222, 128, 255) : Color.white;
             }
-        }
-
-
-        private Text Label(string name, Transform parent, int size)
-        {
-            var text = new GameObject(name, typeof(RectTransform), typeof(Text)).GetComponent<Text>();
-            text.transform.SetParent(parent, false);
-            text.font = font;
-            text.fontSize = size;
-            text.alignment = TextAnchor.MiddleLeft;
-            text.color = Color.white;
-            text.supportRichText = false;
-            text.raycastTarget = false;
-            return text;
         }
     }
 }

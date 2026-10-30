@@ -169,7 +169,7 @@ namespace SmartTraining
                     else if (hitObject)
                     {
                         // 작업대처럼 등록된 작업 대상이 아닌 3D 오브젝트도 무응답 대신 이유를 안내합니다.
-                        if (Vector3.Distance(participant.ServerPosition, hit.point) > SharedScenario.InteractionRange)
+                        if (Vector3.Distance(participant.Position, hit.point) > SharedScenario.InteractionRange)
                         {
                             ShowLocalMessage("작업 대상에 더 가까이 이동해주세요.");
                         }
@@ -199,7 +199,7 @@ namespace SmartTraining
 
             localMessage = "";
             if (objects.TryGetValue(objectId, out var item) &&
-                Vector3.Distance(participant.ServerPosition, item.transform.position) > SharedScenario.InteractionRange)
+                Vector3.Distance(participant.Position, item.transform.position) > SharedScenario.InteractionRange)
             {
                 ShowLocalMessage("작업 대상에 더 가까이 이동해주세요.");
                 return;

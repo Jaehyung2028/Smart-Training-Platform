@@ -359,7 +359,7 @@ namespace SmartTraining
                 progress.TryInteract(sender, objectId, expectedRevision, now, out message, out error);
             }
             else if (Vector3.Distance(
-                player.ServerPosition,
+                player.Position,
                 position + objectOffsets[objectId] * ScenarioObjectPose.Evaluate(
                 progress.Steps,
                 objectId,

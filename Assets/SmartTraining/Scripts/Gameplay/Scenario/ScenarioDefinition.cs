@@ -61,7 +61,7 @@ namespace SmartTraining
             private string title = "";
             [SerializeField, TextArea(2, 5)]
             private string instruction = "";
-            [SerializeField, Tooltip("필요한 공구의 ID입니다. 비워 두면 공구 없이 대상 클릭만으로 완료합니다.")]
+            [SerializeField, Tooltip("필요한 공구의 ID입니다. 비워 두면 공구 선택을 해제한 뒤 대상을 클릭해야 합니다.")]
             private string toolId = "";
             [SerializeField, Tooltip("작업할 대상의 ScenarioObject ID입니다. 공구가 없는 목표도 필수입니다.")]
             private string targetId = "";

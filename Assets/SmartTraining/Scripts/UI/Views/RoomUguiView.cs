@@ -16,7 +16,7 @@ namespace SmartTraining
         public Canvas canvas;
         public CanvasGroup mainInteraction;
         public Font fontOverride;
-        public Text heading, summary, connection, notice, status, participantTitle, emptyParticipants;
+        public Text heading, summary, connection, notice, participantTitle, emptyParticipants;
         public Text notices, emptyChat, chatStatus, settingsStatus, passwordStatus, confirmationText;
         public Button ready, phase, settings, leave, logout, roomParticipants, lobbyParticipants;
         public Button roomChat, lobbyChat, sendChat, clearNotices;
@@ -254,7 +254,6 @@ namespace SmartTraining
             connection.text = screen.UiConnection + "\n" + screen.UiRoomConnection;
             notice.text = screen.UiOperationNotice();
             operationNoticePanel.SetActive(notice.text.Length > 0);
-            status.text = screen.UiStatus;
             ready.gameObject.SetActive(!master);
             ready.interactable = screen.UiRoomCanReady;
             Caption(ready, screen.UiLocalPlayer?.IsReady == true ? "준비 취소" : "준비");

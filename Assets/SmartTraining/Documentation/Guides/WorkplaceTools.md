@@ -1,41 +1,101 @@
-# Workplace Tools 실습
+# 공구·점검 혼합 실습
 
-장비 기초 교육 → 공구 8종 종합 실습을 선택합니다. 여덟 공구를 한 번씩 사용하는 작업과 마지막 결과 확인으로 총 9단계입니다. 기존 볼트·나사·망치 실습과 세 협동 실습도 새 공구 모델을 사용합니다. 공구가 필요한 시나리오의 기능 메뉴에는 8종 목록과 선택 해제가 표시되며 휠·스크롤바로 이동할 수 있습니다.
+별도 공구 8종 종합 실습은 제거했습니다. 기존 일반 시나리오 3개와 협동 콘텐츠 3개에 공구 작업을 분배합니다. 모든 콘텐츠는 8종 공구를 메뉴에서 고를 수 있으며, 각 콘텐츠의 작업에는 3~5종 공구와 무공구 점검이 섞입니다. 일반·협동 콘텐츠를 각각 모두 진행하면 두 묶음 모두 8종 공구를 사용합니다.
 
-| 원본 모델 | 공구 ID | 표시 이름 | 종합 실습의 작업·모션 |
+| 콘텐츠 | 실제 사용하는 공구 | 무공구 단계 | 전체 단계 |
 |---|---|---|---|
-| Wrench_Combination | spanner | 콤비네이션 렌치 | 볼트 풀기: 볼트와 공구 회전·상승 |
-| Screwdriver_Cross | screwdriver | 십자 드라이버 | 나사 풀기: 축 회전·상승 |
-| Hammer_01 | hammer | 망치 | 핀 고정: 세 번 타격 |
-| Axe | axe | 도끼 | 목재 쪼개기: 두 번 내려치기, 작업 후 두 조각 |
-| Drill | drill | 전동 드릴 | 구멍 가공: 회전부 회전·전진·진동, 작업 후 구멍 |
-| Pipe_Wrench | pipe-wrench | 파이프 렌치 | 배관 연결부 풀기: 연결부와 공구 회전 |
-| Pliers | pliers | 플라이어 | 클립 뽑기: 양쪽 집게 닫힘·당기기 |
-| Saw | saw | 톱 | 판재 자르기: 앞뒤 왕복, 작업 후 판재 분리 |
+| 작업 전 공구 점검 실습 | 콤비네이션 렌치, 플라이어, 전동 드릴, 망치 | 3 | 7 |
+| 공구별 체결·타격 실습 | 콤비네이션 렌치, 십자 드라이버, 망치, 파이프 렌치, 톱 | 2 | 9 |
+| 대피 전 안전 확인 실습 | 도끼, 톱, 파이프 렌치, 망치 | 3 | 7 |
+| 협동 장비 접점 정비 | 콤비네이션 렌치, 플라이어, 전동 드릴, 십자 드라이버 | 3 | 8 |
+| 협동 방호 덮개 복구 | 파이프 렌치, 망치, 전동 드릴, 톱 | 3 | 7 |
+| 협동 비상 유도등 복구 | 도끼, 톱, 플라이어, 십자 드라이버 | 5 | 10 |
 
-공구 선택은 개인별 상태이며, 서버가 현재 단계의 공구·대상·시간·작업자를 확인합니다. 손·공구·작업 대상과 가공 결과는 공동 진행 상태에 따라 표시합니다. 공구 동작은 서버 작업 진행률을 기준으로 위치·회전을 계산하므로 매 프레임 자세 RPC를 추가하지 않습니다. 취소하면 미완료 상태로 돌아가고, 다시 실습하면 공구 선택과 가공 결과도 초기화됩니다.
+## 단계와 편집 위치
 
-## 모델과 장착점
+### 작업 전 공구 점검 실습
 
-원본은 `Assets/Workplace Tools`에 두고, 손잡이 위치·크기를 맞춘 장착용 프리팹은 `Assets/SmartTraining/Content/Scenarios/Tools/Workplace`에 있습니다. 원본 모델·재질을 재사용하며 장착 모델의 Collider는 작업 클릭을 가로채지 않도록 비활성화합니다.
+1. 전원 차단 확인 — 공구 없음
+2. 점검 덮개 볼트 풀기 — 콤비네이션 렌치
+3. 고정 클립 제거 — 플라이어
+4. 공구 외관 확인 — 공구 없음
+5. 시험 판재 가공 — 전동 드릴
+6. 시험 핀 고정 — 망치
+7. 작업 구역 최종 확인 — 공구 없음
 
-- 공구 프리팹의 `Work Contact`: 기본 접촉점 기준 표시
-- 각 ScenarioDefinition의 `Tools → Work Contact Point`: 해당 콘텐츠에서 실제 사용할 접촉점
-- `Tools → Work Rotation`: 작업 대상에 맞추는 공구 방향
-- 작업 대상의 `Work Anchor`: 손과 공구가 접근할 위치·방향
-- `ToolArticulation`: 드릴 회전부와 플라이어 집게 참조
+데이터: `Content/Scenarios/ToolCheck/ToolCheck.asset`, 배치: `Content/Scenarios/ToolCheck/ToolCheck.prefab`
 
-교체 후 생성된 에셋·개별 작업 각도의 편집은 보존합니다. 공구 목록 전체를 확장하려면 `WorkplaceToolsBuilder`의 모델·ID·표시 이름 목록을 함께 수정합니다.
+### 공구별 체결·타격 실습
 
-## 코드·데이터 위치
+1. 볼트 풀기 — 콤비네이션 렌치
+2. 볼트 다시 체결 — 콤비네이션 렌치
+3. 나사 풀기 — 십자 드라이버
+4. 나사 다시 체결 — 십자 드라이버
+5. 핀 고정 — 망치
+6. 핀 고정 상태 확인 — 공구 없음
+7. 배관 연결부 풀기 — 파이프 렌치
+8. 보강 판재 자르기 — 톱
+9. 전체 작업 결과 확인 — 공구 없음
 
-- 모델 생성·목록 연결: `WorkplaceToolsBuilder.Prepare()`, `ApplyCatalog()`
-- 종합 실습 데이터·작업대: `Content/Scenarios/WorkplaceTools`, `WorkplaceToolsContentBuilder.Prepare()`
-- Addressables 주소: `content/scenario/workplace-tools`
-- 공구 선택 UI: `ScenarioToolMenu`
-- 손·공구 작업 자세 연결: `ScenarioEquipmentView.RefreshPose()`
-- 공구별 동작 계산: `ScenarioWorkMotion.ToolPose()`, `SpinAngle()`, `GripAmount()`
-- 회전부·집게 표시: 공통 모듈 `ToolArticulation.SetState()`
-- 단계별 가공 결과: `ScenarioStageVisuals`
+데이터: `Content/Scenarios/ToolAssembly.asset`, 배치: `Content/Scenarios/ToolAssembly.prefab`
 
-이 모션은 가상 작업대에서 손·공구와 작업 결과를 표현하는 절차형 모션입니다. 원본 도구 에셋의 메시를 사용하며, 실제 장비 운용·가공 절차의 안내 자료는 아닙니다.
+### 대피 전 안전 확인 실습
+
+1. 비상 알림 확인 — 공구 없음
+2. 훈련용 목재 장애물 분리 — 도끼
+3. 통로 판재 자르기 — 톱
+4. 대피 방향 확인 — 공구 없음
+5. 훈련용 배관 연결부 풀기 — 파이프 렌치
+6. 유도 표지 핀 고정 — 망치
+7. 집결 장소 최종 확인 — 공구 없음
+
+데이터: `Content/Scenarios/EvacuationCheck/EvacuationCheck.asset`, 배치: `Content/Scenarios/EvacuationCheck/EvacuationCheck.prefab`
+
+### 협동 장비 접점 정비
+
+1. 고장 표시 확인 — 공구 없음
+2. 덮개 볼트 풀기 — 콤비네이션 렌치
+3. 접점 고정 클립 제거 — 플라이어
+4. 불량 접점 교체 — 공구 없음
+5. 보강판 구멍 가공 — 전동 드릴
+6. 보강판 점검 나사 풀기 — 십자 드라이버
+7. 보강판 점검 나사 체결 — 십자 드라이버
+8. 공동 작동 확인 — 공구 없음
+
+데이터: `Content/Scenarios/CooperativeMaintenance/CooperativeMaintenance.asset`, 배치: `Content/Scenarios/CooperativeMaintenance/CooperativeMaintenance.prefab`
+
+### 협동 방호 덮개 복구
+
+1. 방호 덮개 이상 확인 — 공구 없음
+2. 보조 배관 연결부 풀기 — 파이프 렌치
+3. 덮개 고정 핀 장착 — 망치
+4. 방호 덮개 닫기 — 공구 없음
+5. 보강판 구멍 가공 — 전동 드릴
+6. 보호 판재 길이 조정 — 톱
+7. 덮개 확인 스위치 점검 — 공구 없음
+
+데이터: `Content/Scenarios/CooperativeSafety/CooperativeSafety.asset`, 배치: `Content/Scenarios/CooperativeSafety/CooperativeSafety.prefab`
+
+### 협동 비상 유도등 복구
+
+1. 복구 순서 확인 — 공구 없음
+2. 훈련용 전원 차단 확인 — 공구 없음
+3. 비상 유도등 상태 확인 — 공구 없음
+4. 목재 장애물 분리 — 도끼
+5. 보호 판재 자르기 — 톱
+6. 고정 클립 제거 — 플라이어
+7. 배터리 덮개 나사 풀기 — 십자 드라이버
+8. 훈련용 배터리 교체 — 공구 없음
+9. 배터리 덮개 나사 체결 — 십자 드라이버
+10. 비상 유도등 점등 확인 — 공구 없음
+
+데이터: `Content/Scenarios/CooperativeEmergency/CooperativeEmergency.asset`, 배치: `Content/Scenarios/CooperativeEmergency/CooperativeEmergency.prefab`
+
+## 공통 모듈
+
+- 작업 모션: `ScenarioWorkMotion`, 공구의 접촉점·작업 각도는 각 데이터의 Tools에서 편집
+- 역할·개인 공구 선택·작업 검사는 기존 `ScenarioProgress`와 `SharedScenario`를 재사용
+
+이번 구성이 적용된 샘플은 이후 빌드에서 덮어쓰지 않습니다. 공구 원본 에셋과 공용 장착 프리팹은 유지합니다. 가상 작업대의 모형을 사용하는 기능 샘플이며 실제 현장의 작업 절차를 의미하지 않습니다.
+
+외형·단계 편집과 새 연결 방식은 [프리팹 편집 안내](PrefabEditing.md)를 참고합니다.

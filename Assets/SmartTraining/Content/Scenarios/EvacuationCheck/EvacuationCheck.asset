@@ -15,21 +15,115 @@ MonoBehaviour:
   id: EvacuationCheck
   title: "\uB300\uD53C \uC804 \uC548\uC804 \uD655\uC778"
   steps:
-  - id: check-0
+  - id: mixed-0
     title: "\uBE44\uC0C1 \uC54C\uB9BC \uD655\uC778"
-    instruction: "\uC67C\uCABD \uBE44\uC0C1 \uC54C\uB9BC \uBC84\uD2BC\uC744 \uD074\uB9AD\uD558\uC138\uC694."
-    toolId: 
+    instruction: "\uACF5\uAD6C \uC5C6\uC774 \uC67C\uCABD \uBE44\uC0C1 \uC54C\uB9BC
+      \uBC84\uD2BC\uC744 \uD655\uC778\uD558\uC138\uC694."
+    toolId:
     targetId: target-0
-  - id: check-1
+    action: 0
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-1
+    title: "\uD6C8\uB828\uC6A9 \uBAA9\uC7AC \uC7A5\uC560\uBB3C \uBD84\uB9AC"
+    instruction: "\uB3C4\uB07C\uB85C LOG\uB97C \uCABC\uAC1C \uD6C8\uB828\uC6A9 \uC7A5\uC560\uBB3C\uC744
+      \uBD84\uB9AC\uD558\uC138\uC694."
+    toolId: axe
+    targetId: practice-log
+    action: 7
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-2
+    title: "\uD1B5\uB85C \uD310\uC7AC \uC790\uB974\uAE30"
+    instruction: "\uD1B1\uC73C\uB85C BOARD\uB97C \uC798\uB77C \uBAA8\uD615 \uD1B5\uB85C\uB97C
+      \uC815\uB9AC\uD558\uC138\uC694."
+    toolId: saw
+    targetId: practice-board
+    action: 6
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-3
     title: "\uB300\uD53C \uBC29\uD5A5 \uD655\uC778"
-    instruction: "\uAC00\uC6B4\uB370 \uB300\uD53C \uBC29\uD5A5 \uD45C\uC9C0\uB97C
-      \uD074\uB9AD\uD558\uC138\uC694."
-    toolId: 
+    instruction: "\uACF5\uAD6C \uC5C6\uC774 \uAC00\uC6B4\uB370 \uB300\uD53C \uBC29\uD5A5
+      \uD45C\uC9C0\uB97C \uD655\uC778\uD558\uC138\uC694."
+    toolId:
     targetId: target-1
-  - id: check-2
-    title: "\uC9D1\uACB0 \uC7A5\uC18C \uD655\uC778"
-    instruction: "\uC624\uB978\uCABD \uC9D1\uACB0 \uC7A5\uC18C \uD45C\uC9C0\uB97C
-      \uD074\uB9AD\uD558\uC138\uC694."
-    toolId: 
+    action: 0
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-4
+    title: "\uD6C8\uB828\uC6A9 \uBC30\uAD00 \uC5F0\uACB0\uBD80 \uD480\uAE30"
+    instruction: "\uD30C\uC774\uD504 \uB80C\uCE58\uB85C PIPE \uC5F0\uACB0\uBD80\uB97C
+      \uD478\uC138\uC694."
+    toolId: pipe-wrench
+    targetId: practice-pipe
+    action: 1
+    durationSeconds: 1.5
+    requiredRole: 0
+  - id: mixed-5
+    title: "\uC720\uB3C4 \uD45C\uC9C0 \uD540 \uACE0\uC815"
+    instruction: "\uB9DD\uCE58\uB85C PIN\uC744 \uACE0\uC815\uD574 \uD6C8\uB828\uC6A9
+      \uD45C\uC9C0\uB97C \uC900\uBE44\uD558\uC138\uC694."
+    toolId: hammer
+    targetId: practice-pin
+    action: 3
+    durationSeconds: 2.4
+    requiredRole: 0
+  - id: mixed-6
+    title: "\uC9D1\uACB0 \uC7A5\uC18C \uCD5C\uC885 \uD655\uC778"
+    instruction: "\uACF5\uAD6C \uC5C6\uC774 \uC624\uB978\uCABD \uC9D1\uACB0 \uC7A5\uC18C
+      \uD45C\uC9C0\uB97C \uD655\uC778\uD558\uC138\uC694."
+    toolId:
     targetId: target-2
-  tools: []
+    action: 0
+    durationSeconds: 1.5
+    requiredRole: 0
+  tools:
+  - id: spanner
+    title: "\uCF64\uBE44\uB124\uC774\uC158 \uB80C\uCE58"
+    heldPrefab: {fileID: 2952906489457177493, guid: 9e6507863a802a148ac2d24db3f88ada, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.171, z: 4.656613e-10}
+    workRotation: {x: 90, y: 0, z: 0}
+  - id: screwdriver
+    title: "\uC2ED\uC790 \uB4DC\uB77C\uC774\uBC84"
+    heldPrefab: {fileID: 6178501118483652845, guid: 852ad5ff7653c674097a423299de9ff1, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.2574, z: 0}
+    workRotation: {x: 180, y: 0, z: 0}
+  - id: hammer
+    title: "\uB9DD\uCE58"
+    heldPrefab: {fileID: 598775265695343592, guid: 5f989e4a1536fe945a064dad1c0806bc, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0.05411471, y: 0.2737228, z: -0.000000002948783}
+    workRotation: {x: 0, y: 0, z: -90}
+  - id: axe
+    title: "\uB3C4\uB07C"
+    heldPrefab: {fileID: 2230026388333957369, guid: 7b3ff908edb01b74bb84abadd90f565d, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0.12253462, y: 0.36432493, z: -0.000000024484319}
+    workRotation: {x: 0, y: 0, z: -90}
+  - id: drill
+    title: "\uC804\uB3D9 \uB4DC\uB9B4"
+    heldPrefab: {fileID: 8887049889620735689, guid: 0b511e0f216f53a4f92f06d8e5889654, type: 3}
+    animateWork: 1
+    workContactPoint: {x: -0.0000000039252885, y: 0.2324433, z: -0.19387576}
+    workRotation: {x: 180, y: 0, z: 0}
+  - id: pipe-wrench
+    title: "\uD30C\uC774\uD504 \uB80C\uCE58"
+    heldPrefab: {fileID: 874365662346899547, guid: 3c5aa81ce72951344ba8a581ca7fd7a2, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.3066, z: 0.00001709722}
+    workRotation: {x: 90, y: 0, z: 0}
+  - id: pliers
+    title: "\uD50C\uB77C\uC774\uC5B4"
+    heldPrefab: {fileID: 6212452181571480667, guid: b7a797ef5ce89c444b4dbc362324e687, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.2, z: 0}
+    workRotation: {x: 180, y: 0, z: 0}
+  - id: saw
+    title: "\uD1B1"
+    heldPrefab: {fileID: 3651821094870475184, guid: 75f43d6ea6248c649a28700635c22143, type: 3}
+    animateWork: 1
+    workContactPoint: {x: 0, y: 0.2285166, z: 0.0822005}
+    workRotation: {x: 90, y: 0, z: 0}

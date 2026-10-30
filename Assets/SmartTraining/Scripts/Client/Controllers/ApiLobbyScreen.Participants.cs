@@ -66,7 +66,7 @@ namespace SmartTraining
                 ScheduleLiveRetry(message);
                 if (api?.IsLoggedIn == true)
                 {
-                    status = message;
+                    Failure(message);
                 }
             }
             );

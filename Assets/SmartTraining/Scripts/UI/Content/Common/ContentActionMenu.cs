@@ -10,7 +10,6 @@ namespace SmartTraining
     {
         private readonly GameObject root;
         private readonly GameObject panel;
-        private readonly Font font;
         private readonly Button toggleButton;
         private readonly Text toggleLabel;
         private readonly Text emptyLabel;
@@ -25,44 +24,13 @@ namespace SmartTraining
 
         public ContentActionMenu(Transform parent, Font font)
         {
-            this.font = font;
-            root = new GameObject("Content Actions", typeof(RectTransform));
-            root.transform.SetParent(parent, false);
-            var rect = root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.right;
-            rect.anchoredPosition = new Vector2(-24, 24);
-            rect.sizeDelta = new Vector2(240, 48);
-            toggleButton = CreateButton("기능 메뉴", root.transform);
-            toggleLabel = toggleButton.GetComponentInChildren<Text>();
-            var toggleRect = toggleButton.GetComponent<RectTransform>();
-            toggleRect.anchorMin = Vector2.zero;
-            toggleRect.anchorMax = Vector2.one;
-            toggleRect.offsetMin = toggleRect.offsetMax = Vector2.zero;
+            var view = UiPrefab.Bind("ContentActionMenu", parent);
+            root = view.Get<GameObject>("root");
+            panel = view.Get<GameObject>("panel");
+            toggleButton = view.Get<Button>("toggleButton");
+            toggleLabel = view.Get<Text>("toggleLabel");
+            emptyLabel = view.Get<Text>("emptyLabel");
             toggleButton.onClick.AddListener(Toggle);
-            panel = new GameObject(
-                "Content Action List",
-                typeof(RectTransform),
-                typeof(Image),
-                typeof(VerticalLayoutGroup),
-                typeof(ContentSizeFitter)
-            );
-            panel.transform.SetParent(root.transform, false);
-            var panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = Vector2.zero;
-            panelRect.anchorMax = Vector2.right;
-            panelRect.pivot = Vector2.zero;
-            panelRect.anchoredPosition = new Vector2(0, 60);
-            panelRect.sizeDelta = Vector2.zero;
-            panel.GetComponent<Image>().color = new Color32(15, 23, 42, 245);
-            var layout = panel.GetComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(12, 12, 12, 12);
-            layout.spacing = 8;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            panel.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            emptyLabel = CreateLabel("등록된 기능이 없습니다.", panel.transform);
-            emptyLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
             Close();
         }
 
@@ -70,23 +38,18 @@ namespace SmartTraining
         // 콘텐츠 전용 UI도 같은 기능 메뉴의 배치·닫기·정리 수명주기에 포함합니다.
         public RectTransform AddSection(string name)
         {
-            var section = new GameObject(name, typeof(RectTransform), typeof(VerticalLayoutGroup));
-            section.transform.SetParent(panel.transform, false);
-            var layout = section.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 6;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            extraControls.Add(section);
+            var section = UiPrefab.Instantiate("ActionSection", panel.transform);
+            section.name = name;
+            extraControls.Add(section.gameObject);
             emptyLabel.gameObject.SetActive(false);
-            return section.GetComponent<RectTransform>();
+            return (RectTransform)section.transform;
         }
 
 
         public void AddAction(string label, Action execute, Func<bool> canExecute)
         {
             var button = CreateButton(label, panel.transform);
-            button.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
+            button.gameObject.GetComponent<LayoutElement>().preferredHeight = 44;
             button.onClick.AddListener(() =>
             {
                 // 표시 직후 상태가 바뀔 수 있으므로 클릭할 때도 조건을 확인합니다. 서버는 다시 권한을 검사합니다.
@@ -106,10 +69,9 @@ namespace SmartTraining
             bool enabled = false;
             float transparency = 0.7f;
             var toggle = CreateButton("주변 반투명: 꺼짐", panel.transform);
-            toggle.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
+            toggle.gameObject.GetComponent<LayoutElement>().preferredHeight = 44;
             var caption = CreateLabel("주변 부품 투명도: 70%", panel.transform);
-            caption.fontSize = 16;
-            caption.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
+            caption.gameObject.GetComponent<LayoutElement>().preferredHeight = 28;
             var slider = CreateSlider("Surroundings Transparency");
             slider.SetValueWithoutNotify(transparency);
             toggle.onClick.AddListener(() =>
@@ -141,30 +103,8 @@ namespace SmartTraining
 
         private Slider CreateSlider(string name)
         {
-            var slider = new GameObject(
-                name,
-                typeof(RectTransform),
-                typeof(Image),
-                typeof(Slider),
-                typeof(LayoutElement)
-            ).GetComponent<Slider>();
-            slider.transform.SetParent(panel.transform, false);
-            slider.GetComponent<Image>().color = new Color32(71, 85, 105, 255);
-            slider.GetComponent<LayoutElement>().preferredHeight = 28;
-            var area = new GameObject("Handle Area", typeof(RectTransform)).GetComponent<RectTransform>();
-            area.SetParent(slider.transform, false);
-            area.anchorMin = Vector2.zero;
-            area.anchorMax = Vector2.one;
-            area.offsetMin = new Vector2(10, 0);
-            area.offsetMax = new Vector2(-10, 0);
-            var handle = new GameObject("Handle", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
-            handle.SetParent(area, false);
-            handle.anchorMin = Vector2.zero;
-            handle.anchorMax = Vector2.up;
-            handle.sizeDelta = new Vector2(20, 0);
-            handle.GetComponent<Image>().color = new Color32(96, 165, 250, 255);
-            slider.targetGraphic = handle.GetComponent<Image>();
-            slider.handleRect = handle;
+            var slider = UiPrefab.Instantiate("ActionSlider", panel.transform).GetComponent<Slider>();
+            slider.name = name;
             return slider;
         }
 
@@ -179,8 +119,7 @@ namespace SmartTraining
         )
         {
             var caption = CreateLabel(title + ": 0%", panel.transform);
-            caption.fontSize = 16;
-            caption.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
+            caption.gameObject.GetComponent<LayoutElement>().preferredHeight = 28;
             var slider = CreateSlider(name);
             slider.SetValueWithoutNotify(getValue());
             bool pending = false;
@@ -240,20 +179,9 @@ namespace SmartTraining
         public void AddPlaybackControls(Action<int> execute, Func<int, bool> canExecute, Func<string> getStatus)
         {
             var status = CreateLabel("조립 상태", panel.transform);
-            status.fontSize = 16;
-            status.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
-            var row = new GameObject(
-                "Model Playback Controls",
-                typeof(RectTransform),
-                typeof(HorizontalLayoutGroup),
-                typeof(LayoutElement)
-            );
-            row.transform.SetParent(panel.transform, false);
-            row.GetComponent<LayoutElement>().preferredHeight = 40;
-            var layout = row.GetComponent<HorizontalLayoutGroup>();
-            layout.spacing = 4;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = layout.childForceExpandHeight = true;
+            status.gameObject.GetComponent<LayoutElement>().preferredHeight = 28;
+            var rowPrefab = UiPrefab.Instantiate("ModelPlaybackControls", panel.transform);
+            var row = rowPrefab.gameObject;
             foreach (var item in new[]
             {
                 (Label: "분해 재생", Direction: 1),
@@ -264,9 +192,8 @@ namespace SmartTraining
             )
             {
                 int direction = item.Direction;
-                var button = CreateButton(item.Label, row.transform);
-                button.GetComponentInChildren<Text>().fontSize = 13;
-                button.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+                var button = rowPrefab.Get<Button>(item.Label + ":Button");
+                button.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1;
                 button.onClick.AddListener(() =>
                 {
                     if (button.IsInteractable() && canExecute(direction))
@@ -296,14 +223,14 @@ namespace SmartTraining
             foreach (var action in actions)
             {
                 action.Button.gameObject.SetActive(false);
-                UnityEngine.Object.Destroy(action.Button.gameObject);
+                UiPrefab.Destroy(action.Button.gameObject);
             }
 
             actions.Clear();
             foreach (var control in extraControls)
             {
                 control.SetActive(false);
-                UnityEngine.Object.Destroy(control);
+                UiPrefab.Destroy(control);
             }
 
             extraControls.Clear();
@@ -367,29 +294,16 @@ namespace SmartTraining
 
         private Button CreateButton(string text, Transform parent)
         {
-            var button = new GameObject(text, typeof(RectTransform), typeof(Image), typeof(Button)).GetComponent<Button>();
-            button.transform.SetParent(parent, false);
-            button.GetComponent<Image>().color = new Color32(51, 65, 85, 255);
-            button.targetGraphic = button.GetComponent<Image>();
-            UguiVisualStyle.Round(button.GetComponent<Image>());
-            var label = CreateLabel(text, button.transform);
-            label.rectTransform.anchorMin = Vector2.zero;
-            label.rectTransform.anchorMax = Vector2.one;
-            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
+            var button = UiPrefab.Instantiate("ActionButton", parent).GetComponent<Button>();
+            button.name = text;
+            button.GetComponentInChildren<Text>(true).text = text;
             return button;
         }
 
 
         private Text CreateLabel(string text, Transform parent)
         {
-            var label = new GameObject("Label", typeof(RectTransform), typeof(Text)).GetComponent<Text>();
-            label.transform.SetParent(parent, false);
-            label.font = font;
-            label.fontSize = 18;
-            label.color = Color.white;
-            label.alignment = TextAnchor.MiddleCenter;
-            label.raycastTarget = false;
-            label.supportRichText = false;
+            var label = UiPrefab.Instantiate("ActionLabel", parent).GetComponent<Text>();
             label.text = text;
             return label;
         }

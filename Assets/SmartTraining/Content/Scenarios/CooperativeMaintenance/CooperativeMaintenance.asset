@@ -15,46 +15,72 @@ MonoBehaviour:
   id: cooperative-maintenance
   title: "\uD611\uB3D9 \uC7A5\uBE44 \uC811\uC810 \uC815\uBE44"
   steps:
-  - id: diagnose
+  - id: mixed-0
     title: "\uACE0\uC7A5 \uD45C\uC2DC \uD655\uC778"
-    instruction: "\uC810\uAC80 \uB2F4\uB2F9: \uC67C\uCABD FAULT \uD45C\uC2DC\uB4F1\uC744
+    instruction: "\uC810\uAC80 \uB2F4\uB2F9: \uACF5\uAD6C \uC5C6\uC774 FAULT \uD45C\uC2DC\uB4F1\uC744
       \uD655\uC778\uD558\uC138\uC694."
     toolId:
     targetId: fault-lamp
     action: 0
     durationSeconds: 1.5
     requiredRole: 1
-  - id: open
+  - id: mixed-1
     title: "\uB36E\uAC1C \uBCFC\uD2B8 \uD480\uAE30"
-    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2A4\uD328\uB108\uB85C \uC67C\uCABD
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uCF64\uBE44\uB124\uC774\uC158 \uB80C\uCE58\uB85C
       COVER BOLT\uB97C \uD478\uC138\uC694."
     toolId: spanner
     targetId: cover-bolt
     action: 1
     durationSeconds: 1.5
     requiredRole: 2
-  - id: replace
+  - id: mixed-2
+    title: "\uC811\uC810 \uACE0\uC815 \uD074\uB9BD \uC81C\uAC70"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uD50C\uB77C\uC774\uC5B4\uB85C CLIP\uC744
+      \uC9D1\uC5B4 \uC81C\uAC70\uD558\uC138\uC694."
+    toolId: pliers
+    targetId: practice-clip
+    action: 5
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: mixed-3
     title: "\uBD88\uB7C9 \uC811\uC810 \uAD50\uCCB4"
-    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uAC00\uC6B4\uB370 \uBD89\uC740 CONTACT\uB97C
-      \uD074\uB9AD\uD574 \uC0C8 \uC811\uC810\uC73C\uB85C \uAD50\uCCB4\uD558\uC138\uC694.
-      \uACF5\uAD6C\uB294 \uD544\uC694 \uC5C6\uC2B5\uB2C8\uB2E4."
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uACF5\uAD6C \uC5C6\uC774 \uBD89\uC740
+      CONTACT\uB97C \uD074\uB9AD\uD574 \uC0C8 \uC811\uC810\uC73C\uB85C \uAD50\uCCB4\uD558\uC138\uC694."
     toolId:
     targetId: contact
     action: 0
     durationSeconds: 1.5
     requiredRole: 2
-  - id: close
-    title: "\uB36E\uAC1C \uBCFC\uD2B8 \uCCB4\uACB0"
-    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2A4\uD328\uB108\uB85C COVER BOLT\uB97C
-      \uB2E4\uC2DC \uCCB4\uACB0\uD558\uC138\uC694."
-    toolId: spanner
-    targetId: cover-bolt
+  - id: mixed-4
+    title: "\uBCF4\uAC15\uD310 \uAD6C\uBA4D \uAC00\uACF5"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC804\uB3D9 \uB4DC\uB9B4\uB85C PLATE\uC758
+      \uACE0\uC815 \uAD6C\uBA4D\uC744 \uAC00\uACF5\uD558\uC138\uC694."
+    toolId: drill
+    targetId: practice-plate
+    action: 4
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: mixed-5
+    title: "\uBCF4\uAC15\uD310 \uC810\uAC80 \uB098\uC0AC \uD480\uAE30"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2ED\uC790 \uB4DC\uB77C\uC774\uBC84\uB85C
+      SCREW\uB97C \uD480\uC5B4 \uC810\uAC80\uD558\uC138\uC694."
+    toolId: screwdriver
+    targetId: practice-screw
+    action: 1
+    durationSeconds: 1.5
+    requiredRole: 2
+  - id: mixed-6
+    title: "\uBCF4\uAC15\uD310 \uC810\uAC80 \uB098\uC0AC \uCCB4\uACB0"
+    instruction: "\uC815\uBE44 \uB2F4\uB2F9: \uC2ED\uC790 \uB4DC\uB77C\uC774\uBC84\uB85C
+      \uAC19\uC740 SCREW\uB97C \uB2E4\uC2DC \uCCB4\uACB0\uD558\uC138\uC694."
+    toolId: screwdriver
+    targetId: practice-screw
     action: 2
     durationSeconds: 1.5
     requiredRole: 2
-  - id: verify
+  - id: mixed-7
     title: "\uACF5\uB3D9 \uC791\uB3D9 \uD655\uC778"
-    instruction: "\uC810\uAC80 \uB2F4\uB2F9: \uC624\uB978\uCABD TEST \uBC84\uD2BC\uC73C\uB85C
+    instruction: "\uC810\uAC80 \uB2F4\uB2F9: \uACF5\uAD6C \uC5C6\uC774 TEST \uBC84\uD2BC\uC73C\uB85C
       \uC815\uBE44 \uACB0\uACFC\uB97C \uD655\uC778\uD558\uC138\uC694."
     toolId:
     targetId: test-button

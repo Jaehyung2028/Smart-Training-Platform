@@ -115,6 +115,7 @@ namespace SmartTraining.Editor
             try
             {
                 var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                UiPrefab.Instantiate("ContentActionMenu", ui.transform);
                 var menu = new ContentActionMenu(ui.transform, font);
                 var section = menu.AddSection("Scenario Tool Menu");
                 var menuType = typeof(ScenarioContent).Assembly.GetType("SmartTraining.ScenarioToolMenu");

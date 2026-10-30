@@ -274,7 +274,7 @@ namespace SmartTraining.Editor
             yield return WaitMaster(client, first.User.id);
             yield return WaitMaster(other, first.User.id);
             Check(
-                client.LocalPlayer.OwnerClientId != other.LocalPlayer.OwnerClientId && Vector3.Distance(client.LocalPlayer.ServerPosition, other.LocalPlayer.ServerPosition) > 1,
+                client.LocalPlayer.OwnerClientId != other.LocalPlayer.OwnerClientId && Vector3.Distance(client.LocalPlayer.Position, other.LocalPlayer.Position) > 1,
                 "participants own separate players at separate spawn positions"
             );
             yield return first.GetRoom(
@@ -342,7 +342,7 @@ namespace SmartTraining.Editor
             );
             yield return Move(other, Vector2.up, 0.6f);
             yield return Move(other, Vector2.zero, 0.4f);
-            var existingPosition = other.LocalPlayer.ServerPosition;
+            var existingPosition = other.LocalPlayer.Position;
             yield return first.JoinRoom(lobby, room, value => reservation = value, fail);
             client = new RoomNetworkClient();
             yield return client.Connect(first.User.id, reservation, () =>
@@ -358,7 +358,7 @@ namespace SmartTraining.Editor
             Check(client.LocalPlayer.UserId == first.User.id, "rejoining creates a fresh owned player");
             var existingPlayer = Array.Find(client.Players, player => player.UserId == second.User.id);
             Check(
-                existingPlayer != null && Vector3.Distance(existingPlayer.ServerPosition, existingPosition) < 0.15f,
+                existingPlayer != null && Vector3.Distance(existingPlayer.Position, existingPosition) < 0.15f,
                 "late joining client receives existing player's current position"
             );
             var screen = UnityEngine.Object.FindFirstObjectByType<ApiLobbyScreen>();
@@ -1627,11 +1627,11 @@ namespace SmartTraining.Editor
                 message => denied = message.Contains("잠")
             );
             Check(denied, "locked room rejects new join even with a free slot");
-            var start = client.LocalPlayer.ServerPosition;
+            var start = client.LocalPlayer.Position;
             yield return Move(client, Vector2.right, 0.4f);
             yield return Settle();
             Check(
-                client.IsConnected && other.IsConnected && Vector3.Distance(client.LocalPlayer.ServerPosition, start) < 0.1f,
+                client.IsConnected && other.IsConnected && Vector3.Distance(client.LocalPlayer.Position, start) < 0.1f,
                 "entry lock preserves connections while waiting phase blocks movement"
             );
             yield return first.TransferRoomMaster(lobby, room, second.User.id, () =>
@@ -1696,12 +1696,12 @@ namespace SmartTraining.Editor
 
         private static IEnumerator MovementChecks()
         {
-            var waitingPosition = client.LocalPlayer.ServerPosition;
+            var waitingPosition = client.LocalPlayer.Position;
             Check(!HasVisibleCharacter(client.LocalPlayer), "waiting participant has no visible character");
             // 클라이언트 전송 함수 우회 요청도 서버가 대기 상태에서 거절해야 합니다.
-            client.LocalPlayer.MoveRpc(Vector2.right);
+            client.LocalPlayer.MoveRpc(Vector2.right, 0);
             yield return Settle();
-            Check(Vector3.Distance(waitingPosition, client.LocalPlayer.ServerPosition) < 0.1f,
+            Check(Vector3.Distance(waitingPosition, client.LocalPlayer.Position) < 0.1f,
                 "server rejects direct movement RPC before room start");
             client.LocalPlayer.RequestPhaseRpc(true);
             yield return WaitPhase(client, true);
@@ -1724,28 +1724,29 @@ namespace SmartTraining.Editor
             yield return null;
             Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
                 "presentation owner explicitly disables avatar visuals");
-            var start = client.LocalPlayer.ServerPosition;
-            var otherStart = other.LocalPlayer.ServerPosition;
-            yield return Move(client, Vector2.right, 1);
+            var start = client.LocalPlayer.Position;
+            var otherStart = other.LocalPlayer.Position;
+            // 스폰 줄의 다른 참가자를 밀지 않는 방향에서 순수 이동 속도를 확인합니다.
+            yield return Move(client, Vector2.up, 1);
             yield return Settle();
-            var after = client.LocalPlayer.ServerPosition;
+            var after = client.LocalPlayer.Position;
             Check(
-                after.x - start.x > 2 && after.x - start.x < 5 && Mathf.Abs(after.z - start.z) < 0.1f,
+                after.z - start.z > 2 && after.z - start.z < 5 && Mathf.Abs(after.x - start.x) < 0.1f,
                 "server applies owner movement at bounded speed"
             );
             Check(
-                Vector3.Distance(other.LocalPlayer.ServerPosition, otherStart) < 0.1f,
+                Vector3.Distance(other.LocalPlayer.Position, otherStart) < 0.1f,
                 "movement does not move another participant"
             );
             var remote = Array.Find(other.Players, player => player.UserId == first.User.id);
             Check(
-                remote != null && Vector3.Distance(remote.ServerPosition, after) < 0.15f,
+                remote != null && Vector3.Distance(remote.Position, after) < 0.15f,
                 "second client receives first player's authoritative position"
             );
             bool rejected = false;
             try
             {
-                Array.Find(client.Players, player => !player.IsOwner).MoveRpc(Vector2.up);
+                Array.Find(client.Players, player => !player.IsOwner).MoveRpc(Vector2.up, 0);
             }
             catch (Unity.Netcode.RpcException)
             {
@@ -1756,7 +1757,7 @@ namespace SmartTraining.Editor
             start = after;
             yield return Move(client, new Vector2(100, 100), 0.8f);
             yield return Settle();
-            after = client.LocalPlayer.ServerPosition;
+            after = client.LocalPlayer.Position;
             Check(
                 Vector3.Distance(start, after) > 1 && Vector3.Distance(start, after) < 4,
                 "oversized diagonal input cannot increase movement speed"
@@ -1765,7 +1766,7 @@ namespace SmartTraining.Editor
             yield return Move(client, new Vector2(float.NaN, float.PositiveInfinity), 0.4f);
             yield return Settle();
             Check(
-                Vector3.Distance(start, client.LocalPlayer.ServerPosition) < 0.1f,
+                Vector3.Distance(start, client.LocalPlayer.Position) < 0.1f,
                 "server rejects non-finite movement input"
             );
             yield return Move(client, Vector2.up, 0.2f);
@@ -1775,7 +1776,7 @@ namespace SmartTraining.Editor
                 yield return null;
             }
 
-            start = client.LocalPlayer.ServerPosition;
+            start = client.LocalPlayer.Position;
             stopBy = Time.realtimeSinceStartupAsDouble + 0.4f;
             while (Time.realtimeSinceStartupAsDouble < stopBy)
             {
@@ -1783,14 +1784,14 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                Vector3.Distance(start, client.LocalPlayer.ServerPosition) < 0.1f,
+                Vector3.Distance(start, client.LocalPlayer.Position) < 0.1f,
                 "lost input stops movement instead of continuing indefinitely"
             );
             yield return Move(client, Vector2.right, 4);
             yield return Settle();
             Check(
-                Mathf.Abs(client.LocalPlayer.ServerPosition.x - RoomPlayer.ArenaHalfSize) < 0.1f,
-                "server clamps movement to training area boundary"
+                Mathf.Abs(client.LocalPlayer.Position.x) <= RoomPlayer.ArenaHalfSize + 0.1f,
+                "server physics walls and area bounds keep movement inside training area"
             );
             client.LocalPlayer.RequestPhaseRpc(false);
             yield return WaitPhase(client, false);

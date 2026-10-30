@@ -10,7 +10,7 @@ namespace SmartTraining
             var source = api;
             if (source?.IsLoggedIn != true)
             {
-                status = "먼저 로그인해주세요.";
+                Failure("먼저 로그인해주세요.");
                 yield break;
             }
 
@@ -21,18 +21,16 @@ namespace SmartTraining
                 yield break;
             }
 
-            if (network?.IsConnected == true ||
-                source.User.currentRoomId.Length > 0 ||
-                source.User.pendingRoomId.Length > 0)
+            if (network?.IsConnected == true || source.User.currentRoomId.Length > 0 || source.User.pendingRoomId.Length > 0)
             {
-                status = "현재 방에서 나가거나 접속 예약을 취소한 뒤 다른 참가자의 방을 찾아주세요.";
+                Failure("현재 방에서 나가거나 접속 예약을 취소한 뒤 다른 참가자의 방을 찾아주세요.");
                 yield break;
             }
 
             var lobby = source.User.currentLobbyId;
             if (string.IsNullOrEmpty(lobby))
             {
-                status = "현재 로비에 입장한 뒤 사용해주세요.";
+                Failure("현재 로비에 입장한 뒤 사용해주세요.");
                 yield break;
             }
 
@@ -48,13 +46,13 @@ namespace SmartTraining
             var target = Array.Find(participants, item => item.userId == userId);
             if (target == null)
             {
-                status = "해당 참가자가 현재 로비를 떠났습니다. 목록을 새로고침해주세요.";
+                Failure("해당 참가자가 현재 로비를 떠났습니다. 목록을 새로고침해주세요.");
                 yield break;
             }
 
             if (target.connectionState != "connected" || string.IsNullOrEmpty(target.roomId))
             {
-                status = "해당 참가자는 현재 방에 접속 중이 아닙니다.";
+                Failure("해당 참가자는 현재 방에 접속 중이 아닙니다.");
                 yield break;
             }
 
@@ -75,7 +73,7 @@ namespace SmartTraining
 
             if (!Array.Exists(roomItems, item => item.id == target.roomId))
             {
-                status = "해당 방이 닫혔습니다. 참가자 목록을 새로고침해주세요.";
+                Failure("해당 방이 닫혔습니다. 참가자 목록을 새로고침해주세요.");
                 yield break;
             }
 
@@ -95,7 +93,7 @@ namespace SmartTraining
             var current = Array.Find(participants, item => item.userId == userId);
             if (current == null || current.connectionState != "connected" || current.roomId != detail.id)
             {
-                status = "해당 참가자의 위치가 변경되었습니다. 목록에서 다시 선택해주세요.";
+                Failure("해당 참가자의 위치가 변경되었습니다. 목록에서 다시 선택해주세요.");
                 yield break;
             }
 
@@ -118,6 +116,7 @@ namespace SmartTraining
             participantsLoaded = true;
             status = ParticipantRoomViewStatus(detail);
         }
+
 
         private static string ParticipantRoomViewStatus(RoomSummary room)
         {

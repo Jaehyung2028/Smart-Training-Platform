@@ -13,7 +13,7 @@ namespace SmartTraining
         public Canvas canvas;
         public CanvasGroup mainInteraction;
         public Font fontOverride;
-        public Text heading, connection, notice, status, roomCount, roomDetail, participantTitle, emptyRooms, emptyParticipants, emptyChat, chatStatus;
+        public Text heading, connection, notice, roomCount, roomDetail, participantTitle, emptyRooms, emptyParticipants, emptyChat, chatStatus;
         public InputField search, joinPassword, chatInput, reconnectPassword, createName, createCapacity, createPassword;
         public Button refresh, leave, create, join, available, protection, sort, resetFilters, sendChat, notifications, logout, clearRoom, reconnect, forgetReconnect;
         public Button createContent, submitCreate, closeCreate, cancelJoin;
@@ -273,7 +273,6 @@ namespace SmartTraining
             connection.text = screen.UiConnection;
             notice.text = screen.UiOperationNotice();
             notice.gameObject.SetActive(notice.text.Length > 0);
-            status.text = screen.UiStatus;
             roomDetail.text = screen.UiRoomDetail();
             search.SetTextWithoutNotify(screen.UiSearch);
             search.interactable = !busy;
