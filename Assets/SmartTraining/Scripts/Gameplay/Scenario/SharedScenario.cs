@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -31,9 +31,7 @@ namespace SmartTraining
             roles = new NetworkList<ScenarioRoleAssignment>();
         }
 
-
         public ScenarioProgressState State => state.Value;
-
 
         public IEnumerable<ScenarioStepOutcome> GetOutcomes()
         {
@@ -49,21 +47,18 @@ namespace SmartTraining
             }
         }
 
-
         public float WorkProgress => IsSpawned ? State.GetWorkProgress(NetworkManager.ServerTime.Time) : 0;
-
 
         private void Update()
         {
-            if (IsServer && IsSpawned && progress != null && progress.TryCompleteWork(NetworkManager.ServerTime.Time))
+            if (IsServer && IsSpawned && progress != null &&
+                progress.TryCompleteWork(NetworkManager.ServerTime.Time))
             {
                 Publish(workingActor);
             }
         }
 
-
         public ScenarioRole LocalRoles => GetRoles(NetworkManager.LocalClientId);
-
 
         public ScenarioRole GetRoles(ulong clientId)
         {
@@ -79,7 +74,6 @@ namespace SmartTraining
             return result;
         }
 
-
         // 표시 이름 대신 동기화된 배정 정보로 역할의 사용 여부를 판단합니다.
         public bool IsRoleAssigned(ScenarioRole role)
         {
@@ -93,7 +87,6 @@ namespace SmartTraining
 
             return false;
         }
-
 
         public string GetRoleParticipantName(ScenarioRole role)
         {
@@ -116,7 +109,6 @@ namespace SmartTraining
             return "미배정";
         }
 
-
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void SelectRoleRpc(ScenarioRole role, int expectedRunRevision, RpcParams rpcParams = default)
         {
@@ -131,16 +123,19 @@ namespace SmartTraining
                 // 재전송으로 기존 겸임 정보를 지우지 않고 새 역할만 추가합니다.
                 if (!IsRoleAssigned(role))
                 {
-                    roles.Add(new ScenarioRoleAssignment { ClientId = sender, Role = role, RunRevision = progress.RunRevision });
+                    roles.Add(new ScenarioRoleAssignment
+                        {
+                            ClientId = sender,
+                            Role = role,
+                            RunRevision = progress.RunRevision
+                        });
                 }
             }
 
             FeedbackRpc(message, state.Value.Revision, RpcTarget.Single(sender, RpcTargetUse.Temp));
         }
 
-
         public string LocalSelectedTool => IsSpawned ? GetSelectedTool(NetworkManager.LocalClientId) : "";
-
 
         public string GetSelectedTool(ulong clientId)
         {
@@ -160,7 +155,6 @@ namespace SmartTraining
             return "";
         }
 
-
         public override void OnNetworkSpawn()
         {
             if (IsServer)
@@ -173,7 +167,6 @@ namespace SmartTraining
             }
         }
 
-
         public override void OnNetworkDespawn()
         {
             if (subscribedManager != null)
@@ -182,7 +175,6 @@ namespace SmartTraining
                 subscribedManager = null;
             }
         }
-
 
         private void RemoveParticipant(ulong clientId)
         {
@@ -204,13 +196,11 @@ namespace SmartTraining
             SetToolSelection(clientId, "");
         }
 
-
         public string Feedback { get; private set; } = "";
 
         public int FeedbackRevision { get; private set; } = -1;
 
         public int FeedbackVersion { get; private set; }
-
 
         public static GameObject Register(NetworkManager manager)
         {
@@ -223,7 +213,6 @@ namespace SmartTraining
             manager.AddNetworkPrefab(prefab);
             return prefab;
         }
-
 
         public static SharedScenario Find(NetworkManager manager)
         {
@@ -240,7 +229,6 @@ namespace SmartTraining
 
             return null;
         }
-
 
         // Addressables 프리팹을 생성하지 않고 공구·대상 위치와 단계 원본만 읽습니다.
         public void InitializeServer(ScenarioContent source)
@@ -262,12 +250,9 @@ namespace SmartTraining
             }
         }
 
-
         private RoomPlayer GetParticipant(ulong sender)
         {
-            if (!IsServer ||
-                !IsSpawned ||
-                progress == null ||
+            if (!IsServer || !IsSpawned || progress == null ||
                 !NetworkManager.ConnectedClients.TryGetValue(sender, out var client) ||
                 client.PlayerObject == null ||
                 !client.PlayerObject.TryGetComponent<RoomPlayer>(out var player) ||
@@ -279,7 +264,6 @@ namespace SmartTraining
 
             return player;
         }
-
 
         // 실제 송신자의 선택만 판정한 뒤 표시용 목록을 갱신합니다. 다른 참가자의 공구 판정에는 영향을 주지 않습니다.
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -298,7 +282,6 @@ namespace SmartTraining
 
             FeedbackRpc(message, state.Value.Revision, RpcTarget.Single(sender, RpcTargetUse.Temp));
         }
-
 
         private void SetToolSelection(ulong clientId, string toolId)
         {
@@ -326,10 +309,14 @@ namespace SmartTraining
 
             if (toolId.Length > 0)
             {
-                toolSelections.Add(new ScenarioToolSelection { ClientId = clientId, ToolId = new FixedString64Bytes(toolId), RunRevision = progress.RunRevision });
+                toolSelections.Add(new ScenarioToolSelection
+                    {
+                        ClientId = clientId,
+                        ToolId = new FixedString64Bytes(toolId),
+                        RunRevision = progress.RunRevision
+                    });
             }
         }
-
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void InteractRpc(string objectId, int expectedRevision, RpcParams rpcParams = default)
@@ -359,15 +346,9 @@ namespace SmartTraining
                 progress.TryInteract(sender, objectId, expectedRevision, now, out message, out error);
             }
             else if (Vector3.Distance(
-                player.Position,
-                position + objectOffsets[objectId] * ScenarioObjectPose.Evaluate(
-                progress.Steps,
-                objectId,
-                progress.CompletedSteps,
-                progress.IsWorking,
-                WorkProgress
-            )
-            ) > InteractionRange)
+                    player.Position,
+                    position + objectOffsets[objectId] * ScenarioObjectPose.Evaluate(progress.Steps, objectId, progress.CompletedSteps, progress.IsWorking, WorkProgress)
+                ) > InteractionRange)
             {
                 message = "공구나 작업 대상에 더 가까이 이동해주세요.";
             }
@@ -384,7 +365,6 @@ namespace SmartTraining
 
             FeedbackRpc(message, state.Value.Revision, RpcTarget.Single(sender, RpcTargetUse.Temp));
         }
-
 
         // 방장 권한 대신 작업자의 실제 연결 ID를 검사합니다. 이전 작업의 취소 요청은 버전으로 거절합니다.
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -412,7 +392,6 @@ namespace SmartTraining
             FeedbackRpc(message, state.Value.Revision, RpcTarget.Single(sender, RpcTargetUse.Temp));
         }
 
-
         // 다른 참가자가 실습하는 도중 임의로 초기화하지 못하도록 현재 방장만 허용합니다.
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void ResetRpc(int expectedRevision, RpcParams rpcParams = default)
@@ -434,14 +413,21 @@ namespace SmartTraining
             }
         }
 
-
         private void Publish(string actor)
         {
             // 작업 시작·취소는 완료 행을 만들지 않습니다. 실제 완료된 단계만 한 번 기록합니다.
             if (results.CompleteStep(progress.CompletedSteps, actor, NetworkManager.ServerTime.Time))
             {
                 var row = results.Steps[results.Steps.Count - 1];
-                outcomes.Add(new ScenarioStepOutcome { Index = row.Index, RunRevision = progress.RunRevision, ActorName = new FixedString128Bytes(row.ActorName), DurationSeconds = row.DurationSeconds, ToolErrors = row.ToolErrors, TargetErrors = row.TargetErrors });
+                outcomes.Add(new ScenarioStepOutcome
+                    {
+                        Index = row.Index,
+                        RunRevision = progress.RunRevision,
+                        ActorName = new FixedString128Bytes(row.ActorName),
+                        DurationSeconds = row.DurationSeconds,
+                        ToolErrors = row.ToolErrors,
+                        TargetErrors = row.TargetErrors
+                    });
             }
 
             // 공동 목표는 서버가 승인한 단계 수로만 참가자 결과를 갱신합니다. 초기화 시 결과도 되돌립니다.
@@ -465,7 +451,6 @@ namespace SmartTraining
                 TargetErrors = results.TargetErrors
             };
         }
-
 
         [Rpc(SendTo.SpecifiedInParams)]
         private void FeedbackRpc(string message, int revision, RpcParams rpcParams = default)

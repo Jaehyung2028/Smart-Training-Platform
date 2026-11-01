@@ -70,7 +70,7 @@ namespace SmartTraining
         }
 
         private bool EnsureView<T>(ref T view, string resourcePath)
-            where T : Component
+        where T : Component
         {
             if (view == null)
             {
@@ -93,9 +93,15 @@ namespace SmartTraining
             return true;
         }
 
-        private static bool ShutdownBlocksEntry(LobbySummary lobby) => lobby != null && (lobby.operatingMode == "scheduled" || lobby.operatingMode == "maintenance");
+        private static bool ShutdownBlocksEntry(LobbySummary lobby)
+        {
+            return lobby != null && (lobby.operatingMode == "scheduled" || lobby.operatingMode == "maintenance");
+        }
 
-        internal bool UseUgui => uguiView != null && isActiveAndEnabled && network?.IsConnected != true && string.IsNullOrEmpty(roomJoinProgress) && (api?.IsLoggedIn != true || string.IsNullOrEmpty(api.User.currentLobbyId) || !string.IsNullOrEmpty(lobbyJoinProgress));
+        internal bool UseUgui => uguiView != null && isActiveAndEnabled && network?.IsConnected != true &&
+        string.IsNullOrEmpty(roomJoinProgress) &&
+        (api?.IsLoggedIn != true || string.IsNullOrEmpty(api.User.currentLobbyId) ||
+        !string.IsNullOrEmpty(lobbyJoinProgress));
 
         internal bool UiLoggedIn => api?.IsLoggedIn == true;
 
@@ -112,6 +118,7 @@ namespace SmartTraining
                     {
                         ClearCourses();
                     }
+
                     serverUrl = value;
                 }
             }
@@ -133,7 +140,26 @@ namespace SmartTraining
 
         internal string UiConnection => ServerConnectionStatusText();
 
-        internal string UiStatus => WaitingForExitCleanup ? "이전 접속을 정리하는 중…" : busy ? "처리 중… " + (roomJoinCancelRequested || lobbyJoinCancelRequested ? "입장 취소 정보를 정리하고 있습니다." : operationMessage) : status;
+        internal string UiStatus
+        {
+            get
+            {
+                if (WaitingForExitCleanup)
+                {
+                    return "이전 접속을 정리하는 중…";
+                }
+
+                if (!busy)
+                {
+                    return status;
+                }
+
+                string message = roomJoinCancelRequested || lobbyJoinCancelRequested
+                    ? "입장 취소 정보를 정리하고 있습니다."
+                    : operationMessage;
+                return "처리 중… " + message;
+            }
+        }
 
         internal string UiAddressNotice => "다른 PC에서는 localhost 대신 서버 PC의 IP 주소를 입력해주세요.";
 
@@ -149,11 +175,18 @@ namespace SmartTraining
 
         internal string UiFailure => lobbyJoinError;
 
-        internal bool UiCanRetry => !UiProcessing && !string.IsNullOrEmpty(lobbyJoinRetryId) && Array.Find(lobbies, x => x.id == lobbyJoinRetryId)?.isMaintenance != true;
+        internal bool UiCanRetry => !UiProcessing && !string.IsNullOrEmpty(lobbyJoinRetryId) &&
+        Array.Find(lobbies, x => x.id == lobbyJoinRetryId)?.isMaintenance != true;
 
-        internal bool UiCanEnter => UiLoggedIn && !UiProcessing && string.IsNullOrEmpty(api.User.currentLobbyId) && Array.Find(lobbies, x => x.id == selectedLobbyId)is LobbySummary selected && !selected.isMaintenance && !ShutdownBlocksEntry(selected);
+        internal bool UiCanEnter => UiLoggedIn && !UiProcessing && string.IsNullOrEmpty(api.User.currentLobbyId) &&
+        Array.Find(lobbies, x => x.id == selectedLobbyId) is LobbySummary selected &&
+        !selected.isMaintenance &&
+        !ShutdownBlocksEntry(selected);
 
-        internal void UiHealth() => RunOperation(CheckHealthAndCourses(), "서버 연결과 교육과정을 확인하고 있습니다.");
+        internal void UiHealth()
+        {
+            RunOperation(CheckHealthAndCourses(), "서버 연결과 교육과정을 확인하고 있습니다.");
+        }
 
         internal void UiLogin()
         {
@@ -198,7 +231,10 @@ namespace SmartTraining
             }
         }
 
-        internal void UiCancel() => RequestCancelLobbyJoin();
+        internal void UiCancel()
+        {
+            RequestCancelLobbyJoin();
+        }
 
         internal void UiRetry()
         {
@@ -208,9 +244,15 @@ namespace SmartTraining
             }
         }
 
-        internal void UiCloseFailure() => ClearLobbyJoinFailure();
+        internal void UiCloseFailure()
+        {
+            ClearLobbyJoinFailure();
+        }
 
-        internal void UiResetAddress() => ResetServerAddress();
+        internal void UiResetAddress()
+        {
+            ResetServerAddress();
+        }
 
         internal void UiReconnectNotifications()
         {

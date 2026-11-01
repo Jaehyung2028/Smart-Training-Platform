@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -9,11 +9,20 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string name) => typeof(ApiLobbyScreen).GetField(name, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string name)
+        {
+            return typeof(ApiLobbyScreen).GetField(name, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string name, object value) => typeof(ApiLobbyScreen).GetField(name, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string name, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(name, Flags).SetValue(screen, value);
+        }
 
-        private static object Call(ApiLobbyScreen screen, string name) => typeof(ApiLobbyScreen).GetMethod(name, Flags).Invoke(screen, null);
+        private static object Call(ApiLobbyScreen screen, string name)
+        {
+            return typeof(ApiLobbyScreen).GetMethod(name, Flags).Invoke(screen, null);
+        }
 
         public static void Request(ApiLobbyScreen screen, string action, string target = "")
         {
@@ -21,7 +30,10 @@ namespace SmartTraining.Editor
             typeof(ApiLobbyScreen).GetMethod("RequestRoomAction", Flags).Invoke(screen, new object[] { Enum.Parse(type, action), target });
         }
 
-        private static bool Pending(ApiLobbyScreen screen) => Get(screen, "pendingRoomAction").ToString() != "None";
+        private static bool Pending(ApiLobbyScreen screen)
+        {
+            return Get(screen, "pendingRoomAction").ToString() != "None";
+        }
 
         private static void Check(bool value, string name)
         {
@@ -105,7 +117,6 @@ namespace SmartTraining.Editor
                     "Kick",
                     "Close"
                 }
-
                 )
                 {
                     Request(screen, action, peerApi.User.id);
@@ -116,9 +127,9 @@ namespace SmartTraining.Editor
                         lobby,
                         room,
                         value => Check(
-                            value.connectedUsers == 2 && value.masterUserId == masterApi.User.id,
-                            action + " cancellation preserves room, authority and participant connections"
-                        ),
+                                value.connectedUsers == 2 && value.masterUserId == masterApi.User.id,
+                                action + " cancellation preserves room, authority and participant connections"
+                            ),
                         fail
                     );
                 }

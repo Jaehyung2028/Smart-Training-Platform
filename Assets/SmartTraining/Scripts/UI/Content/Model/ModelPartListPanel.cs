@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -16,7 +16,6 @@ namespace SmartTraining
             public string Caption;
         }
 
-
         private readonly GameObject root;
         private readonly RectTransform content;
         private readonly ScrollRect scroll;
@@ -28,8 +27,7 @@ namespace SmartTraining
 
         public bool IsOpen { get; private set; }
 
-
-        public ModelPartListPanel(Transform parent, Font font)
+        public ModelPartListPanel(Transform parent)
         {
             var view = UiPrefab.Bind("ModelPartListPanel", parent);
             root = view.Get<GameObject>("root");
@@ -39,14 +37,12 @@ namespace SmartTraining
             Close();
         }
 
-
         public void Toggle()
         {
             IsOpen = !IsOpen;
             revealSelection = IsOpen;
             root.SetActive(IsOpen);
         }
-
 
         public void Close()
         {
@@ -56,7 +52,6 @@ namespace SmartTraining
                 root.SetActive(false);
             }
         }
-
 
         internal void Refresh(ModelViewer currentViewer, bool visible, bool canInteract)
         {
@@ -142,7 +137,6 @@ namespace SmartTraining
             }
         }
 
-
         private bool AncestorsExpanded(ModelPartTree.Node node)
         {
             for (var parent = node.Parent; parent != null; parent = parent.Parent)
@@ -156,12 +150,10 @@ namespace SmartTraining
             return true;
         }
 
-
         public void Clear()
         {
             Rebuild(null);
         }
-
 
         private void Rebuild(ModelViewer currentViewer)
         {

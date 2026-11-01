@@ -22,7 +22,6 @@ namespace SmartTraining.Editor
             PrepareNetworkPrefab();
         }
 
-
         public static void PrepareNetworkPrefab()
         {
             const string path = "Assets/SmartTraining/Resources/SmartTraining/SharedScenario.prefab";

@@ -1,12 +1,12 @@
-using System;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEditor.Build;
+using System;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Build;
 using UnityEditor.SceneManagement;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace SmartTraining.Editor
@@ -28,7 +28,6 @@ namespace SmartTraining.Editor
     public static class UguiScenePreview
     {
         private static readonly List<Action> restore = new();
-
         private static Font previewFont;
 
         public static bool IsActive => restore.Count > 0;
@@ -124,7 +123,6 @@ namespace SmartTraining.Editor
                         "Apple SD Gothic Neo",
                         "Noto Sans CJK KR"
                     }
-
                     )
                     {
                         if (names.Contains(name))
@@ -148,7 +146,10 @@ namespace SmartTraining.Editor
             }
         }
 
-        private static void SetActive(GameObject root, bool active) => Set(root, () => root.activeSelf, value => root.SetActive(value), active);
+        private static void SetActive(GameObject root, bool active)
+        {
+            Set(root, () => root.activeSelf, value => root.SetActive(value), active);
+        }
 
         private static void SetGroup(CanvasGroup group, bool active)
         {
@@ -192,7 +193,10 @@ namespace SmartTraining.Editor
     {
         public int callbackOrder => 0;
 
-        public void OnPreprocessBuild(BuildReport report) => UguiScenePreview.Restore();
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            UguiScenePreview.Restore();
+        }
 
         public void OnProcessScene(Scene scene, BuildReport report)
         {

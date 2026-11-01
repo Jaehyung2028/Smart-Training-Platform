@@ -1,7 +1,7 @@
 using System;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
@@ -17,7 +17,6 @@ namespace SmartTraining.Editor
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(AssetPath));
         }
 
-
         public static void EnsureAssets()
         {
             if (AssetDatabase.LoadAssetAtPath<LobbyUguiView>(AssetPath) == null)
@@ -27,7 +26,6 @@ namespace SmartTraining.Editor
 
             EnsureRootInteraction(AssetPath);
         }
-
 
         internal static void EnsureRootInteraction(string path)
         {
@@ -39,7 +37,7 @@ namespace SmartTraining.Editor
                     root.AddComponent<CanvasGroup>();
                 }
 
-                // RequireComponent may already have restored it while loading the old prefab.
+                // 프리팹 로드 중 RequireComponent가 이미 복구했을 수 있습니다.
                 PrefabUtility.SaveAsPrefabAsset(root, path);
             }
             finally

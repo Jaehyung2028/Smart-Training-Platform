@@ -16,7 +16,6 @@ namespace SmartTraining
             return Mathf.SmoothStep(0, 1, Mathf.InverseLerp(ApproachEnd, ReturnStart, progress));
         }
 
-
         // 핀은 실제 타격 시점마다 들어갑니다. 손을 들어 올리는 동안에는 대상이 먼저 움직이지 않습니다.
         public static float TargetProgress(ScenarioAction action, float progress)
         {
@@ -30,7 +29,6 @@ namespace SmartTraining
             return Mathf.Clamp(Mathf.FloorToInt(strokes + .0001f), 0, count) / (float)count;
         }
 
-
         public static float HammerLift(float progress)
         {
             if (progress <= ApproachEnd || progress >= ReturnStart)
@@ -42,7 +40,6 @@ namespace SmartTraining
             float lift = Mathf.Sin(phase * Mathf.PI);
             return lift * lift;
         }
-
 
         // 접촉점 기준의 추가 이동·각도만 계산합니다. 모든 화면이 같은 진행률로 같은 동작을 구합니다.
         public static void ToolPose(ScenarioAction action, float progress, out Vector3 offset, out Quaternion rotation)
@@ -71,18 +68,15 @@ namespace SmartTraining
             }
         }
 
-
         public static float SpinAngle(ScenarioAction action, float progress)
         {
             return action == ScenarioAction.Drill ? TurnProgress(progress) * 360 * 12 : 0;
         }
 
-
         public static float GripAmount(ScenarioAction action, float progress)
         {
             return action == ScenarioAction.Grip ? Mathf.SmoothStep(0, 1, Mathf.InverseLerp(ApproachEnd, .35f, progress)) : 0;
         }
-
 
         public static float ContactWeight(float progress)
         {

@@ -17,7 +17,6 @@ namespace SmartTraining
             rig.name = name;
         }
 
-
         public void Attach(Transform parent, Vector3 position, Quaternion rotation)
         {
             rig.transform.SetParent(parent, false);
@@ -25,17 +24,14 @@ namespace SmartTraining
             rig.transform.localRotation = rotation;
         }
 
-
         public Vector3 Position => rig.transform.position;
 
         public Quaternion Rotation => rig.transform.rotation;
-
 
         public void SetPose(Vector3 position, Quaternion rotation)
         {
             rig.transform.SetPositionAndRotation(position, rotation);
         }
-
 
         // 아이템의 접촉점이 지정한 월드 위치·방향에 맞도록 손 루트의 자세를 계산합니다.
         // Grip과 모델의 배치가 달라도 콘텐츠 측에서 보정 수치를 다시 계산할 필요가 없습니다.
@@ -53,7 +49,6 @@ namespace SmartTraining
             Vector3 point = rigTransform.InverseTransformPoint(item.transform.TransformPoint(localContactPoint));
             position = worldPoint - rotation * Vector3.Scale(rigTransform.lossyScale, point);
         }
-
 
         public void SetItem(GameObject prefab)
         {
@@ -83,12 +78,10 @@ namespace SmartTraining
             }
         }
 
-
         public void SetArticulation(float spinAngle, float grip)
         {
             articulation?.SetState(spinAngle, grip);
         }
-
 
         public void Dispose()
         {

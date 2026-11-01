@@ -24,7 +24,6 @@ namespace SmartTraining
 
         public string Label => kind.Value == 0 || Run == 0 ? "학습 미시작" : (IsComplete ? "학습 완료" : "학습 진행 " + Percent + "%") + (IsShared ? " · 공동" : " · 개인");
 
-
         // 콘텐츠 변경은 이전 결과를 지웁니다. 실행 번호는 증가시켜 늦은 이전 보고가 재사용되지 않게 합니다.
         public void ClearServer()
         {
@@ -41,7 +40,6 @@ namespace SmartTraining
             }
         }
 
-
         public void BeginServer(string contentType)
         {
             if (!IsServer)
@@ -54,16 +52,11 @@ namespace SmartTraining
             run.Value++;
         }
 
-
         // 프레임마다 RPC를 보내지 않고 진행 변화가 있을 때 최대 초당 한 번 보고합니다.
         public void ReportPersonal(int value)
         {
             var player = GetComponent<RoomPlayer>();
-            if (!IsOwner ||
-                !IsSpawned ||
-                Run == 0 ||
-                kind.Value is not (1 or 2) ||
-                player == null ||
+            if (!IsOwner || !IsSpawned || Run == 0 || kind.Value is not (1 or 2) || player == null ||
                 !player.RoomIsRunning ||
                 player.PhasePending)
             {
@@ -88,16 +81,12 @@ namespace SmartTraining
             nextReport = Time.unscaledTime + 1;
         }
 
-
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void ReportPersonalRpc(int value, int expectedRun)
         {
             var player = GetComponent<RoomPlayer>();
             // 이전 실행의 늦은 보고와 다른 참가자의 보고, 대기 중 보고를 거절합니다.
-            if (expectedRun != Run ||
-                kind.Value is not (1 or 2) ||
-                player == null ||
-                !player.RoomIsRunning ||
+            if (expectedRun != Run || kind.Value is not (1 or 2) || player == null || !player.RoomIsRunning ||
                 player.PhasePending ||
                 value < Percent ||
                 value > 100)
@@ -107,7 +96,6 @@ namespace SmartTraining
 
             percent.Value = value;
         }
-
 
         public void SetSharedServer(int value)
         {

@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -18,12 +18,11 @@ namespace SmartTraining
             }
         }
 
-
         private string roomJoinProgress = "";
         private bool roomJoinCanCancel, roomJoinCancelRequested;
-
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         private bool testPauseRoomJoinAfterConnection;
+
 #endif
         private void RequestCancelRoomJoin()
         {
@@ -37,7 +36,6 @@ namespace SmartTraining
             RefreshUguiState();
         }
 
-
         private void DisposeRoomConnection()
         {
             network?.Dispose();
@@ -47,12 +45,10 @@ namespace SmartTraining
             networkLobbyId = "";
         }
 
-
         private IEnumerator JoinRoom(string roomId, string password = null)
         {
             return JoinRoomInLobby(api?.User?.currentLobbyId ?? selectedLobbyId, roomId, password);
         }
-
 
         private IEnumerator JoinRoomInLobby(string lobbyId, string roomId, string password)
         {
@@ -95,21 +91,27 @@ namespace SmartTraining
             }
         }
 
-
         private IEnumerator JoinRoomCore(string lobbyId, string roomId, string password)
         {
             status = "방 서버 준비와 접속 예약을 기다리는 중…";
             JoinRoomResponse reservation = null;
             string reservationError = null;
-            yield return api.JoinRoom(lobbyId, roomId, value => reservation = value, message =>
-            {
-                reservationError = message;
-                Debug.LogWarning($"방 입장 예약 실패 (로비: {lobbyId}, 방: {roomId}): {message}");
-                if (!roomJoinCancelRequested)
+            yield return api.JoinRoom(
+                lobbyId,
+                roomId,
+                value => reservation = value,
+                message =>
                 {
-                    Failure(message);
-                }
-            }, password ?? joinRoomPassword, () => roomJoinCancelRequested);
+                    reservationError = message;
+                    Debug.LogWarning($"방 입장 예약 실패 (로비: {lobbyId}, 방: {roomId}): {message}");
+                    if (!roomJoinCancelRequested)
+                    {
+                        Failure(message);
+                    }
+                },
+                password ?? joinRoomPassword,
+                () => roomJoinCancelRequested
+            );
             if (roomJoinCancelRequested)
             {
                 yield break;
@@ -123,8 +125,8 @@ namespace SmartTraining
                     yield return api.GetMe(_ =>
                     {
                     }, _ =>
-                    {
-                    });
+                        {
+                        });
                 }
 
                 if (api.IsLoggedIn && (api.User.pendingRoomId == roomId || api.User.currentRoomId == roomId))
@@ -148,9 +150,16 @@ namespace SmartTraining
             network = new RoomNetworkClient();
             string error = null;
             roomJoinProgress = "2/4 · 방 서버에 연결 중…";
-            yield return network.Connect(api.User.id, reservation, () =>
-            {
-            }, message => error = message, api.BaseUrl, () => roomJoinCancelRequested);
+            yield return network.Connect(
+                api.User.id,
+                reservation,
+                () =>
+                {
+                },
+                message => error = message,
+                api.BaseUrl,
+                () => roomJoinCancelRequested
+            );
             if (roomJoinCancelRequested)
             {
                 yield break;
@@ -163,14 +172,20 @@ namespace SmartTraining
             }
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-            while (testPauseRoomJoinAfterConnection && !roomJoinCancelRequested) yield return null;
-            if (roomJoinCancelRequested) yield break;
+            while (testPauseRoomJoinAfterConnection && !roomJoinCancelRequested)
+            {
+                yield return null;
+            }
+
+            if (roomJoinCancelRequested)
+            {
+                yield break;
+            }
+
 #endif
             roomJoinProgress = "3/4 · 서버의 입장 승인 확인 중…";
             double confirmedBy = Time.realtimeSinceStartupAsDouble + 10;
-            while (!roomJoinCancelRequested &&
-                api.IsLoggedIn &&
-                network.IsConnected &&
+            while (!roomJoinCancelRequested && api.IsLoggedIn && network.IsConnected &&
                 Time.realtimeSinceStartupAsDouble < confirmedBy)
             {
                 yield return api.GetMe(_ =>
@@ -197,9 +212,7 @@ namespace SmartTraining
 
             double playerBy = Time.realtimeSinceStartupAsDouble + 10;
             roomJoinProgress = "4/4 · 내 참가자 정보 준비 중…";
-            while (!roomJoinCancelRequested &&
-                network.IsConnected &&
-                network.LocalPlayer == null &&
+            while (!roomJoinCancelRequested && network.IsConnected && network.LocalPlayer == null &&
                 Time.realtimeSinceStartupAsDouble < playerBy)
             {
                 yield return null;
@@ -218,7 +231,6 @@ namespace SmartTraining
 
             ForgetReconnect();
         }
-
 
         private IEnumerator LeaveRoom(string message)
         {
@@ -274,7 +286,6 @@ namespace SmartTraining
             status = error == null ? message : message + " 정리 확인: " + error;
         }
 
-
         private IEnumerator Logout()
         {
             ClearRoomPasswords();
@@ -282,13 +293,15 @@ namespace SmartTraining
             ClearRoomAction();
             ForgetReconnect();
             DisposeRoomConnection();
-            yield return api.Logout(() =>
-            {
-                ClearView();
-                status = "로그아웃했습니다.";
-            }, Failure);
+            yield return api.Logout(
+                () =>
+                {
+                    ClearView();
+                    status = "로그아웃했습니다.";
+                },
+                Failure
+            );
         }
-
 
         private void ForgetReconnect()
         {
@@ -297,7 +310,6 @@ namespace SmartTraining
             reconnectPassword = "";
         }
 
-
         private IEnumerator HandleConnectionLost()
         {
             bool kicked = network?.DisconnectReason == "방장에 의해 강퇴되었습니다.";
@@ -305,17 +317,13 @@ namespace SmartTraining
             string roomId = networkRoomId, lobbyId = networkLobbyId;
             ForgetReconnect();
             yield return LeaveRoom(closed ? "방장이 방을 닫았습니다. 로비로 돌아왔습니다." : kicked ? "방장에 의해 강퇴되었습니다. 로비로 돌아왔습니다." : "방 서버 연결이 끊겼습니다. 로비에서 다시 접속할 수 있습니다.");
-            if (!kicked &&
-                !closed &&
-                api?.IsLoggedIn == true &&
-                api.User.currentLobbyId == lobbyId &&
+            if (!kicked && !closed && api?.IsLoggedIn == true && api.User.currentLobbyId == lobbyId &&
                 !string.IsNullOrEmpty(roomId))
             {
                 reconnectRoomId = roomId;
                 reconnectLobbyId = lobbyId;
             }
         }
-
 
         private IEnumerator ReconnectRoom()
         {

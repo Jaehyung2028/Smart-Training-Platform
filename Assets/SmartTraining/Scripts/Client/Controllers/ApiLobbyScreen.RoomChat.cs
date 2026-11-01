@@ -1,5 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -32,10 +32,10 @@ namespace SmartTraining
             nextRoomChatAttempt = 0;
         }
 
-
         private void SyncChatRoom()
         {
-            var current = network?.IsConnected == true && network.LocalPlayer != null && network.LocalPlayer.UserId == api?.User?.id ? network : null;
+            var current = network?.IsConnected == true && network.LocalPlayer != null &&
+            network.LocalPlayer.UserId == api?.User?.id ? network : null;
             var room = current != null ? networkRoomId : "";
             var admission = current?.AdmissionToken ?? "";
             if (room == chatRoomId && current == chatNetwork && admission == chatAdmissionToken)
@@ -59,20 +59,19 @@ namespace SmartTraining
             chatChannel = 0;
         }
 
-
-        private bool RoomChatIsBound() => chatRoomId.Length > 0 &&
-            roomChatBoundRoomId == chatRoomId &&
-            roomChatConnection == lobbyUpdates &&
+        private bool RoomChatIsBound()
+        {
+            return chatRoomId.Length > 0 && roomChatBoundRoomId == chatRoomId && roomChatConnection == lobbyUpdates &&
             roomChatBoundNetwork == chatNetwork &&
             roomChatAfterSequence >= 0;
+        }
 
-        private bool RoomChatNeedsBinding() => lobbyUpdates != null &&
-            lobbyUpdates.Failure == null &&
-            liveLobbyId.Length > 0 &&
+        private bool RoomChatNeedsBinding()
+        {
+            return lobbyUpdates != null && lobbyUpdates.Failure == null && liveLobbyId.Length > 0 &&
             Time.realtimeSinceStartup >= nextRoomChatAttempt &&
-            (roomChatBoundRoomId != chatRoomId ||
-            (chatRoomId.Length > 0 &&
-            !RoomChatIsBound()));
+            (roomChatBoundRoomId != chatRoomId || (chatRoomId.Length > 0 && !RoomChatIsBound()));
+        }
 
         private IEnumerator BindRoomChat()
         {
@@ -95,9 +94,7 @@ namespace SmartTraining
                 yield return null;
             }
 
-            if (lobbyUpdates != connection ||
-                current != chatNetwork ||
-                room != chatRoomId ||
+            if (lobbyUpdates != connection || current != chatNetwork || room != chatRoomId ||
                 admission != (current?.AdmissionToken ?? ""))
             {
                 yield break;
@@ -117,7 +114,6 @@ namespace SmartTraining
             CompleteRoomChatBinding(subscribe.Result.chatSequence);
         }
 
-
         private void CompleteRoomChatBinding(long sequence)
         {
             roomChatAfterSequence = sequence;
@@ -128,7 +124,6 @@ namespace SmartTraining
 
             pendingRoomChatMessages.Clear();
         }
-
 
         // 그룹 메시지에 담긴 방 ID가 현재 접속한 방인지 확인합니다.
         private void ReceiveRoomChat(RoomHubConnection connection, string json, string roomId)
@@ -145,9 +140,7 @@ namespace SmartTraining
             }
 
             var message = TrainingJson.Deserialize<LobbyChatMessage>(json);
-            if (message == null ||
-                message.roomId != chatRoomId ||
-                message.lobbyId != chatLobbyId ||
+            if (message == null || message.roomId != chatRoomId || message.lobbyId != chatLobbyId ||
                 string.IsNullOrEmpty(message.id))
             {
                 return;
@@ -167,7 +160,6 @@ namespace SmartTraining
             AcceptRoomChat(message);
         }
 
-
         private void AcceptRoomChat(LobbyChatMessage message)
         {
             // 같은 방을 재입장해도 이전 구독 시점에 생성된 메시지는 표시하지 않습니다.
@@ -183,13 +175,11 @@ namespace SmartTraining
             }
         }
 
-
         internal IReadOnlyList<LobbyChatMessage> UiContentRoomMessages => roomChatMessages;
 
         internal bool UiCanSendContentChat => UiRoomCanAct && UiCanChat && RoomChatIsBound() && UiLocalPlayer.RoomIsRunning;
 
         internal string UiContentChatStatus => UiChatConnected && RoomChatIsBound() ? chatStatus : "방 채팅 연결 중…";
-
 
         internal void UiSendContentChat(string text, System.Action<bool> completed)
         {
@@ -202,19 +192,20 @@ namespace SmartTraining
             RunOperation(SendRoomChat(text, completed), "채팅을 전송하고 있습니다.");
         }
 
-
         private IEnumerator SendRoomChat()
         {
             var draft = chatInput;
-            return SendRoomChat(draft, success =>
-            {
-                if (success && chatInput == draft)
+            return SendRoomChat(
+                draft,
+                success =>
                 {
-                    chatInput = "";
+                    if (success && chatInput == draft)
+                    {
+                        chatInput = "";
+                    }
                 }
-            });
+            );
         }
-
 
         // 방 채널의 전송 경로를 대기실과 콘텐츠가 함께 사용합니다. 초안은 각 화면에서 소유합니다.
         private IEnumerator SendRoomChat(string draft, System.Action<bool> completed)
@@ -247,9 +238,7 @@ namespace SmartTraining
                     yield return null;
                 }
 
-                if (lobbyUpdates != connection ||
-                    current != chatNetwork ||
-                    room != chatRoomId ||
+                if (lobbyUpdates != connection || current != chatNetwork || room != chatRoomId ||
                     admission != (current?.AdmissionToken ?? ""))
                 {
                     yield break;

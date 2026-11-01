@@ -1,6 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -8,7 +8,6 @@ namespace SmartTraining
     public sealed partial class ApiLobbyScreen
     {
         private readonly List<LobbyChatMessage> chatMessages = new List<LobbyChatMessage>();
-
         private string chatLobbyId = "", chatInput = "", chatStatus = "";
 
         private void SyncChatLobby()
@@ -41,9 +40,7 @@ namespace SmartTraining
 
             SyncChatLobby();
             var message = TrainingJson.Deserialize<LobbyChatMessage>(json);
-            if (message == null ||
-                message.lobbyId != chatLobbyId ||
-                string.IsNullOrEmpty(message.id) ||
+            if (message == null || message.lobbyId != chatLobbyId || string.IsNullOrEmpty(message.id) ||
                 chatMessages.Exists(item => item.id == message.id))
             {
                 return;

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -74,10 +74,15 @@ namespace SmartTraining
             Refresh();
         }
 
+        private void EnsureComponents()
+        {
+            UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
+        }
 
-        private void EnsureComponents() => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
-
-        private void LateUpdate() => Refresh();
+        private void LateUpdate()
+        {
+            Refresh();
+        }
 
         internal void RefreshState()
         {
@@ -86,7 +91,6 @@ namespace SmartTraining
                 Refresh();
             }
         }
-
 
         internal void ResetTransientState()
         {
@@ -107,7 +111,6 @@ namespace SmartTraining
             rowsKey = "";
             emptyText.gameObject.SetActive(true);
         }
-
 
         private void Refresh()
         {
@@ -183,7 +186,6 @@ namespace SmartTraining
             }
         }
 
-
         // 닉네임 아래에 미리 배치한 교육과정 드롭다운을 연결합니다.
         private void EnsureCourseSelector()
         {
@@ -204,7 +206,6 @@ namespace SmartTraining
             coursePopup.GetComponent<Button>().onClick.AddListener(CloseCourseDropdown);
             coursePopup.SetActive(false);
         }
-
 
         // 펼칠 때 선택 상자 아래의 좌표를 계산합니다. 캔버스 배율이 바뀌어도 상자 너비와 맞춥니다.
         private void ToggleCourseDropdown()
@@ -227,7 +228,6 @@ namespace SmartTraining
             courseViewport.GetComponent<ScrollRect>().verticalNormalizedPosition = 1;
         }
 
-
         private void CloseCourseDropdown()
         {
             if (coursePopup != null)
@@ -235,7 +235,6 @@ namespace SmartTraining
                 coursePopup.SetActive(false);
             }
         }
-
 
         private void UpdateCourses()
         {
@@ -287,7 +286,6 @@ namespace SmartTraining
             }
         }
 
-
         private void UpdateRows()
         {
             string key = screen.UiSelectedLobby;
@@ -332,7 +330,6 @@ namespace SmartTraining
                 rows.Add(row);
             }
         }
-
 
         private void OnDestroy()
         {

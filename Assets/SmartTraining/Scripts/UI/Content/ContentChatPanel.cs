@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -25,8 +25,7 @@ namespace SmartTraining
 
         public bool IsEditing => root.activeInHierarchy && input.isFocused;
 
-
-        public ContentChatPanel(Transform parent, Font font, Action<string, Action<bool>> sendAction)
+        public ContentChatPanel(Transform parent, Action<string, Action<bool>> sendAction)
         {
             var view = UiPrefab.Bind("ContentChatPanel", parent);
             root = view.Get<GameObject>("root");
@@ -42,7 +41,6 @@ namespace SmartTraining
             root.SetActive(false);
         }
 
-
         public void Toggle()
         {
             if (open)
@@ -55,14 +53,12 @@ namespace SmartTraining
             }
         }
 
-
         public void Close()
         {
             open = false;
             UguiViewUtility.ClearSelection(root.transform);
             root.SetActive(false);
         }
-
 
         public void Refresh(
             string currentRoom,
@@ -99,25 +95,19 @@ namespace SmartTraining
             }
 
             var parentSize = ((RectTransform)root.transform.parent).rect.size;
-            root.GetComponent<RectTransform>().sizeDelta = new Vector2(
-                Mathf.Min(preferredSize.x, parentSize.x - 32),
-                Mathf.Min(preferredSize.y, parentSize.y - 150)
-            );
+            root.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Min(preferredSize.x, parentSize.x - 32), Mathf.Min(preferredSize.y, parentSize.y - 150));
             messagesView.Refresh(messages, localUserId, roomId);
         }
-
 
         public void Dispose()
         {
             messagesView.Dispose();
         }
 
-
         private Text CreateMessageRow()
         {
             return UiPrefab.Instantiate("ContentChatMessage", content).GetComponent<Text>();
         }
-
 
         private void Send()
         {
@@ -129,19 +119,22 @@ namespace SmartTraining
             string draft = input.text;
             int requestContext = context;
             pending = true;
-            sendAction(draft, success =>
-            {
-                if (context != requestContext || root == null)
+            sendAction(
+                draft,
+                success =>
                 {
-                    return;
-                }
+                    if (context != requestContext || root == null)
+                    {
+                        return;
+                    }
 
-                pending = false;
-                if (success && input.text == draft)
-                {
-                    input.SetTextWithoutNotify("");
+                    pending = false;
+                    if (success && input.text == draft)
+                    {
+                        input.SetTextWithoutNotify("");
+                    }
                 }
-            });
+            );
         }
     }
 }

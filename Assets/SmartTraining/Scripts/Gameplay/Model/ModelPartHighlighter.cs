@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -19,6 +19,7 @@ namespace SmartTraining
         {
             private readonly Color color;
             private readonly List<MaterialPropertyBlock> savedBlocks = new();
+
             public Renderer Renderer { get; private set; }
 
             public TintState(Color color)
@@ -32,12 +33,14 @@ namespace SmartTraining
                 {
                     return;
                 }
+
                 Clear();
                 Renderer = renderer;
                 if (Renderer == null)
                 {
                     return;
                 }
+
                 var materials = Renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
                 {
@@ -49,6 +52,7 @@ namespace SmartTraining
                     {
                         continue;
                     }
+
                     var block = new MaterialPropertyBlock();
                     if (original.isEmpty)
                     {
@@ -58,6 +62,7 @@ namespace SmartTraining
                     {
                         Renderer.GetPropertyBlock(block, i);
                     }
+
                     int property = material.HasProperty(BaseColorId) ? BaseColorId : ColorId;
                     var tint = color;
                     tint.a = material.GetColor(property).a;
@@ -75,6 +80,7 @@ namespace SmartTraining
                         Renderer.SetPropertyBlock(savedBlocks[i].isEmpty ? null : savedBlocks[i], i);
                     }
                 }
+
                 savedBlocks.Clear();
                 Renderer = null;
             }
@@ -92,9 +98,13 @@ namespace SmartTraining
         private bool disposed;
 
         public Renderer Highlighted => highlighted;
+
         public int SelectedCount => selectionTints.Count;
 
-        public bool IsSelected(Renderer renderer) => renderer != null && selectionTints.ContainsKey(renderer);
+        public bool IsSelected(Renderer renderer)
+        {
+            return renderer != null && selectionTints.ContainsKey(renderer);
+        }
 
         public ModelPartHighlighter(IReadOnlyList<Renderer> renderers)
         {
@@ -105,7 +115,8 @@ namespace SmartTraining
                 if (ownsCollider)
                 {
                     var filter = renderer.GetComponent<MeshFilter>();
-                    if (renderer is MeshRenderer && filter != null && filter.sharedMesh != null && filter.sharedMesh.isReadable)
+                    if (renderer is MeshRenderer && filter != null && filter.sharedMesh != null &&
+                        filter.sharedMesh.isReadable)
                     {
                         // 경계 상자만 검사하면 드릴·원통의 빈 공간도 선택되므로 정적 메시의 실제 표면을 사용합니다.
                         var meshCollider = renderer.gameObject.AddComponent<MeshCollider>();
@@ -121,7 +132,13 @@ namespace SmartTraining
                         collider = boxCollider;
                     }
                 }
-                parts.Add(new Part { Renderer = renderer, Collider = collider, OwnsCollider = ownsCollider });
+
+                parts.Add(new Part
+                    {
+                        Renderer = renderer,
+                        Collider = collider,
+                        OwnsCollider = ownsCollider
+                    });
             }
         }
 
@@ -131,6 +148,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             SetHighlighted(canHover ? FindPart(ray, maxDistance) : null);
         }
 
@@ -141,18 +159,22 @@ namespace SmartTraining
             {
                 return null;
             }
+
             Renderer nearest = null;
             float nearestDistance = maxDistance;
             Physics.SyncTransforms();
             foreach (var part in parts)
             {
                 if (part.Renderer != null && part.Renderer.enabled && part.Renderer.gameObject.activeInHierarchy &&
-                    part.Collider != null && part.Collider.enabled && part.Collider.Raycast(ray, out var hit, nearestDistance))
+                    part.Collider != null &&
+                    part.Collider.enabled &&
+                    part.Collider.Raycast(ray, out var hit, nearestDistance))
                 {
                     nearestDistance = hit.distance;
                     nearest = part.Renderer;
                 }
             }
+
             return nearest;
         }
 
@@ -174,6 +196,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             var desired = new HashSet<Renderer>();
             foreach (var renderer in renderers)
             {
@@ -182,10 +205,12 @@ namespace SmartTraining
                     desired.Add(renderer);
                 }
             }
+
             if (desired.SetEquals(selectionTints.Keys))
             {
                 return;
             }
+
             RefreshTints(desired);
         }
 
@@ -197,6 +222,7 @@ namespace SmartTraining
             {
                 tint.Clear();
             }
+
             selectionTints.Clear();
             transparency.Clear();
             if (fadeSurroundings && desired.Count > 0 && surroundingsOpacity < 1)
@@ -209,12 +235,14 @@ namespace SmartTraining
                     }
                 }
             }
+
             foreach (var renderer in desired)
             {
                 var tint = new TintState(new Color(1f, 0.55f, 0.1f));
                 tint.Set(renderer);
                 selectionTints.Add(renderer, tint);
             }
+
             hoverTint.Set(!IsSelected(highlighted) ? highlighted : null);
         }
 
@@ -226,6 +254,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             var selected = new HashSet<Renderer>(selectionTints.Keys);
             fadeSurroundings = enabled;
             surroundingsOpacity = opacity;
@@ -245,6 +274,7 @@ namespace SmartTraining
             {
                 tint.Clear();
             }
+
             selectionTints.Clear();
             transparency.Clear();
         }
@@ -255,6 +285,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             Clear();
             disposed = true;
             foreach (var part in parts)
@@ -271,6 +302,7 @@ namespace SmartTraining
                     }
                 }
             }
+
             parts.Clear();
         }
     }

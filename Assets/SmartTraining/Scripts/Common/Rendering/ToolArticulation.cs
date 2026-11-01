@@ -16,7 +16,9 @@ namespace SmartTraining
         private Quaternion spinRest, leftRest, rightRest;
         private float previousSpin, previousGrip;
         private bool initialized;
+
         public float SpinAngle => previousSpin;
+
         public float GripAmount => previousGrip;
 
         private void Awake()
@@ -25,7 +27,6 @@ namespace SmartTraining
             leftRest = leftJaw != null ? leftJaw.localRotation : Quaternion.identity;
             rightRest = rightJaw != null ? rightJaw.localRotation : Quaternion.identity;
         }
-
 
         public void SetState(float spinAngle, float grip)
         {

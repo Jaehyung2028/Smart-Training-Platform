@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -9,13 +9,25 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static IEnumerator View(ApiLobbyScreen screen, string id) => (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ViewParticipantRoom", Flags).Invoke(screen, new object[] { id });
+        private static IEnumerator View(ApiLobbyScreen screen, string id)
+        {
+            return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ViewParticipantRoom", Flags).Invoke(screen, new object[] { id });
+        }
 
-        private static RoomSummary Selected(ApiLobbyScreen screen) => (RoomSummary)Get(screen, "selectedRoom");
+        private static RoomSummary Selected(ApiLobbyScreen screen)
+        {
+            return (RoomSummary)Get(screen, "selectedRoom");
+        }
 
         private static void Check(bool ok, string name)
         {
@@ -56,15 +68,19 @@ namespace SmartTraining.Editor
                     "participant room shortcut selects current-lobby room while browsing another lobby"
                 );
                 Check(
-                    (string)Get(screen, "roomSearch") == "" && !(bool)Get(screen, "availableRoomsOnly") && (RoomProtectionFilter)Get(screen, "roomProtectionFilter") == RoomProtectionFilter.All && (string)Get(screen, "joinRoomPassword") == "",
+                    (string)Get(screen, "roomSearch") == "" && !(bool)Get(screen, "availableRoomsOnly") &&
+                    (RoomProtectionFilter)Get(screen, "roomProtectionFilter") == RoomProtectionFilter.All &&
+                    (string)Get(screen, "joinRoomPassword") == "",
                     "participant room shortcut resets hiding filters and previous password"
                 );
                 Check(
-                    ((ContentSummary[])Get(screen, "contents")).Length > 0 && (string)Get(screen, "selectedContentId") == Selected(screen).contentId,
+                    ((ContentSummary[])Get(screen, "contents")).Length > 0 &&
+                    (string)Get(screen, "selectedContentId") == Selected(screen).contentId,
                     "participant room shortcut loads current lobby content and selects room detail"
                 );
                 Check(
-                    observer.User.currentRoomId == "" && observer.User.pendingRoomId == "" && Get(screen, "network") == null,
+                    observer.User.currentRoomId == "" && observer.User.pendingRoomId == "" &&
+                    Get(screen, "network") == null,
                     "viewing participant room does not reserve or connect automatically"
                 );
                 yield return View(screen, observer.User.id);
@@ -82,7 +98,8 @@ namespace SmartTraining.Editor
                 }, fail);
                 yield return View(screen, first.User.id);
                 Check(
-                    Selected(screen).isEntryLocked && !RoomBrowser.CanJoin(Selected(screen)) && ((string)Get(screen, "status")).Contains("잠갔습니다"),
+                    Selected(screen).isEntryLocked && !RoomBrowser.CanJoin(Selected(screen)) &&
+                    ((string)Get(screen, "status")).Contains("잠갔습니다"),
                     "locked room remains viewable with admission lock explanation"
                 );
                 yield return first.SetRoomEntryLock(lobby, room, false, () =>
@@ -93,7 +110,8 @@ namespace SmartTraining.Editor
                 }, fail);
                 yield return View(screen, first.User.id);
                 Check(
-                    Selected(screen).hasPassword && (string)Get(screen, "joinRoomPassword") == "" && ((string)Get(screen, "status")).Contains("비밀번호"),
+                    Selected(screen).hasPassword && (string)Get(screen, "joinRoomPassword") == "" &&
+                    ((string)Get(screen, "status")).Contains("비밀번호"),
                     "protected room shortcut requires fresh password input and keeps protection"
                 );
                 yield return first.UpdateRoomPassword(lobby, room, "", _ =>
@@ -104,7 +122,8 @@ namespace SmartTraining.Editor
                 }, fail);
                 yield return View(screen, first.User.id);
                 Check(
-                    Selected(screen).availableSlots == 0 && !RoomBrowser.CanJoin(Selected(screen)) && ((string)Get(screen, "status")).Contains("남은 자리"),
+                    Selected(screen).availableSlots == 0 && !RoomBrowser.CanJoin(Selected(screen)) &&
+                    ((string)Get(screen, "status")).Contains("남은 자리"),
                     "full participant room can be viewed but not joined"
                 );
                 yield return first.UpdateRoomSettings(lobby, room, "network-room", 3, _ =>
@@ -114,7 +133,8 @@ namespace SmartTraining.Editor
                 yield return observer.JoinRoom(lobby, room, value => reservation = value, fail);
                 yield return View(screen, first.User.id);
                 Check(
-                    observer.User.pendingRoomId == room && Get(screen, "network") == null && ((string)Get(screen, "status")).Contains("예약을 취소"),
+                    observer.User.pendingRoomId == room && Get(screen, "network") == null &&
+                    ((string)Get(screen, "status")).Contains("예약을 취소"),
                     "shortcut preserves existing reservation and requests explicit cancellation"
                 );
                 yield return observer.LeaveRoom(lobby, room, () =>

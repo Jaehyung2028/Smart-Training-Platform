@@ -1,8 +1,8 @@
-using System;
 using System.Linq;
+using System;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
@@ -17,10 +17,7 @@ namespace SmartTraining.Editor
             preferences.FieldOfView = 95;
             preferences.InvertY = true;
             preferences.CancelEdit();
-            Check(
-                preferences.Volume == 1 && preferences.FieldOfView == 75 && !preferences.InvertY,
-                "개인 설정 편집 취소"
-            );
+            Check(preferences.Volume == 1 && preferences.FieldOfView == 75 && !preferences.InvertY, "개인 설정 편집 취소");
             preferences.Sensitivity = 2;
             preferences.BeginEdit();
             preferences.Reset();
@@ -32,11 +29,17 @@ namespace SmartTraining.Editor
                 int changes = 0, saves = 0, cancels = 0;
                 preferences.BeginEdit();
                 UiPrefab.Instantiate("ClientSettingsPanel", parent.transform);
-                var panel = new ClientSettingsPanel(parent.transform, Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"), preferences, () => changes++, () => saves++, () =>
-                {
-                    preferences.CancelEdit();
-                    cancels++;
-                });
+                var panel = new ClientSettingsPanel(
+                    parent.transform,
+                    preferences,
+                    () => changes++,
+                    () => saves++,
+                    () =>
+                    {
+                        preferences.CancelEdit();
+                        cancels++;
+                    }
+                );
                 panel.Root.SetActive(true);
                 var sliders = panel.Root.GetComponentsInChildren<Slider>();
                 Check(sliders.Length == 3 && changes == 0, "설정 패널 생성은 값을 변경하지 않음");
@@ -57,10 +60,7 @@ namespace SmartTraining.Editor
 
             using (var surface = new VideoSurfacePlayer(null, null, null, null))
             {
-                Check(
-                    !surface.TryInitialize(out var error) && !string.IsNullOrEmpty(error),
-                    "영상 모듈의 누락 리소스 검사"
-                );
+                Check(!surface.TryInitialize(out var error) && !string.IsNullOrEmpty(error), "영상 모듈의 누락 리소스 검사");
                 surface.SetVolume(0.4f);
                 surface.Update(0, 0, false);
                 Check(!surface.IsReady && surface.Volume == 0.4f, "미준비 영상 갱신·음량 설정의 안전성");
@@ -68,7 +68,6 @@ namespace SmartTraining.Editor
 
             Debug.Log("COMMON MODULE CHECKS PASSED (9)");
         }
-
 
         private static void Check(bool condition, string name)
         {

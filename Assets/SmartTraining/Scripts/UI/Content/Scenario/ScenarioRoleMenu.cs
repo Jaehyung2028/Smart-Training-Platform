@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -19,11 +19,10 @@ namespace SmartTraining
             public bool Selected, Assigned, Initialized;
         }
 
-
         private readonly Dictionary<ScenarioRole, RoleButton> buttons = new();
         private ScenarioContent current;
 
-        public ScenarioRoleMenu(Transform parent, Font font)
+        public ScenarioRoleMenu(Transform parent)
         {
             var view = UiPrefab.Instantiate("ScenarioRoleMenu", parent);
             root = view.Get<GameObject>("root");
@@ -48,7 +47,6 @@ namespace SmartTraining
             }
         }
 
-
         public void Refresh(ScenarioContent scenario, bool visible, bool canInteract)
         {
             current = scenario;
@@ -70,14 +68,14 @@ namespace SmartTraining
             }
         }
 
-
         private void RefreshRole(RoleButton view, ScenarioRole role, bool canInteract)
         {
             bool selected = (current.SelectedRoles & role) == role;
             bool assigned = current.IsRoleAssigned(role);
             view.Button.interactable = canInteract && !current.CanCancelWork && !current.IsComplete && !assigned;
             string name = assigned ? current.RoleParticipantName(role) : "";
-            if (!view.Initialized || view.Selected != selected || view.Assigned != assigned || view.Participant != name)
+            if (!view.Initialized || view.Selected != selected || view.Assigned != assigned ||
+                view.Participant != name)
             {
                 view.Initialized = true;
                 view.Selected = selected;

@@ -1,5 +1,5 @@
-using System;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -18,12 +18,20 @@ namespace SmartTraining.Editor
             Debug.Log("UNITY PASS: " + name);
         }
 
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
-
-        private static void Call(ApiLobbyScreen screen, string method) => typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, null);
+        private static void Call(ApiLobbyScreen screen, string method)
+        {
+            typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, null);
+        }
 
         private static ApiLobbyScreen Screen(string initial)
         {
@@ -36,7 +44,6 @@ namespace SmartTraining.Editor
             Call(screen, "InitializeServerAddress");
             return screen;
         }
-
 
         public static void Run()
         {
@@ -86,23 +93,14 @@ namespace SmartTraining.Editor
             try
             {
                 first = Screen("https://localhost:7087/swagger/index.html");
-                Check(
-                    (string)Get(first, "serverUrl") == "https://localhost:7087",
-                    "scene default is normalized at startup"
-                );
+                Check((string)Get(first, "serverUrl") == "https://localhost:7087", "scene default is normalized at startup");
                 Set(first, "serverUrl", "http://localhost:7999");
                 Set(first, "busy", true);
                 Call(first, "ResetServerAddress");
-                Check(
-                    (string)Get(first, "serverUrl") == "http://localhost:7999",
-                    "busy screen cannot reset endpoint"
-                );
+                Check((string)Get(first, "serverUrl") == "http://localhost:7999", "busy screen cannot reset endpoint");
                 Set(first, "busy", false);
                 Call(first, "ResetServerAddress");
-                Check(
-                    (string)Get(first, "serverUrl") == "https://localhost:7087",
-                    "reset restores this scenes default endpoint"
-                );
+                Check((string)Get(first, "serverUrl") == "https://localhost:7087", "reset restores this scenes default endpoint");
                 second = Screen(ServerAddress.DefaultUrl);
                 Check(
                     (string)Get(second, "serverUrl") == ServerAddress.DefaultUrl,
@@ -112,9 +110,14 @@ namespace SmartTraining.Editor
             finally
             {
                 if (first != null)
+                {
                     UnityEngine.Object.DestroyImmediate(first.gameObject);
+                }
+
                 if (second != null)
+                {
                     UnityEngine.Object.DestroyImmediate(second.gameObject);
+                }
             }
         }
     }

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -22,7 +22,6 @@ namespace SmartTraining
         internal int ObservedPartCount => observedParts.Count;
 
         internal int RequiredPartCount => observationGoals?.Length ?? 0;
-
 
         private bool controlRequested;
         private ModelPartHighlighter partHighlighter;
@@ -52,12 +51,16 @@ namespace SmartTraining
             selectedNodes.Select(node => selectedNodes.Count == 1 ? node.Description : node.Title + "\n" + node.Description)
         );
 
+        internal bool IsSelectedNode(ModelPartTree.Node node)
+        {
+            return selectedNodes.Contains(node);
+        }
 
-        internal bool IsSelectedNode(ModelPartTree.Node node) => selectedNodes.Contains(node);
-
-        internal bool IsIncludedNode(ModelPartTree.Node node) => node?.Transform != null &&
-            selectedNodes.Any(selected => selected.Transform != null &&
-            node.Transform.IsChildOf(selected.Transform));
+        internal bool IsIncludedNode(ModelPartTree.Node node)
+        {
+            return node?.Transform != null &&
+            selectedNodes.Any(selected => selected.Transform != null && node.Transform.IsChildOf(selected.Transform));
+        }
 
         public bool TryInitialize(out string error)
         {
@@ -93,7 +96,6 @@ namespace SmartTraining
             return renderers.Count > 0;
         }
 
-
         private void Update()
         {
             if (sharedModel == null || !sharedModel.IsSpawned)
@@ -103,11 +105,7 @@ namespace SmartTraining
 
             int direction = sharedModel.PlaybackDirection;
             // 자동 재생은 서버 시각으로 계산해 부드럽게 진행합니다. 수동 구간 이동만 짧게 보간합니다.
-            float amount = direction != 0 ? sharedModel.ExplosionAmount : Mathf.MoveTowards(
-                displayedExplosion,
-                sharedModel.ExplosionAmount,
-                Time.unscaledDeltaTime * 2.5f
-            );
+            float amount = direction != 0 ? sharedModel.ExplosionAmount : Mathf.MoveTowards(displayedExplosion, sharedModel.ExplosionAmount, Time.unscaledDeltaTime * 2.5f);
             if (amount != displayedExplosion)
             {
                 displayedExplosion = amount;
@@ -115,25 +113,15 @@ namespace SmartTraining
             }
         }
 
-
         internal float ExplosionAmount => sharedModel != null && sharedModel.IsSpawned ? sharedModel.ExplosionAmount : 0;
-
 
         internal bool CanSetExplosion(Camera camera)
         {
-            return explodedView != null &&
-                explodedView.IsAvailable &&
-                camera != null &&
-                sharedModel != null &&
-                sharedModel.IsSpawned &&
-                (sharedModel.NetworkObject.IsOwnedByServer ||
-                sharedModel.IsOwner) &&
-                Vector3.Distance(
-                camera.transform.position,
-                sharedModel.transform.position
-            ) <= SharedModel.InteractionDistance;
+            return explodedView != null && explodedView.IsAvailable && camera != null && sharedModel != null &&
+            sharedModel.IsSpawned &&
+            (sharedModel.NetworkObject.IsOwnedByServer || sharedModel.IsOwner) &&
+            Vector3.Distance(camera.transform.position, sharedModel.transform.position) <= SharedModel.InteractionDistance;
         }
-
 
         internal void SetExplosion(Camera camera, float amount)
         {
@@ -143,17 +131,13 @@ namespace SmartTraining
             }
         }
 
-
         internal int PlaybackDirection => sharedModel != null && sharedModel.IsSpawned ? sharedModel.PlaybackDirection : 0;
-
 
         internal bool CanSetPlayback(Camera camera, int direction)
         {
-            return CanSetExplosion(camera) &&
-                PlaybackDirection != direction &&
-                (direction == 0 ? PlaybackDirection != 0 : direction > 0 ? ExplosionAmount < 1 : ExplosionAmount > 0);
+            return CanSetExplosion(camera) && PlaybackDirection != direction &&
+            (direction == 0 ? PlaybackDirection != 0 : direction > 0 ? ExplosionAmount < 1 : ExplosionAmount > 0);
         }
-
 
         internal void SetPlayback(Camera camera, int direction)
         {
@@ -163,9 +147,7 @@ namespace SmartTraining
             }
         }
 
-
         internal string PlaybackStatus => PlaybackDirection > 0 ? "분해 재생 중" : PlaybackDirection < 0 ? "재조립 중" : ExplosionAmount <= 0 ? "조립 상태" : ExplosionAmount >= 1 ? "분해 완료" : "일시정지";
-
 
         private void SetVisible(bool visible)
         {
@@ -177,7 +159,6 @@ namespace SmartTraining
                 }
             }
         }
-
 
         private bool BindSharedModel(RoomPlayer player)
         {
@@ -198,7 +179,6 @@ namespace SmartTraining
             SetVisible(true);
             return true;
         }
-
 
         internal void UpdateInteraction(Camera camera, RoomPlayer player, bool canInteract)
         {
@@ -230,10 +210,7 @@ namespace SmartTraining
                 return;
             }
 
-            bool inRange = Vector3.Distance(
-                camera.transform.position,
-                sharedModel.transform.position
-            ) <= SharedModel.InteractionDistance;
+            bool inRange = Vector3.Distance(camera.transform.position, sharedModel.transform.position) <= SharedModel.InteractionDistance;
             var ray = camera.ScreenPointToRay(mouse.position.ReadValue());
             if (mouse.leftButton.wasPressedThisFrame)
             {
@@ -276,10 +253,11 @@ namespace SmartTraining
             if (controlRequested && pointerGesture.IsDragging && sharedModel.IsOwner)
             {
                 var delta = mouse.delta.ReadValue();
-                sharedModel.transform.rotation = Quaternion.AngleAxis(-delta.x * 0.2f, camera.transform.up) * Quaternion.AngleAxis(delta.y * 0.2f, camera.transform.right) * sharedModel.transform.rotation;
+                var horizontal = Quaternion.AngleAxis(-delta.x * 0.2f, camera.transform.up);
+                var vertical = Quaternion.AngleAxis(delta.y * 0.2f, camera.transform.right);
+                sharedModel.transform.rotation = horizontal * vertical * sharedModel.transform.rotation;
             }
         }
-
 
         private void CancelPointer()
         {
@@ -288,7 +266,6 @@ namespace SmartTraining
             ReleaseControl();
         }
 
-
         private void SelectPart(Renderer part)
         {
             var node = part != null ? partTree.Find(part.transform) : null;
@@ -296,12 +273,10 @@ namespace SmartTraining
             RecordObservation(node);
         }
 
-
         private void SelectNode(ModelPartTree.Node node)
         {
             SelectNodes(node != null ? new[] { node } : System.Array.Empty<ModelPartTree.Node>());
         }
-
 
         // 직접 클릭·트리 선택·단계 이동이 공유하는 단일 선택 집합입니다.
         private void SelectNodes(IReadOnlyList<ModelPartTree.Node> nodes)
@@ -315,8 +290,7 @@ namespace SmartTraining
                 // 부모를 먼저 확인해 부모·자식을 동시에 지정해도 같은 묶음을 중복 선택하지 않습니다.
                 foreach (var node in partTree.Nodes)
                 {
-                    if (!candidates.Contains(node) ||
-                        node.Transform == null ||
+                    if (!candidates.Contains(node) || node.Transform == null ||
                         !node.Transform.gameObject.activeInHierarchy ||
                         selectedNodes.Any(parent => node.Transform.IsChildOf(parent.Transform)))
                     {
@@ -339,11 +313,9 @@ namespace SmartTraining
             SelectionVersion++;
         }
 
-
         internal bool SelectPartFromList(ModelPartTree.Node node)
         {
-            if (node?.Transform == null ||
-                partTree.Find(node.Transform) != node ||
+            if (node?.Transform == null || partTree.Find(node.Transform) != node ||
                 !node.Transform.gameObject.activeInHierarchy)
             {
                 return false;
@@ -353,7 +325,6 @@ namespace SmartTraining
             RecordObservation(node);
             return true;
         }
-
 
         // 직접 클릭과 목록 선택만 개인 관찰로 기록합니다. 공유 애니메이션의 자동 강조는 포함하지 않습니다.
         private void RecordObservation(ModelPartTree.Node node)
@@ -365,19 +336,16 @@ namespace SmartTraining
             }
         }
 
-
         internal void ClearSelection()
         {
             SelectNode(null);
         }
-
 
         // 본인 화면의 표시만 변경합니다. 회전 소유권·RPC·다른 참가자의 재질에는 영향을 주지 않습니다.
         internal void SetSurroundingsTransparency(bool enabled, float opacity)
         {
             partHighlighter?.SetSurroundingsTransparency(enabled, opacity);
         }
-
 
         private void ReleaseControl()
         {
@@ -389,11 +357,9 @@ namespace SmartTraining
             controlRequested = false;
         }
 
-
         internal bool IsBeingManipulated => sharedModel != null && sharedModel.IsSpawned && !sharedModel.NetworkObject.IsOwnedByServer;
 
         internal bool IsLocalManipulator => IsBeingManipulated && sharedModel.IsOwner;
-
 
         // 이미 동기화된 소유권과 참가자 닉네임을 사용합니다. 표시를 위한 별도 RPC나 복제 변수는 만들지 않습니다.
         internal string GetControlStatus()
@@ -423,20 +389,13 @@ namespace SmartTraining
             return "참가자가 모델을 조작 중입니다.";
         }
 
-
         // 기능 메뉴의 버튼 상태와 클릭 처리가 같은 조건을 사용합니다. 실제 공유 상태 변경은 서버에서 검사합니다.
         internal bool CanResetRotation(Camera camera)
         {
-            return camera != null &&
-                sharedModel != null &&
-                sharedModel.IsSpawned &&
-                sharedModel.NetworkObject.IsOwnedByServer &&
-                Vector3.Distance(
-                camera.transform.position,
-                sharedModel.transform.position
-            ) <= SharedModel.InteractionDistance;
+            return camera != null && sharedModel != null && sharedModel.IsSpawned &&
+            sharedModel.NetworkObject.IsOwnedByServer &&
+            Vector3.Distance(camera.transform.position, sharedModel.transform.position) <= SharedModel.InteractionDistance;
         }
-
 
         internal void ResetRotation(Camera camera)
         {
@@ -446,7 +405,6 @@ namespace SmartTraining
             }
         }
 
-
         private void OnDisable()
         {
             partHighlighter?.Clear();
@@ -455,7 +413,6 @@ namespace SmartTraining
             CancelPointer();
             ClearSelection();
         }
-
 
         private void OnDestroy()
         {

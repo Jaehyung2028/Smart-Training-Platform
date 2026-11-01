@@ -11,6 +11,7 @@ namespace SmartTraining
         private float startedAt;
 
         public bool IsPressed { get; private set; }
+
         public bool IsDragging { get; private set; }
 
         public void Begin(Vector2 position, float time)

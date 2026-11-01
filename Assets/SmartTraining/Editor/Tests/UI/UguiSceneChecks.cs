@@ -1,19 +1,18 @@
-using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
+using System;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.SceneManagement;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
     public static class UguiSceneChecks
     {
         private const string CopyPath = "Assets/SmartTraining/Scenes/SceneUiCheckCopy.unity";
-
         private static int passed;
 
         private static void Check(bool condition, string name)
@@ -47,18 +46,19 @@ namespace SmartTraining.Editor
                     layout.interiorView,
                     layout.roomView
                 }
-
                 )
                 {
                     Check(
-                        PrefabUtility.IsPartOfPrefabInstance(view) && PrefabUtility.GetCorrespondingObjectFromSource(view) != null,
+                        PrefabUtility.IsPartOfPrefabInstance(view) &&
+                        PrefabUtility.GetCorrespondingObjectFromSource(view) != null,
                         view.name + " retains its editable prefab connection"
                     );
                 }
 
                 var before = UguiSceneDesigner.InScene<Transform>(scene).Length;
                 Check(
-                    UguiSceneDesigner.Install(scene) == layout && UguiSceneDesigner.InScene<Transform>(scene).Length == before,
+                    UguiSceneDesigner.Install(scene) == layout &&
+                    UguiSceneDesigner.InScene<Transform>(scene).Length == before,
                     "repeated placement reuses existing UI without duplication"
                 );
                 var initial = new[]
@@ -79,7 +79,8 @@ namespace SmartTraining.Editor
 
                 UguiScenePreview.Restore();
                 Check(
-                    initial.SequenceEqual(new[] { layout.loginView.canvas.enabled, layout.interiorView.canvas.enabled, layout.roomView.canvas.enabled }) && layout.roomView.heading.font == initialFont,
+                    initial.SequenceEqual(new[] { layout.loginView.canvas.enabled, layout.interiorView.canvas.enabled, layout.roomView.canvas.enabled }) &&
+                    layout.roomView.heading.font == initialFont,
                     "preview restores Canvas state and original font references"
                 );
                 Check(
@@ -106,7 +107,8 @@ namespace SmartTraining.Editor
                 var copy = EditorSceneManager.OpenScene(CopyPath);
                 layout = UguiSceneDesigner.InScene<UguiSceneLayout>(copy).Single();
                 Check(
-                    layout.roomView.heading.fontSize == originalSize + 3 && UguiSceneDesigner.Validate(layout).Count == 0,
+                    layout.roomView.heading.fontSize == originalSize + 3 &&
+                    UguiSceneDesigner.Validate(layout).Count == 0,
                     "saved scene preserves design override and valid prefab references"
                 );
                 var ready = layout.roomView.ready;

@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.Rendering;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -19,7 +19,10 @@ namespace SmartTraining
         // 강조를 해제한 뒤 호출합니다. 원래 슬롯 색상·사용자 PropertyBlock도 함께 보존합니다.
         public void Apply(Renderer renderer, float opacity)
         {
-            var state = new State { Originals = renderer.sharedMaterials };
+            var state = new State
+            {
+                Originals = renderer.sharedMaterials
+            };
             state.Copies = new Material[state.Originals.Length];
             var materials = (Material[])state.Originals.Clone();
             for (int i = 0; i < materials.Length; i++)
@@ -29,17 +32,25 @@ namespace SmartTraining
                 state.Blocks.Add(originalBlock);
                 var source = materials[i];
                 // 현재 프로젝트의 URP Lit/Unlit 및 Standard 재질을 지원합니다. 사용자 셰이더는 그대로 둡니다.
-                if (source == null || !(source.shader.name.StartsWith("Universal Render Pipeline/", StringComparison.Ordinal) ||
-                    source.shader.name == "Standard" || source.shader.name == "Standard (Specular setup)"))
+                if (source == null ||
+                    !(source.shader.name.StartsWith("Universal Render Pipeline/", StringComparison.Ordinal) ||
+                    source.shader.name == "Standard" ||
+                    source.shader.name == "Standard (Specular setup)"))
                 {
                     continue;
                 }
+
                 string colorName = source.HasProperty("_BaseColor") ? "_BaseColor" : "_Color";
                 if (!source.HasProperty(colorName))
                 {
                     continue;
                 }
-                var copy = new Material(source) { name = source.name + " (Local Transparency)", hideFlags = HideFlags.DontSave };
+
+                var copy = new Material(source)
+                {
+                    name = source.name + " (Local Transparency)",
+                    hideFlags = HideFlags.DontSave
+                };
                 state.Copies[i] = copy;
                 materials[i] = copy;
                 SetFloat(copy, "_Surface", 1);
@@ -67,6 +78,7 @@ namespace SmartTraining
                 {
                     renderer.GetPropertyBlock(block);
                 }
+
                 int colorId = Shader.PropertyToID(colorName);
                 var color = block.HasColor(colorId) ? block.GetColor(colorId) : source.GetColor(colorId);
                 color.a *= opacity;
@@ -74,6 +86,7 @@ namespace SmartTraining
                 block.SetColor(colorId, color);
                 renderer.SetPropertyBlock(block, i);
             }
+
             renderer.sharedMaterials = materials;
             states.Add(renderer, state);
         }
@@ -100,12 +113,14 @@ namespace SmartTraining
                         pair.Key.SetPropertyBlock(block.isEmpty ? null : block, i);
                     }
                 }
+
                 foreach (var material in pair.Value.Copies)
                 {
                     if (material == null)
                     {
                         continue;
                     }
+
                     if (Application.isPlaying)
                     {
                         UnityEngine.Object.Destroy(material);
@@ -116,6 +131,7 @@ namespace SmartTraining
                     }
                 }
             }
+
             states.Clear();
         }
 

@@ -7,16 +7,15 @@ namespace SmartTraining
     {
         [SerializeField, Tooltip("설명 창에 표시할 부품 이름입니다.")]
         private string title;
-
         [SerializeField, TextArea(3, 10), Tooltip("부품의 역할과 관찰할 내용을 입력합니다.")]
         private string description;
-
         [SerializeField, Tooltip("개인 관찰 완료에 필요한 부품인지 지정합니다.")]
         private bool requiredForCompletion = true;
 
         public bool RequiredForCompletion => requiredForCompletion;
 
         public string Title => string.IsNullOrWhiteSpace(title) ? gameObject.name : title;
+
         public string Description => string.IsNullOrWhiteSpace(description) ? "등록된 부품 설명이 없습니다." : description;
     }
 }

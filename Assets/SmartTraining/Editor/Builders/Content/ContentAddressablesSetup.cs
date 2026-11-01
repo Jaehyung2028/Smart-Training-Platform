@@ -1,7 +1,7 @@
 using System;
-using UnityEditor;
-using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Build;
+using UnityEditor.AddressableAssets;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor

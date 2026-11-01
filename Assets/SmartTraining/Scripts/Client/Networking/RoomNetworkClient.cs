@@ -1,13 +1,13 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
 using System.Text;
-using Unity.Netcode;
+using System;
 using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace SmartTraining
@@ -27,13 +27,22 @@ namespace SmartTraining
 
         internal string AdmissionToken { get; private set; }
 
-
         private float nextInputAt;
 
         public string ServerEndpoint { get; private set; } = "";
 
-        public RoomPlayer LocalPlayer => manager != null && manager.IsConnectedClient && manager.LocalClient?.PlayerObject != null ? manager.LocalClient.PlayerObject.GetComponent<RoomPlayer>() : null;
+        public RoomPlayer LocalPlayer
+        {
+            get
+            {
+                if (!IsConnected || manager.LocalClient?.PlayerObject == null)
+                {
+                    return null;
+                }
 
+                return manager.LocalClient.PlayerObject.GetComponent<RoomPlayer>();
+            }
+        }
 
         private readonly List<RoomPlayer> playerBuffer = new();
         private RoomPlayer[] players = Array.Empty<RoomPlayer>();
@@ -87,14 +96,10 @@ namespace SmartTraining
             }
         }
 
-
         public bool SetReady(bool value)
         {
             var player = LocalPlayer;
-            if (player == null ||
-                !player.IsSpawned ||
-                !player.IsOwner ||
-                player.IsRoomMaster ||
+            if (player == null || !player.IsSpawned || !player.IsOwner || player.IsRoomMaster ||
                 player.RoomIsRunning ||
                 player.PhasePending)
             {
@@ -105,20 +110,15 @@ namespace SmartTraining
             return true;
         }
 
-
         public RoomReadinessSummary GetReadiness()
         {
             return RoomReadinessSummary.FromPlayers(Players, LocalPlayer?.RoomMasterUserId, LocalPlayer != null);
         }
 
-
         public void SendMovement(Vector2 direction)
         {
             var player = LocalPlayer;
-            if (player == null ||
-                !player.IsSpawned ||
-                !player.IsOwner ||
-                !player.RoomIsRunning ||
+            if (player == null || !player.IsSpawned || !player.IsOwner || !player.RoomIsRunning ||
                 player.PhasePending ||
                 Time.unscaledTime < nextInputAt)
             {
@@ -128,7 +128,6 @@ namespace SmartTraining
             nextInputAt = Time.unscaledTime + 0.05f;
             player.MoveRpc(direction, player.ViewYaw);
         }
-
 
         public IEnumerator Connect(
             string userId,
@@ -151,18 +150,12 @@ namespace SmartTraining
                 yield break;
             }
 
-            if (reservation?.room == null ||
-                string.IsNullOrEmpty(userId) ||
+            if (reservation?.room == null || string.IsNullOrEmpty(userId) ||
                 string.IsNullOrEmpty(reservation.admissionToken) ||
                 reservation.room.port < 1 ||
                 reservation.room.port > 65535 ||
                 string.IsNullOrEmpty(reservation.room.ipAddress) ||
-                !DateTimeOffset.TryParse(
-                reservation.expiresAtUtc,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal,
-                out var expires
-            ) ||
+                !DateTimeOffset.TryParse(reservation.expiresAtUtc, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expires) ||
                 expires <= DateTimeOffset.UtcNow)
             {
                 failure("유효한 접속 예약이 없습니다. 다시 참가해주세요.");
@@ -194,7 +187,8 @@ namespace SmartTraining
             {
                 var lookup = Dns.GetHostAddressesAsync(address);
                 double deadline = Time.realtimeSinceStartupAsDouble + 5;
-                while (!lookup.IsCompleted && cancellationRequested?.Invoke() != true && Time.realtimeSinceStartupAsDouble < deadline)
+                while (!lookup.IsCompleted && cancellationRequested?.Invoke() != true &&
+                    Time.realtimeSinceStartupAsDouble < deadline)
                 {
                     yield return null;
                 }
@@ -245,7 +239,12 @@ namespace SmartTraining
                 NetworkTransport = transport,
                 EnableSceneManagement = false,
                 ConnectionApproval = true,
-                ConnectionData = Encoding.UTF8.GetBytes(TrainingJson.Serialize(new RoomConnectionData { roomId = reservation.room.id, userId = userId, admissionToken = reservation.admissionToken }))
+                ConnectionData = Encoding.UTF8.GetBytes(TrainingJson.Serialize(new RoomConnectionData
+                        {
+                            roomId = reservation.room.id,
+                            userId = userId,
+                            admissionToken = reservation.admissionToken
+                        }))
             };
             string prefabError = null;
             try
@@ -276,13 +275,8 @@ namespace SmartTraining
                 yield break;
             }
 
-            double limit = Time.realtimeSinceStartupAsDouble + Math.Min(
-                15,
-                Math.Max(0, (expires - DateTimeOffset.UtcNow).TotalSeconds)
-            );
-            while (!IsConnected &&
-                !failed &&
-                cancellationRequested?.Invoke() != true &&
+            double limit = Time.realtimeSinceStartupAsDouble + Math.Min(15, Math.Max(0, (expires - DateTimeOffset.UtcNow).TotalSeconds));
+            while (!IsConnected && !failed && cancellationRequested?.Invoke() != true &&
                 Time.realtimeSinceStartupAsDouble < limit)
             {
                 yield return null;
@@ -311,7 +305,6 @@ namespace SmartTraining
             }
         }
 
-
         private void OnDisconnected(ulong id)
         {
             failed = true;
@@ -319,13 +312,11 @@ namespace SmartTraining
             DisconnectReason = manager?.DisconnectReason;
         }
 
-
         private void OnTransportFailure()
         {
             failed = true;
             WasDisconnected = true;
         }
-
 
         // Shutdown은 즉시 완료되지 않습니다. 이전 매니저와 전송 드라이버가 사라진 다음 재입장합니다.
         public IEnumerator WaitForShutdown()
@@ -341,7 +332,6 @@ namespace SmartTraining
                 Debug.LogWarning("이전 방의 네트워크 종료가 지연되고 있습니다. 종료 전 재접속은 차단합니다.");
             }
         }
-
 
         public void Dispose()
         {
@@ -371,7 +361,6 @@ namespace SmartTraining
         }
     }
 
-
     public readonly struct RoomReadinessSummary
     {
         public int ParticipantCount { get; }
@@ -380,25 +369,19 @@ namespace SmartTraining
 
         public bool AllReady { get; }
 
-
         // 클라이언트의 시작 버튼과 전용 서버의 시작 승인에 같은 준비 기준을 사용합니다.
         public static RoomReadinessSummary FromPlayers(RoomPlayer[] players, string masterId, bool connectionsConfirmed)
         {
             var targets = players.Where(player => player.UserId != masterId).ToArray();
             int readyCount = targets.Count(player => player.IsSpawned && player.IsReady);
-            bool confirmed = connectionsConfirmed &&
-                !string.IsNullOrEmpty(masterId) &&
-                players.Count(player => player.UserId == masterId) == 1 &&
-                players.All(player => player.IsSpawned &&
-                Guid.TryParse(player.UserId, out _) &&
-                player.RoomMasterUserId == masterId);
+            bool confirmed = connectionsConfirmed && !string.IsNullOrEmpty(masterId) &&
+            players.Count(player => player.UserId == masterId) == 1 &&
+            players.All(player => player.IsSpawned && Guid.TryParse(player.UserId, out _) && player.RoomMasterUserId == masterId);
             return new RoomReadinessSummary(players.Length, readyCount, confirmed, targets.Length);
         }
 
-
         // 전체 접속 인원과 준비 대상 인원을 구분합니다. 방장 혼자 있으면 준비 대상은 0명입니다.
         public int ReadyTargetCount { get; }
-
 
         public RoomReadinessSummary(int participants, int ready, bool confirmed, int readyTargets)
         {

@@ -1,9 +1,9 @@
-using System;
 using System.Linq;
-using UnityEditor;
+using System;
 using UnityEditor.SceneManagement;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
@@ -23,7 +23,6 @@ namespace SmartTraining.Editor
                 LobbyInteriorUguiBuilder.InteriorPath,
                 RoomUguiBuilder.AssetPath
             }
-
             )
             {
                 var root = PrefabUtility.LoadPrefabContents(path);
@@ -77,7 +76,6 @@ namespace SmartTraining.Editor
                     new Vector2(2560, 1080),
                     new Vector2(720, 1280)
                 }
-
                 )
                 {
                     foreach (int variant in Enumerable.Range(0, 14))
@@ -167,9 +165,7 @@ namespace SmartTraining.Editor
                                 foreach (var corner in corners)
                                 {
                                     var point = parent.InverseTransformPoint(corner);
-                                    if (point.x < parent.rect.xMin - 1 ||
-                                        point.x > parent.rect.xMax + 1 ||
-                                        point.y < parent.rect.yMin - 1 ||
+                                    if (point.x < parent.rect.xMin - 1 || point.x > parent.rect.xMax + 1 || point.y < parent.rect.yMin - 1 ||
                                         point.y > parent.rect.yMax + 1)
                                     {
                                         issues.Add(parent.name + "/" + child.name);

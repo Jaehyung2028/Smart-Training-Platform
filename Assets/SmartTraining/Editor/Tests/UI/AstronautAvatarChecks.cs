@@ -1,7 +1,7 @@
-using System;
 using System.Linq;
-using UnityEditor;
+using System;
 using UnityEditor.Animations;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -20,14 +20,8 @@ namespace SmartTraining.Editor
                 var data = new SerializedObject(player);
                 var model = (Transform)data.FindProperty("avatarRoot").objectReferenceValue;
                 var animator = (Animator)data.FindProperty("avatarAnimator").objectReferenceValue;
-                Require(
-                    model != null && model.name == "Astronaut" && model.parent == root.transform,
-                    "사용자 배치 모델 연결"
-                );
-                Require(
-                    !model.gameObject.activeSelf && animator != null && !animator.applyRootMotion,
-                    "초기 숨김과 Root Motion 해제"
-                );
+                Require(model != null && model.name == "Astronaut" && model.parent == root.transform, "사용자 배치 모델 연결");
+                Require(!model.gameObject.activeSelf && animator != null && !animator.applyRootMotion, "초기 숨김과 Root Motion 해제");
                 Require(model.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length > 0, "스킨 모델 유지");
                 Require(
                     model.GetComponentsInChildren<Camera>(true).Length == 0 &&
@@ -63,7 +57,6 @@ namespace SmartTraining.Editor
                 PrefabUtility.UnloadPrefabContents(root);
             }
         }
-
 
         private static void Require(bool success, string message)
         {

@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -10,11 +10,20 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
-        private static object Get(ApiLobbyScreen screen, string name) => typeof(ApiLobbyScreen).GetField(name, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string name)
+        {
+            return typeof(ApiLobbyScreen).GetField(name, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string name, object value) => typeof(ApiLobbyScreen).GetField(name, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string name, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(name, Flags).SetValue(screen, value);
+        }
 
-        private static void Cancel(ApiLobbyScreen screen) => typeof(ApiLobbyScreen).GetMethod("RequestCancelRoomJoin", Flags).Invoke(screen, null);
+        private static void Cancel(ApiLobbyScreen screen)
+        {
+            typeof(ApiLobbyScreen).GetMethod("RequestCancelRoomJoin", Flags).Invoke(screen, null);
+        }
 
         private static void Start(ApiLobbyScreen screen, string method, params object[] args)
         {
@@ -22,7 +31,10 @@ namespace SmartTraining.Editor
             typeof(ApiLobbyScreen).GetMethod("Run", Flags).Invoke(screen, new object[] { operation });
         }
 
-        private static bool Idle(ApiLobbyScreen screen) => !(bool)Get(screen, "busy");
+        private static bool Idle(ApiLobbyScreen screen)
+        {
+            return !(bool)Get(screen, "busy");
+        }
 
         private static IEnumerator Wait(Func<bool> predicate, string name)
         {
@@ -51,11 +63,16 @@ namespace SmartTraining.Editor
         private static void Clean(ApiLobbyScreen screen, TrainingApiClient user, string lobby, string name)
         {
             Check(
-                user.IsLoggedIn && user.User.currentLobbyId == lobby && user.User.currentRoomId == "" && user.User.pendingRoomId == "" && Get(screen, "network") == null,
+                user.IsLoggedIn && user.User.currentLobbyId == lobby && user.User.currentRoomId == "" &&
+                user.User.pendingRoomId == "" &&
+                Get(screen, "network") == null,
                 name + " clears reservation and connection while preserving login and lobby"
             );
             Check(
-                (string)Get(screen, "roomJoinProgress") == "" && !(bool)Get(screen, "roomJoinCanCancel") && !(bool)Get(screen, "roomJoinCancelRequested") && (string)Get(screen, "reconnectRoomId") == "" && ((string)Get(screen, "status")).Contains("취소"),
+                (string)Get(screen, "roomJoinProgress") == "" && !(bool)Get(screen, "roomJoinCanCancel") &&
+                !(bool)Get(screen, "roomJoinCancelRequested") &&
+                (string)Get(screen, "reconnectRoomId") == "" &&
+                ((string)Get(screen, "status")).Contains("취소"),
                 name + " restores idle view with explicit cancellation message"
             );
         }
@@ -111,7 +128,8 @@ namespace SmartTraining.Editor
                 Set(screen, "testPauseRoomJoinAfterConnection", true);
                 Start(screen, "JoinRoom", room, null);
                 yield return Wait(
-                    () => ((RoomNetworkClient)Get(screen, "network"))?.IsConnected == true && anchorNetwork.Players.Any(player => player.UserId == user.User.id),
+                    () => ((RoomNetworkClient)Get(screen, "network"))?.IsConnected == true &&
+                        anchorNetwork.Players.Any(player => player.UserId == user.User.id),
                     "confirmed cancellation window missing"
                 );
                 yield return user.GetMe(_ =>
@@ -126,16 +144,17 @@ namespace SmartTraining.Editor
                     lobby,
                     room,
                     value => Check(
-                        value.connectedUsers == 1 && value.reservedUsers == 0 && value.availableSlots == 1,
-                        "confirmed cancellation frees slot and preserves existing participant"
-                    ),
+                            value.connectedUsers == 1 && value.reservedUsers == 0 && value.availableSlots == 1,
+                            "confirmed cancellation frees slot and preserves existing participant"
+                        ),
                     fail
                 );
                 Set(screen, "testPauseRoomJoinAfterConnection", false);
                 Start(screen, "JoinRoom", room, null);
                 yield return Wait(() => Idle(screen), "retry after cancellation stuck");
                 Check(
-                    ((RoomNetworkClient)Get(screen, "network"))?.IsConnected == true && user.User.currentRoomId == room && anchorNetwork.Players.Count(player => player.UserId == user.User.id) == 1,
+                    ((RoomNetworkClient)Get(screen, "network"))?.IsConnected == true && user.User.currentRoomId == room &&
+                    anchorNetwork.Players.Count(player => player.UserId == user.User.id) == 1,
                     "retry after cancellations joins once with the same user identity"
                 );
                 Cancel(screen);

@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -8,9 +8,13 @@ namespace SmartTraining
     public interface IFirstPersonCameraInput : IDisposable
     {
         bool Looking { get; }
+
         bool Inspecting { get; }
+
         Vector2 LookDelta { get; }
+
         void Enable();
+
         void Disable();
     }
 
@@ -31,7 +35,9 @@ namespace SmartTraining
         }
 
         public bool Looking => lookHeld.IsPressed();
+
         public bool Inspecting => inspectHeld.IsPressed();
+
         public Vector2 LookDelta => lookDelta.ReadValue<Vector2>();
 
         public void Enable()

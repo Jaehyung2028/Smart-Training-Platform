@@ -1,8 +1,8 @@
 using System;
-using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.SceneManagement;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
@@ -47,8 +47,7 @@ namespace SmartTraining.Editor
                 highlighter.UpdateHover(cornerRay, false, 6);
                 cube.GetPropertyBlock(restored, 0);
                 Check(
-                    highlighter.Highlighted == null &&
-                    restored.GetColor(colorId) == Color.red &&
+                    highlighter.Highlighted == null && restored.GetColor(colorId) == Color.red &&
                     Mathf.Approximately(restored.GetFloat("_SavedValue"), 0.37f),
                     "입력이 차단되면 기존 슬롯 설정을 복원합니다."
                 );
@@ -58,10 +57,7 @@ namespace SmartTraining.Editor
                 var orange = new Color(1, 0.55f, 0.1f, 1);
                 highlighter.SetSelected(cube);
                 cube.GetPropertyBlock(highlighted, 0);
-                Check(
-                    highlighter.IsSelected(cube) && highlighted.GetColor(colorId) == orange,
-                    "선택한 부품은 주황색으로 표시합니다."
-                );
+                Check(highlighter.IsSelected(cube) && highlighted.GetColor(colorId) == orange, "선택한 부품은 주황색으로 표시합니다.");
                 highlighter.ClearHover();
                 cube.GetPropertyBlock(highlighted, 0);
                 Check(highlighted.GetColor(colorId) == orange, "마우스 강조 해제 후에도 선택 색상을 유지합니다.");
@@ -69,7 +65,8 @@ namespace SmartTraining.Editor
                 sphere.GetPropertyBlock(restored, 0);
                 cube.GetPropertyBlock(highlighted, 0);
                 Check(
-                    restored.GetColor(colorId) == new Color(0.25f, 0.9f, 1f, 1) && highlighted.GetColor(colorId) == orange,
+                    restored.GetColor(colorId) == new Color(0.25f, 0.9f, 1f, 1) &&
+                    highlighted.GetColor(colorId) == orange,
                     "다른 부품의 마우스 강조와 선택 강조를 동시에 표시합니다."
                 );
                 highlighter.UpdateHover(cornerRay, true, 6);
@@ -91,7 +88,8 @@ namespace SmartTraining.Editor
                 highlighter.Dispose();
                 cube.GetPropertyBlock(restored, 0);
                 Check(
-                    restored.GetColor(colorId) == Color.red && Mathf.Approximately(restored.GetFloat("_SavedValue"), 0.37f),
+                    restored.GetColor(colorId) == Color.red &&
+                    Mathf.Approximately(restored.GetFloat("_SavedValue"), 0.37f),
                     "종료 시 선택 색상과 기존 슬롯 값을 복원합니다."
                 );
                 Check(
@@ -106,10 +104,7 @@ namespace SmartTraining.Editor
                 gesture.Begin(Vector2.zero, 1);
                 gesture.Update(new Vector2(9, 0));
                 gesture.Update(Vector2.zero);
-                Check(
-                    gesture.IsDragging && !gesture.End(Vector2.zero, 1.2f),
-                    "드래그 후 원점으로 돌아와도 클릭하지 않습니다."
-                );
+                Check(gesture.IsDragging && !gesture.End(Vector2.zero, 1.2f), "드래그 후 원점으로 돌아와도 클릭하지 않습니다.");
                 gesture.Begin(Vector2.zero, 1);
                 Check(!gesture.End(Vector2.zero, 1.5f), "긴 누르기는 클릭 설명을 열지 않습니다.");
                 gesture.Begin(Vector2.zero, 1);
@@ -150,8 +145,7 @@ namespace SmartTraining.Editor
                     "렌더러가 없는 부모도 하위 부품 묶음으로 조회합니다."
                 );
                 Check(
-                    tree.Find(assembly).Title == "배터리 조립체" &&
-                    tree.Find(cube.transform).Title == cube.name &&
+                    tree.Find(assembly).Title == "배터리 조립체" && tree.Find(cube.transform).Title == cube.name &&
                     tree.Find(cube.transform).Description == groupInfo.Description,
                     "선택 노드의 이름과 설명을 구분합니다."
                 );
@@ -160,8 +154,7 @@ namespace SmartTraining.Editor
                 sphere.GetPropertyBlock(highlighted, 0);
                 cube.GetPropertyBlock(restored, 0);
                 Check(
-                    highlighter.SelectedCount == 2 &&
-                    highlighted.GetColor(colorId) == orange &&
+                    highlighter.SelectedCount == 2 && highlighted.GetColor(colorId) == orange &&
                     restored.GetColor(colorId) == orange,
                     "부모를 선택하면 모든 하위 렌더러를 강조합니다."
                 );
@@ -171,17 +164,13 @@ namespace SmartTraining.Editor
                 highlighter.ClearHover();
                 highlighter.SetSelection(tree.Find(cube.transform).Renderers);
                 sphere.GetPropertyBlock(highlighted, 0);
-                Check(
-                    highlighter.SelectedCount == 1 && highlighted.isEmpty,
-                    "자식으로 선택을 옮기면 형제의 색상을 복원합니다."
-                );
+                Check(highlighter.SelectedCount == 1 && highlighted.isEmpty, "자식으로 선택을 옮기면 형제의 색상을 복원합니다.");
                 highlighter.SetSelection(tree.Find(assembly).Renderers);
                 highlighter.Clear();
                 sphere.GetPropertyBlock(highlighted, 0);
                 cube.GetPropertyBlock(restored, 0);
                 Check(
-                    highlighted.isEmpty &&
-                    restored.GetColor(colorId) == Color.red &&
+                    highlighted.isEmpty && restored.GetColor(colorId) == Color.red &&
                     Mathf.Approximately(restored.GetFloat("_SavedValue"), 0.37f),
                     "부모·자식 선택이 겹쳐도 원래 슬롯 설정을 복원합니다."
                 );
@@ -192,24 +181,15 @@ namespace SmartTraining.Editor
                     sphere.sharedMaterial != material && Mathf.Approximately(highlighted.GetColor(colorId).a, 0.3f),
                     "선택 밖의 부품만 임시 재질로 반투명 처리합니다."
                 );
-                Check(
-                    cube.sharedMaterial == material && material.GetColor(colorId) == Color.yellow,
-                    "선택 부품과 원본 재질은 변경하지 않습니다."
-                );
+                Check(cube.sharedMaterial == material && material.GetColor(colorId) == Color.yellow, "선택 부품과 원본 재질은 변경하지 않습니다.");
                 highlighter.UpdateHover(centerRay, true, 6);
                 sphere.GetPropertyBlock(highlighted, 0);
-                Check(
-                    Mathf.Approximately(highlighted.GetColor(colorId).a, 0.3f),
-                    "마우스 강조 중에도 투명도를 유지합니다."
-                );
+                Check(Mathf.Approximately(highlighted.GetColor(colorId).a, 0.3f), "마우스 강조 중에도 투명도를 유지합니다.");
                 highlighter.SetSurroundingsTransparency(true, 0.65f);
                 sphere.GetPropertyBlock(highlighted, 0);
                 Check(Mathf.Approximately(highlighted.GetColor(colorId).a, 0.65f), "투명도 조절은 누적되지 않습니다.");
                 highlighter.SetSelection(tree.Find(assembly).Renderers);
-                Check(
-                    sphere.sharedMaterial == material && cube.sharedMaterial == material,
-                    "부모를 선택하면 자식들의 원래 불투명도를 복원합니다."
-                );
+                Check(sphere.sharedMaterial == material && cube.sharedMaterial == material, "부모를 선택하면 자식들의 원래 불투명도를 복원합니다.");
                 highlighter.SetSelected(cube);
                 highlighter.SetSurroundingsTransparency(false, 0.65f);
                 Check(sphere.sharedMaterial == material, "기능을 끄면 원래 재질로 복구합니다.");
@@ -218,9 +198,7 @@ namespace SmartTraining.Editor
                 sphere.GetPropertyBlock(highlighted, 0);
                 cube.GetPropertyBlock(restored, 0);
                 Check(
-                    sphere.sharedMaterial == material &&
-                    highlighted.isEmpty &&
-                    restored.GetColor(colorId) == Color.red &&
+                    sphere.sharedMaterial == material && highlighted.isEmpty && restored.GetColor(colorId) == Color.red &&
                     Mathf.Approximately(restored.GetFloat("_SavedValue"), 0.37f),
                     "선택 해제 시 원래 재질과 슬롯 설정을 복원합니다."
                 );
@@ -249,11 +227,7 @@ namespace SmartTraining.Editor
                 AnimationUtility.SetEditorCurve(
                     animation,
                     EditorCurveBinding.FloatCurve(spherePath, typeof(Transform), "m_LocalPosition.x"),
-                    new AnimationCurve(
-                    new Keyframe(0, sphereStart.x),
-                    new Keyframe(2, sphereStart.x),
-                    new Keyframe(4, sphereStart.x + 1)
-                )
+                    new AnimationCurve(new Keyframe(0, sphereStart.x), new Keyframe(2, sphereStart.x), new Keyframe(4, sphereStart.x + 1))
                 );
                 AnimationUtility.SetEditorCurve(
                     animation,
@@ -301,21 +275,14 @@ namespace SmartTraining.Editor
                         "위치뿐 아니라 클립의 회전과 크기도 재생합니다."
                     );
                     explosion.Apply(0.25f);
-                    Check(
-                        Mathf.Abs(cube.transform.localPosition.y - (cubeStart.y + 0.5f)) < 0.001f,
-                        "역방향으로 이동해도 같은 키프레임 위치를 복원합니다."
-                    );
+                    Check(Mathf.Abs(cube.transform.localPosition.y - (cubeStart.y + 0.5f)) < 0.001f, "역방향으로 이동해도 같은 키프레임 위치를 복원합니다.");
                     root.transform.rotation = Quaternion.Euler(15, 70, 20);
                     var rootRotation = root.transform.rotation;
                     explosion.Apply(1);
-                    Check(
-                        Quaternion.Angle(root.transform.rotation, rootRotation) < 0.001f,
-                        "분해 애니메이션은 모델 전체 공유 회전을 덮어쓰지 않습니다."
-                    );
+                    Check(Quaternion.Angle(root.transform.rotation, rootRotation) < 0.001f, "분해 애니메이션은 모델 전체 공유 회전을 덮어쓰지 않습니다.");
                     explosion.Apply(0);
                     Check(
-                        sphere.transform.localPosition == sphereStart &&
-                        cube.transform.localPosition == cubeStart &&
+                        sphere.transform.localPosition == sphereStart && cube.transform.localPosition == cubeStart &&
                         cube.transform.localRotation == cubeRotation &&
                         cube.transform.localScale == cubeScale,
                         "0퍼센트에서 최초 위치·회전·크기로 정확히 복원합니다."
@@ -324,8 +291,7 @@ namespace SmartTraining.Editor
                 }
 
                 Check(
-                    sphere.transform.localPosition == sphereStart &&
-                    cube.transform.localPosition == cubeStart &&
+                    sphere.transform.localPosition == sphereStart && cube.transform.localPosition == cubeStart &&
                     cube.transform.localRotation == cubeRotation &&
                     cube.transform.localScale == cubeScale,
                     "재생 그래프를 해제하면 최초 포즈로 복원합니다."
@@ -337,17 +303,12 @@ namespace SmartTraining.Editor
                 Check(Mathf.Abs(reverse.Evaluate(12) - 0.4f) < 0.0001f, "재조립은 현재 진행도에서 역방향으로 진행합니다.");
                 Check(paused.Evaluate(100) == 0.4f, "일시정지 후 시간이 지나도 진행도는 유지됩니다.");
                 Check(
-                    forward.Evaluate(100) == 1 &&
-                    reverse.Evaluate(100) == 0 &&
-                    forward.GetDirection(100) == 0 &&
+                    forward.Evaluate(100) == 1 && reverse.Evaluate(100) == 0 && forward.GetDirection(100) == 0 &&
                     reverse.GetDirection(100) == 0,
                     "양쪽 끝에서는 포즈를 고정하고 재생을 멈춥니다."
                 );
                 Check(forward.Evaluate(9) == 0.2f, "시각 보정으로 시작 시각보다 앞서도 진행도가 역행하지 않습니다.");
-                Check(
-                    new ModelPlaybackState(0.3f, 1, 0, 0).Evaluate(100) == 0.3f,
-                    "길이가 없는 상태는 나누기 없이 현재 진행도를 유지합니다."
-                );
+                Check(new ModelPlaybackState(0.3f, 1, 0, 0).Evaluate(100) == 0.3f, "길이가 없는 상태는 나누기 없이 현재 진행도를 유지합니다.");
                 serialized.Update();
                 var stepValues = serialized.FindProperty("steps");
                 var times = new[]
@@ -377,8 +338,7 @@ namespace SmartTraining.Editor
                     "단계는 시간순으로 정렬하고 범위 밖 시간과 중복 시간을 제외합니다."
                 );
                 Check(
-                    source.FindStepIndex(ordered, 0) == 0 &&
-                    source.FindStepIndex(ordered, 0.25f) == 1 &&
+                    source.FindStepIndex(ordered, 0) == 0 && source.FindStepIndex(ordered, 0.25f) == 1 &&
                     source.FindStepIndex(ordered, 1) == 2 &&
                     source.FindStepIndex(ordered, float.NaN) == -1,
                     "정방향·역방향·슬라이더 이동 모두 같은 단계 경계를 사용합니다."
@@ -406,22 +366,14 @@ namespace SmartTraining.Editor
                 typeof(ModelViewer).GetMethod("SetSurroundingsTransparency", flags).Invoke(viewer, new object[] { true, 0.2f });
                 var manualSelectionExplosion = (ModelExplodedView)typeof(ModelViewer).GetField("explodedView", flags).GetValue(viewer);
                 manualSelectionExplosion.Apply(.8f);
-                Check(
-                    selectedNodes.Count == 1 && viewerHighlighter.IsSelected(cube),
-                    "분해는 직접 선택을 변경하지 않습니다."
-                );
+                Check(selectedNodes.Count == 1 && viewerHighlighter.IsSelected(cube), "분해는 직접 선택을 변경하지 않습니다.");
                 manualSelectionExplosion.Apply(.1f);
-                Check(
-                    selectedNodes.Count == 1 && viewerHighlighter.IsSelected(cube),
-                    "재조립도 직접 선택을 유지합니다."
-                );
+                Check(selectedNodes.Count == 1 && viewerHighlighter.IsSelected(cube), "재조립도 직접 선택을 유지합니다.");
                 typeof(ModelViewer).GetMethod("ClearSelection", flags).Invoke(viewer, null);
                 sphere.GetPropertyBlock(highlighted, 0);
                 cube.GetPropertyBlock(restored, 0);
                 Check(
-                    selectedNodes.Count == 0 &&
-                    highlighted.isEmpty &&
-                    restored.GetColor(colorId) == Color.red &&
+                    selectedNodes.Count == 0 && highlighted.isEmpty && restored.GetColor(colorId) == Color.red &&
                     Mathf.Approximately(restored.GetFloat("_SavedValue"), 0.37f),
                     "선택 해제는 원래 재질을 복구합니다."
                 );
@@ -445,7 +397,6 @@ namespace SmartTraining.Editor
             }
         }
 
-
         private static Renderer Part(GameObject root, PrimitiveType type, Vector3 position, Material material)
         {
             var part = GameObject.CreatePrimitive(type);
@@ -456,7 +407,6 @@ namespace SmartTraining.Editor
             renderer.sharedMaterial = material;
             return renderer;
         }
-
 
         private static void Check(bool condition, string message)
         {

@@ -4,9 +4,25 @@ Unity 기반 멀티플레이 교육 플랫폼입니다. 참가자가 같은 3D �
 
 - 작성자: 고재형
 - [ASP.NET Core 서버 저장소](https://github.com/Jaehyung2028/Smart-Training-Server)
-- [1분 시연 영상](docs/media/demo-60s.mp4) · [교육과정과 리소스 구성](Assets/SmartTraining/Documentation/Guides/CourseSamples.md)
+- [3분 30초 시연 영상](docs/media/demo-3m30s.mp4)
 
-[![멀티플레이 교육 콘텐츠 시연](docs/images/model.png)](docs/media/demo-60s.mp4)
+[![멀티플레이 교육 콘텐츠 시연](docs/images/model.png)](docs/media/demo-3m30s.mp4)
+
+## 시연 영상
+
+[3분 30초 시연 영상 보기](docs/media/demo-3m30s.mp4)
+
+두 클라이언트를 함께 실행해 조작하는 사용자와 동료의 독립된 시점을 비교했습니다. 공동 상태와 개인 설정의 차이를 화면과 설명 자막으로 확인할 수 있습니다.
+
+| 구간 | 내용 |
+|---|---|
+| 00:00–00:22 | 교육과정 선택, 콘텐츠 트리와 방 준비 |
+| 00:22–01:16 | 채팅·참가자, 모델 조작권 전환, 분해·재조립과 개인별 부품 관찰 |
+| 01:16–01:42 | 공동 영상 재생·탐색·정지, 개인 자막·음량 |
+| 01:42–03:14 | 동료 이동, 역할 배정, 입력 안내와 공구별 협동 작업 |
+| 03:14–03:30 | 단계별 결과와 대기실 복귀 |
+
+![작업자와 동료의 서로 다른 시점](docs/images/cooperative-two-clients.png)
 
 ## 사용 흐름
 
@@ -109,7 +125,7 @@ flowchart LR
 | [Servers](Assets/SmartTraining/Scripts/Servers) | 전용 서버의 콘텐츠 상태 처리 |
 | [UI](Assets/SmartTraining/Scripts/UI) | UGUI 화면 및 콘텐츠별 패널 |
 
-[문서 모음](Assets/SmartTraining/Documentation/README.md)에서 기능별 수정 위치를 확인할 수 있습니다.
+공통 입력·카메라·미디어 처리는 `Common`, 콘텐츠 동작은 `Gameplay`, 화면 갱신은 `UI`에서 관리합니다. 콘텐츠 HUD의 연결과 설정 처리는 `ContentHudController`, 씬의 콘텐츠 생성과 정리는 `ContentSceneSession`이 맡습니다.
 
 ## 실행 방법
 
@@ -122,7 +138,6 @@ flowchart LR
 
 다른 PC에서는 API 서버의 LAN 주소를 사용하고 API TCP 포트와 방 서버 UDP 포트에 접근할 수 있어야 합니다. 실행 파일은 `_Data`·DLL을 포함한 폴더 전체가 필요합니다. 빌드 산출물은 Git에 포함하지 않습니다.
 
-[빌드 안내](Assets/SmartTraining/Documentation/Guides/BUILD-TEST-BUNDLE.md)
 
 ## 현재 범위와 확장 계획
 

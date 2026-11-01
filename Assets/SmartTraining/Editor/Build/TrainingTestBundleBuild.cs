@@ -1,7 +1,7 @@
-using System;
 using System.IO;
-using UnityEditor;
+using System;
 using UnityEditor.Build;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -14,18 +14,18 @@ namespace SmartTraining.Editor
         private sealed class Manifest
         {
             public string builtAtUtc, unityVersion;
-
             public string client = "Client/Smart Training Client.exe";
-
             public string server = "RoomServer/Smart Training Room.exe";
-
             public string clientKind = "Development", serverKind = "DedicatedServer";
-
             public bool completed = true;
         }
 
         [MenuItem(MenuPath, true)]
-        private static bool CanBuild() => !EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling && !BuildPipeline.isBuildingPlayer;
+        private static bool CanBuild()
+        {
+            return !EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling &&
+            !BuildPipeline.isBuildingPlayer;
+        }
 
         [MenuItem(MenuPath)]
         public static void Build()
@@ -56,7 +56,6 @@ namespace SmartTraining.Editor
                 {
                     builtAtUtc = DateTimeOffset.UtcNow.ToString("O"),
                     unityVersion = Application.unityVersion
-
                 };
                 var server = Path.Combine(output, manifest.server);
                 var client = Path.Combine(output, manifest.client);
@@ -72,7 +71,7 @@ namespace SmartTraining.Editor
                     Path.Combine(output, "RUNNING.txt"),
                     "Smart Training 테스트 빌드\n\n" + "Client: Smart Training Client.exe를 실행합니다. 실행 파일과 같은 폴더의 모든 파일이 필요합니다.\n" + "RoomServer: ASP.NET이 방 입장 요청에 따라 실행하는 전용 서버입니다. 직접 실행하지 않습니다.\n" + "ASP.NET의 Room:ServerExecutablePath를 이 RoomServer 폴더의 실행 파일 경로로 지정하거나, RoomServer 폴더 전체를 기존 API 실행 폴더에 복사합니다.\n" + "먼저 ASP.NET 서버를 실행하고 클라이언트에서 서버 주소와 닉네임을 입력합니다. 다른 PC에서는 localhost 대신 서버 PC 주소를 입력합니다.\n\n" + "이 클라이언트는 Development Build이며 실제 서비스 배포용 빌드가 아닙니다.\n"
                 );
-                // A completed manifest exists only after both players and their required files have been verified.
+                // 양쪽 빌드와 필수 파일이 준비된 뒤에만 완료 정보를 남깁니다.
                 File.WriteAllText(Path.Combine(output, "build-manifest.json"), JsonUtility.ToJson(manifest, true));
                 Debug.Log("TEST BUNDLE COMPLETE: " + output);
                 if (!Application.isBatchMode)

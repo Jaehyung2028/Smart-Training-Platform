@@ -12,7 +12,9 @@ namespace SmartTraining
         private readonly NetworkVariable<VideoPlaybackState> playback = new();
 
         public double Duration => playback.Value.Duration;
+
         public double Position => IsSpawned ? playback.Value.Evaluate(NetworkManager.ServerTime.Time) : 0;
+
         public bool IsPlaying => IsSpawned && playback.Value.IsPlaying(NetworkManager.ServerTime.Time);
 
         public static GameObject Register(NetworkManager manager)
@@ -22,6 +24,7 @@ namespace SmartTraining
             {
                 throw new InvalidOperationException("SharedVideo 네트워크 프리팹을 준비해주세요.");
             }
+
             manager.AddNetworkPrefab(prefab);
             return prefab;
         }
@@ -38,6 +41,7 @@ namespace SmartTraining
                     }
                 }
             }
+
             return null;
         }
 
@@ -45,19 +49,27 @@ namespace SmartTraining
         private bool CanControl(ulong clientId, bool masterOnly = false)
         {
             return NetworkManager.ConnectedClients.TryGetValue(clientId, out var client) &&
-                client.PlayerObject != null && client.PlayerObject.TryGetComponent<RoomPlayer>(out var player) &&
-                player.RoomIsRunning && !player.PhasePending && (!masterOnly || player.IsRoomMaster);
+            client.PlayerObject != null &&
+            client.PlayerObject.TryGetComponent<RoomPlayer>(out var player) &&
+            player.RoomIsRunning &&
+            !player.PhasePending &&
+            (!masterOnly || player.IsRoomMaster);
         }
 
         // 서버는 영상 디코더를 실행하지 않습니다. 방장이 준비한 클립의 길이를 최초 한 번만 등록합니다.
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void ConfigureRpc(double duration, RpcParams rpcParams = default)
         {
-            if (!IsServer || !IsSpawned || !CanControl(rpcParams.Receive.SenderClientId, masterOnly: true) || Duration > 0 ||
-                double.IsNaN(duration) || double.IsInfinity(duration) || duration < 0.1 || duration > 21600)
+            if (!IsServer || !IsSpawned || !CanControl(rpcParams.Receive.SenderClientId, masterOnly: true) ||
+                Duration > 0 ||
+                double.IsNaN(duration) ||
+                double.IsInfinity(duration) ||
+                duration < 0.1 ||
+                duration > 21600)
             {
                 return;
             }
+
             playback.Value = new VideoPlaybackState(0, NetworkManager.ServerTime.Time, duration, false);
         }
 
@@ -68,12 +80,14 @@ namespace SmartTraining
             {
                 return;
             }
+
             double position = Position;
             // 영상이 끝난 뒤 재생을 누르면 처음부터 시작합니다.
             if (playing && position >= Duration)
             {
                 position = 0;
             }
+
             playback.Value = new VideoPlaybackState(position, NetworkManager.ServerTime.Time, Duration, playing);
         }
 
@@ -81,10 +95,12 @@ namespace SmartTraining
         public void SeekRpc(double position, RpcParams rpcParams = default)
         {
             if (!IsServer || !IsSpawned || Duration <= 0 || !CanControl(rpcParams.Receive.SenderClientId) ||
-                double.IsNaN(position) || double.IsInfinity(position))
+                double.IsNaN(position) ||
+                double.IsInfinity(position))
             {
                 return;
             }
+
             SetPosition(position);
         }
 
@@ -97,6 +113,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             SetPosition(Position + seconds);
         }
 
@@ -108,6 +125,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             playback.Value = new VideoPlaybackState(0, NetworkManager.ServerTime.Time, Duration, false);
         }
 

@@ -1,5 +1,5 @@
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -27,15 +27,12 @@ namespace SmartTraining
             }
         }
 
-
         public static void PolishDark(Transform root)
         {
             foreach (var image in root.GetComponentsInChildren<Image>(true))
             {
                 string name = image.name;
-                if (image.GetComponent<Button>() != null ||
-                    name.Contains("Panel") ||
-                    name.Contains("Controls") ||
+                if (image.GetComponent<Button>() != null || name.Contains("Panel") || name.Contains("Controls") ||
                     name.Contains("Card") ||
                     name == "Content Action List" ||
                     name.Contains("Background"))

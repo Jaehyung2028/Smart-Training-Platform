@@ -12,7 +12,7 @@ namespace SmartTraining
         public FixedString128Bytes ActorName;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer)
-            where T : IReaderWriter
+        where T : IReaderWriter
         {
             serializer.SerializeValue(ref Index);
             serializer.SerializeValue(ref RunRevision);
@@ -22,15 +22,12 @@ namespace SmartTraining
             serializer.SerializeValue(ref ActorName);
         }
 
-
         public bool Equals(ScenarioStepOutcome other)
         {
-            return Index == other.Index &&
-                RunRevision == other.RunRevision &&
-                ToolErrors == other.ToolErrors &&
-                TargetErrors == other.TargetErrors &&
-                DurationSeconds == other.DurationSeconds &&
-                ActorName.Equals(other.ActorName);
+            return Index == other.Index && RunRevision == other.RunRevision && ToolErrors == other.ToolErrors &&
+            TargetErrors == other.TargetErrors &&
+            DurationSeconds == other.DurationSeconds &&
+            ActorName.Equals(other.ActorName);
         }
     }
 }

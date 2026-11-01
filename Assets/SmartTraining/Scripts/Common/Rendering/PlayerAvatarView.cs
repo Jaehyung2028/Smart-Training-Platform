@@ -28,9 +28,7 @@ namespace SmartTraining
             this.nameTagPrefab = nameTagPrefab;
         }
 
-
         public bool HasVisual => shown;
-
 
         public void Show(bool localFirstPerson)
         {
@@ -48,7 +46,6 @@ namespace SmartTraining
                 nameTag ??= new WorldNameTagView(parent, nameTagPrefab);
             }
         }
-
 
         public void Refresh(string displayName, Camera viewCamera, string detail = "", float deltaTime = 0)
         {
@@ -69,7 +66,6 @@ namespace SmartTraining
             }
         }
 
-
         public void Hide()
         {
             shown = false;
@@ -81,13 +77,12 @@ namespace SmartTraining
             nameTag?.Refresh("", null);
         }
 
-
         public void Dispose()
         {
             Hide();
             nameTag?.Dispose();
             nameTag = null;
-        // 모델은 프리팹 소유 자식이므로 표시 모듈에서 생성하거나 파괴하지 않습니다.
+            // 모델은 프리팹 소유 자식이므로 표시 모듈에서 생성하거나 파괴하지 않습니다.
         }
     }
 }

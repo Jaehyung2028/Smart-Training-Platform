@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -15,14 +15,13 @@ namespace SmartTraining
         private ScenarioContent scenario;
         private ScenarioDefinition definition;
 
-        public ScenarioToolMenu(Transform section, Font font)
+        public ScenarioToolMenu(Transform section)
         {
             var view = UiPrefab.Instantiate("ScenarioToolMenu", section);
             root = view.Get<GameObject>("root");
             selection = view.Get<Text>("selection");
             toolContainer = view.Get<Transform>("toolContainer");
         }
-
 
         public void Refresh(ScenarioContent current, bool visible, bool canInteract)
         {
@@ -70,7 +69,6 @@ namespace SmartTraining
                 item.Button.interactable = canInteract && current.CanSelectTool;
             }
         }
-
 
         private void AddTool(string toolId, string title)
         {

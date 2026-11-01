@@ -1,10 +1,9 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
-using UnityEngine;
+using System;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -24,7 +23,6 @@ namespace SmartTraining
 
         private Camera PlayerCamera => firstPersonCamera != null ? firstPersonCamera.ViewCamera : null;
 
-
         private ModelViewer modelViewer;
         private VideoContentPlayer videoViewer;
         private ScenarioContent scenarioViewer;
@@ -37,13 +35,11 @@ namespace SmartTraining
 
         private bool InputBlocked => hud?.BlocksGameplayInput == true;
 
-
         private string loadError = "";
 
         public bool SceneReady { get; private set; }
 
         public bool IsActive => requested || transition != null || SceneReady;
-
 
         private void OnEnable()
         {
@@ -53,7 +49,6 @@ namespace SmartTraining
             hud?.EnableInput();
         }
 
-
         private void OnApplicationFocus(bool focused)
         {
             if (!focused)
@@ -62,20 +57,19 @@ namespace SmartTraining
             }
         }
 
-
         private void OnDisable()
         {
             hud?.DisableInput();
             StopSession();
         }
 
-
         // Controller가 매 프레임 원하는 상태를 전달합니다. 로딩 도중 퇴장해도 완료 후 즉시 언로드합니다.
         internal void Synchronize(ApiLobbyScreen controller, bool running)
         {
             screen = controller;
             requested = running;
-            if (transition == null && (requested != SceneReady || HasDifferentRoom()) && (loadError.Length == 0 || !requested))
+            if (transition == null && (requested != SceneReady || HasDifferentRoom()) &&
+                (loadError.Length == 0 || !requested))
             {
                 transition = StartCoroutine(ReconcileScene());
             }
@@ -95,7 +89,6 @@ namespace SmartTraining
 
             RefreshHud();
         }
-
 
         // 한 번에 한 전환만 실행합니다. 로딩 중 바뀐 요청도 완료 후 반복문에서 다시 확인합니다.
         private IEnumerator ReconcileScene()
@@ -121,12 +114,10 @@ namespace SmartTraining
             transition = null;
         }
 
-
         private bool HasDifferentRoom()
         {
             return SceneReady && loadedRoomId != screen.UiActiveRoomId;
         }
-
 
         private IEnumerator LoadContentScene()
         {
@@ -166,50 +157,55 @@ namespace SmartTraining
                     contentAssets = new ContentAssetScope();
                     var resources = sceneLayout.Resources;
                     resources.Initialize(contentAssets, definition.contentType);
-                    yield return contentAssets.Instantiate(definition.assetId, resources.transform, instance =>
-                    {
-                        contentMessage = "";
-                        if (definition.contentType == "model")
+                    yield return contentAssets.Instantiate(
+                        definition.assetId,
+                        resources.transform,
+                        instance =>
                         {
+                            contentMessage = "";
+                            if (definition.contentType == "model")
+                            {
                             // 모델도 공통 3D 공간에 고정 배치합니다. 관찰은 기존 네트워크 캐릭터로 이동하며 진행합니다.
-                            modelViewer = instance.GetComponent<ModelViewer>();
-                            if (!modelViewer.TryInitialize(out var modelError))
-                            {
-                                loadError = modelError;
-                                modelViewer = null;
+                                modelViewer = instance.GetComponent<ModelViewer>();
+                                if (!modelViewer.TryInitialize(out var modelError))
+                                {
+                                    loadError = modelError;
+                                    modelViewer = null;
+                                }
                             }
-                        }
-                        else if (definition.contentType == "video")
-                        {
-                            videoViewer = instance.GetComponent<VideoContentPlayer>();
-                            if (videoViewer == null)
+                            else if (definition.contentType == "video")
                             {
-                                loadError = "영상 프리팹에 VideoContentPlayer를 연결해주세요.";
+                                videoViewer = instance.GetComponent<VideoContentPlayer>();
+                                if (videoViewer == null)
+                                {
+                                    loadError = "영상 프리팹에 VideoContentPlayer를 연결해주세요.";
+                                }
+                                else if (!videoViewer.TryInitialize(out var videoError))
+                                {
+                                    loadError = videoError;
+                                    videoViewer = null;
+                                }
                             }
-                            else if (!videoViewer.TryInitialize(out var videoError))
+                            else if (definition.contentType == "scenario")
                             {
-                                loadError = videoError;
-                                videoViewer = null;
+                                var scenario = instance.GetComponent<ScenarioContent>();
+                                scenarioViewer = scenario;
+                                if (scenario == null)
+                                {
+                                    loadError = "시나리오 프리팹에 ScenarioContent를 연결해주세요.";
+                                }
+                                else if (!scenario.TryInitialize(out var scenarioError))
+                                {
+                                    loadError = scenarioError;
+                                }
+                                else
+                                {
+                                    contentMessage = "";
+                                }
                             }
-                        }
-                        else if (definition.contentType == "scenario")
-                        {
-                            var scenario = instance.GetComponent<ScenarioContent>();
-                            scenarioViewer = scenario;
-                            if (scenario == null)
-                            {
-                                loadError = "시나리오 프리팹에 ScenarioContent를 연결해주세요.";
-                            }
-                            else if (!scenario.TryInitialize(out var scenarioError))
-                            {
-                                loadError = scenarioError;
-                            }
-                            else
-                            {
-                                contentMessage = "";
-                            }
-                        }
-                    }, message => loadError = message);
+                        },
+                        message => loadError = message
+                    );
                 }
             }
 
@@ -222,7 +218,6 @@ namespace SmartTraining
             }
         }
 
-
         private IEnumerator UnloadContentScene()
         {
             EndFirstPerson();
@@ -232,7 +227,6 @@ namespace SmartTraining
                 yield return unloading;
             }
         }
-
 
         // 정상 복귀와 GameObject 비활성화 모두 같은 경로로 씬을 정리합니다.
         // 비활성화 시에는 코루틴을 시작할 수 없으므로 비동기 작업 자체를 반환합니다.
@@ -260,7 +254,6 @@ namespace SmartTraining
             return scene.IsValid() && scene.isLoaded ? SceneManager.UnloadSceneAsync(scene) : null;
         }
 
-
         private void BeginFirstPerson(Scene scene)
         {
             foreach (var camera in Camera.allCameras)
@@ -287,18 +280,13 @@ namespace SmartTraining
             firstPersonCamera.GetComponent<AudioListener>().enabled = true;
             firstPersonCamera.Bind(
                 screen.UiLocalPlayer.transform,
-                () => requested &&
-                SceneReady &&
-                !InputBlocked &&
-                screen.UiLocalPlayer != null &&
-                !screen.UiProcessing &&
-                !screen.UiLocalPlayer.PhasePending
+                () => requested && SceneReady && !InputBlocked && screen.UiLocalPlayer != null && !screen.UiProcessing &&
+                    !screen.UiLocalPlayer.PhasePending
             );
             firstPersonCamera.Configure(preferences.FieldOfView, preferences.Sensitivity, preferences.InvertY);
             UguiViewUtility.ClearSelection(screen.transform);
             ReleaseCursor();
         }
-
 
         private void LateUpdate()
         {
@@ -314,15 +302,10 @@ namespace SmartTraining
             scenarioViewer?.UpdateInteraction(PlayerCamera, screen.UiLocalPlayer, firstPersonCamera.CanInteract);
         }
 
-
         // 마우스로 보는 수평 방향을 기준으로 입력을 회전시킵니다. 실제 이동 속도·범위는 서버가 검사합니다.
         internal Vector2 ReadMovement()
         {
-            if (!SceneReady ||
-                !requested ||
-                InputBlocked ||
-                PlayerCamera == null ||
-                UguiViewUtility.IsEditingText ||
+            if (!SceneReady || !requested || InputBlocked || PlayerCamera == null || UguiViewUtility.IsEditingText ||
                 screen.UiLocalPlayer?.PhasePending == true)
             {
                 return Vector2.zero;
@@ -331,23 +314,24 @@ namespace SmartTraining
             return firstPersonCamera.ToWorldMovement(PlayerMovementInput.Read());
         }
 
-
         private void EnsureHud()
         {
             if (hud != null)
             {
                 return;
             }
-
-            var font = screen.GetComponentInChildren<Text>(true)?.font ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             hud = new ContentHudController(
                 sceneLayout.Hud,
-                font,
                 preferences,
-                new ContentHudActions { SettingsChanged = ApplyPreferences, ReturnToWaiting = () => screen.UiTogglePhase(), LeaveRoom = () => screen.UiLeaveRoom(), SendChat = (text, completed) => screen.UiSendContentChat(text, completed) }
+                new ContentHudActions
+                {
+                    SettingsChanged = ApplyPreferences,
+                    ReturnToWaiting = () => screen.UiTogglePhase(),
+                    LeaveRoom = () => screen.UiLeaveRoom(),
+                    SendChat = (text, completed) => screen.UiSendContentChat(text, completed)
+                }
             );
         }
-
 
         private void SetPlayerPresentation(bool visible)
         {
@@ -358,14 +342,9 @@ namespace SmartTraining
 
             foreach (var participant in screen.UiRoomPlayers)
             {
-                participant.SetPresentationVisible(
-                    visible,
-                    PlayerCamera,
-                    scenarioViewer?.ParticipantRoleLabel(participant.OwnerClientId) ?? ""
-                );
+                participant.SetPresentationVisible(visible, PlayerCamera, scenarioViewer?.ParticipantRoleLabel(participant.OwnerClientId) ?? "");
             }
         }
-
 
         private void RefreshHud()
         {
@@ -377,9 +356,31 @@ namespace SmartTraining
 
             videoViewer?.Bind(screen.UiLocalPlayer);
             scenarioViewer?.Bind(screen.UiLocalPlayer);
-            hud.Refresh(new ContentHudState { Active = IsActive, Requested = requested, SceneReady = SceneReady, Busy = screen.UiProcessing, CanInteract = !screen.UiProcessing && screen.UiLocalPlayer != null && !screen.UiLocalPlayer.PhasePending, IsMaster = screen.UiLocalPlayer?.IsRoomMaster == true, CanReturn = screen.UiRoomCanPhase, CanLeave = screen.UiRoomCanAct, Error = loadError, ContentMessage = contentMessage, Model = modelViewer, Video = videoViewer, Scenario = scenarioViewer, Progress = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.GetComponent<TrainingProgress>() : null, RoomId = screen.UiActiveRoomId, LocalUserId = screen.UiSelfId, ChatMessages = screen.UiContentRoomMessages, ChatStatus = screen.UiContentChatStatus, CanSendChat = screen.UiCanSendContentChat, Participants = GetParticipantStates(), Camera = PlayerCamera });
+            hud.Refresh(new ContentHudState
+                {
+                    Active = IsActive,
+                    Requested = requested,
+                    SceneReady = SceneReady,
+                    Busy = screen.UiProcessing,
+                    CanInteract = !screen.UiProcessing && screen.UiLocalPlayer != null && !screen.UiLocalPlayer.PhasePending,
+                    IsMaster = screen.UiLocalPlayer?.IsRoomMaster == true,
+                    CanReturn = screen.UiRoomCanPhase,
+                    CanLeave = screen.UiRoomCanAct,
+                    Error = loadError,
+                    ContentMessage = contentMessage,
+                    Model = modelViewer,
+                    Video = videoViewer,
+                    Scenario = scenarioViewer,
+                    Progress = screen.UiLocalPlayer != null ? screen.UiLocalPlayer.GetComponent<TrainingProgress>() : null,
+                    RoomId = screen.UiActiveRoomId,
+                    LocalUserId = screen.UiSelfId,
+                    ChatMessages = screen.UiContentRoomMessages,
+                    ChatStatus = screen.UiContentChatStatus,
+                    CanSendChat = screen.UiCanSendContentChat,
+                    Participants = GetParticipantStates(),
+                    Camera = PlayerCamera
+                });
         }
-
 
         private ContentParticipantState[] GetParticipantStates()
         {
@@ -392,18 +393,11 @@ namespace SmartTraining
             for (int index = 0; index < players.Length; index++)
             {
                 var player = players[index];
-                participantStates[index] = new ContentParticipantState(
-                    player.UserId,
-                    player.UserName,
-                    player.IsOwner,
-                    player.IsRoomMaster,
-                    player.ConnectionStatusLabel
-                );
+                participantStates[index] = new ContentParticipantState(player.UserId, player.UserName, player.IsOwner, player.IsRoomMaster, player.ConnectionStatusLabel);
             }
 
             return participantStates;
         }
-
 
         // 설정 UI에서 전달한 값을 연결된 카메라에 적용합니다. 저장·취소는 HUD 컨트롤러가 담당합니다.
         private void ApplyPreferences()
@@ -414,13 +408,11 @@ namespace SmartTraining
             }
         }
 
-
         private static void ReleaseCursor()
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
-
 
         private void EndFirstPerson()
         {
@@ -452,7 +444,6 @@ namespace SmartTraining
             previousListeners.Clear();
         }
 
-
         internal void StopSession()
         {
             requested = false;
@@ -469,7 +460,6 @@ namespace SmartTraining
                 transition = StartCoroutine(ReconcileScene());
             }
         }
-
 
         private void OnDestroy()
         {

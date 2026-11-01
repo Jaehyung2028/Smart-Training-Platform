@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System;
 
 namespace SmartTraining
 {
@@ -24,6 +24,7 @@ namespace SmartTraining
                     {
                         continue;
                     }
+
                     // 번호 줄은 선택 사항입니다. 시간 줄의 형식이 잘못되면 자막 파일의 수정 위치를 알립니다.
                     if (!line.Contains("-->"))
                     {
@@ -31,13 +32,17 @@ namespace SmartTraining
                         {
                             throw new FormatException("SRT 자막 번호가 올바르지 않습니다.");
                         }
+
                         line = reader.ReadLine();
                     }
+
                     var times = (line ?? "").Split(new[] { "-->" }, StringSplitOptions.None);
-                    if (times.Length != 2 || !TryTime(times[0], out var start) || !TryTime(times[1], out var end) || end <= start)
+                    if (times.Length != 2 || !TryTime(times[0], out var start) || !TryTime(times[1], out var end) ||
+                        end <= start)
                     {
                         throw new FormatException("SRT 자막 시각은 00:00:00,000 --> 00:00:04,000 형식이어야 합니다.");
                     }
+
                     var text = new StringBuilder();
                     while ((line = reader.ReadLine()) != null && !string.IsNullOrWhiteSpace(line))
                     {
@@ -45,14 +50,17 @@ namespace SmartTraining
                         {
                             text.Append('\n');
                         }
+
                         text.Append(line);
                     }
+
                     if (text.Length > 0)
                     {
                         cues.Add((start, end, text.ToString()));
                     }
                 }
             }
+
             cues.Sort((left, right) => left.Start.CompareTo(right.Start));
         }
 
@@ -66,6 +74,7 @@ namespace SmartTraining
                 {
                     break;
                 }
+
                 if (seconds >= cue.Start && seconds < cue.End)
                 {
                     result ??= new StringBuilder();
@@ -73,9 +82,11 @@ namespace SmartTraining
                     {
                         result.Append('\n');
                     }
+
                     result.Append(cue.Text);
                 }
             }
+
             return result?.ToString() ?? "";
         }
 

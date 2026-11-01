@@ -1,14 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
+using System;
 using UnityEditor.SceneManagement;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace SmartTraining.Editor
@@ -18,13 +18,22 @@ namespace SmartTraining.Editor
         public const string ClientScene = "Assets/SmartTraining/Scenes/ApiLobby.unity";
 
         public static T[] InScene<T>(Scene scene)
-            where T : Component => scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<T>(true)).ToArray();
+        where T : Component
+        {
+            return scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<T>(true)).ToArray();
+        }
 
         [MenuItem("Smart Training/UI/Scene UI Editor")]
-        public static void OpenWindow() => EditorWindow.GetWindow<UguiSceneWindow>("UI 편집");
+        public static void OpenWindow()
+        {
+            EditorWindow.GetWindow<UguiSceneWindow>("UI 편집");
+        }
 
         [MenuItem("Smart Training/UI/Place UI in Current Scene")]
-        public static void PlaceInCurrentScene() => Install(SceneManager.GetActiveScene());
+        public static void PlaceInCurrentScene()
+        {
+            Install(SceneManager.GetActiveScene());
+        }
 
         public static UguiSceneLayout Install(Scene scene)
         {
@@ -103,7 +112,7 @@ namespace SmartTraining.Editor
         }
 
         private static T EnsureView<T>(ApiLobbyScreen controller, Transform parent, string path)
-            where T : Component
+        where T : Component
         {
             var existing = controller.GetComponentInChildren<T>(true);
             if (existing != null)
@@ -138,7 +147,6 @@ namespace SmartTraining.Editor
                 group,
                 raycaster
             }
-
             )
             {
                 PrefabUtility.RecordPrefabInstancePropertyModifications(component);
@@ -174,8 +182,7 @@ namespace SmartTraining.Editor
                 errors.Add("Workspace.roomView: 방 내부 화면 연결이 없습니다.");
             }
 
-            if (layout.eventSystem == null ||
-                !layout.eventSystem.gameObject.activeInHierarchy ||
+            if (layout.eventSystem == null || !layout.eventSystem.gameObject.activeInHierarchy ||
                 layout.eventSystem.GetComponent<InputSystemUIInputModule>() == null)
             {
                 errors.Add("Workspace.eventSystem: 활성 EventSystem과 InputSystemUIInputModule이 필요합니다.");
@@ -187,8 +194,7 @@ namespace SmartTraining.Editor
                 errors.Add("ApiLobbyScreen이 중복되어 있습니다.");
             }
 
-            if (InScene<LobbyUguiView>(scene).Length != 1 ||
-                InScene<LobbyInteriorUguiView>(scene).Length != 1 ||
+            if (InScene<LobbyUguiView>(scene).Length != 1 || InScene<LobbyInteriorUguiView>(scene).Length != 1 ||
                 InScene<RoomUguiView>(scene).Length != 1)
             {
                 errors.Add("로그인·로비·방 화면은 각각 하나씩 있어야 합니다.");
@@ -205,7 +211,6 @@ namespace SmartTraining.Editor
                 layout.interiorView,
                 layout.roomView
             }
-
             )
             {
                 if (view == null)
@@ -223,8 +228,7 @@ namespace SmartTraining.Editor
                     errors.Add(view.name + ": 화면 오브젝트는 활성화하고 Canvas로 표시를 전환해주세요.");
                 }
 
-                if (view.GetComponent<Canvas>() == null ||
-                    view.GetComponent<CanvasGroup>() == null ||
+                if (view.GetComponent<Canvas>() == null || view.GetComponent<CanvasGroup>() == null ||
                     view.GetComponent<GraphicRaycaster>() == null)
                 {
                     errors.Add(view.name + ": Canvas·CanvasGroup·GraphicRaycaster 연결이 필요합니다.");

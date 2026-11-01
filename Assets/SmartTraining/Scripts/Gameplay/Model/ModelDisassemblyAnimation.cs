@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -29,8 +29,11 @@ namespace SmartTraining
             private Transform[] targets = Array.Empty<Transform>();
 
             public float Time => time;
+
             public string Title => title;
+
             public string Description => description;
+
             public IReadOnlyList<Transform> Targets => targets ?? Array.Empty<Transform>();
         }
 
@@ -44,8 +47,12 @@ namespace SmartTraining
             {
                 return Array.Empty<Step>();
             }
+
             return steps.Where(step => step != null && step.Time >= 0 && step.Time <= disassemblyClip.length)
-                .OrderBy(step => step.Time).GroupBy(step => step.Time).Select(group => group.First()).ToArray();
+                .OrderBy(step => step.Time)
+                .GroupBy(step => step.Time)
+                .Select(group => group.First())
+                .ToArray();
         }
 
         public int FindStepIndex(IReadOnlyList<Step> ordered, float amount)
@@ -54,6 +61,7 @@ namespace SmartTraining
             {
                 return -1;
             }
+
             float time = Mathf.Clamp01(amount) * disassemblyClip.length;
             for (int i = ordered.Count - 1; i >= 0; i--)
             {
@@ -62,10 +70,12 @@ namespace SmartTraining
                     return i;
                 }
             }
+
             return -1;
         }
 
         public AnimationClip Clip => disassemblyClip;
+
         public Animator Animator => GetComponent<Animator>();
     }
 }

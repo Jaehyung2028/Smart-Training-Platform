@@ -1,5 +1,5 @@
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -17,8 +17,11 @@ namespace SmartTraining
         private float detailLineHeight = 24;
 
         public Canvas Canvas => canvas;
+
         public Text NameLabel => nameLabel;
+
         public Text DetailLabel => detailLabel;
+
         public float DetailLineHeight => detailLineHeight;
     }
 }

@@ -13,13 +13,11 @@ namespace SmartTraining
     public static class ParticipantConnectionHealth
     {
         public const double MissingHeartbeatSeconds = 3;
-
         public const int DelayedMilliseconds = 500;
 
         public static ParticipantConnectionState Evaluate(double heartbeatAge, bool heartbeatReceived, int milliseconds)
         {
-            if (double.IsNaN(heartbeatAge) ||
-                double.IsInfinity(heartbeatAge) ||
+            if (double.IsNaN(heartbeatAge) || double.IsInfinity(heartbeatAge) ||
                 heartbeatAge >= MissingHeartbeatSeconds)
             {
                 return ParticipantConnectionState.Checking;

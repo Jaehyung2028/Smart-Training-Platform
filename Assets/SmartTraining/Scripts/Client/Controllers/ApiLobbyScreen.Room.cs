@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -23,9 +23,7 @@ namespace SmartTraining
             int reply = player.PhaseReply;
             player.RequestPhaseRpc(running);
             double until = Time.realtimeSinceStartupAsDouble + 15;
-            while (network?.IsConnected == true &&
-                player != null &&
-                player.PhaseReply == reply &&
+            while (network?.IsConnected == true && player != null && player.PhaseReply == reply &&
                 Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
@@ -42,7 +40,6 @@ namespace SmartTraining
             }
         }
 
-
         private IEnumerator UpdateRoomSettings(string name, string capacityText)
         {
             if (network?.IsConnected != true || api?.IsLoggedIn != true)
@@ -57,22 +54,14 @@ namespace SmartTraining
             }
 
             RoomHubResult result = null;
-            yield return api.UpdateRoomSettings(
-                networkLobbyId,
-                networkRoomId,
-                name.Trim(),
-                capacity,
-                value => result = value,
-                Failure
-            );
+            yield return api.UpdateRoomSettings(networkLobbyId, networkRoomId, name.Trim(), capacity, value => result = value, Failure);
             if (result == null)
             {
                 yield break;
             }
 
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while (network?.IsConnected == true &&
-                network.LocalPlayer != null &&
+            while (network?.IsConnected == true && network.LocalPlayer != null &&
                 (network.LocalPlayer.RoomName != result.roomName ||
                 network.LocalPlayer.RoomCapacity != result.maxUsers) &&
                 Time.realtimeSinceStartupAsDouble < until)
@@ -80,12 +69,10 @@ namespace SmartTraining
                 yield return null;
             }
 
-            status = network?.IsConnected == true &&
-                network.LocalPlayer != null &&
-                network.LocalPlayer.RoomName == result.roomName &&
-                network.LocalPlayer.RoomCapacity == result.maxUsers ? "방 이름과 최대 인원을 변경했습니다." : "방 설정을 저장했습니다. 화면 동기화를 기다리고 있습니다.";
+            status = network?.IsConnected == true && network.LocalPlayer != null &&
+            network.LocalPlayer.RoomName == result.roomName &&
+            network.LocalPlayer.RoomCapacity == result.maxUsers ? "방 이름과 최대 인원을 변경했습니다." : "방 설정을 저장했습니다. 화면 동기화를 기다리고 있습니다.";
         }
-
 
         private IEnumerator ChangeRoomContent(ContentSummary content)
         {
@@ -97,8 +84,7 @@ namespace SmartTraining
             }
 
             double until = Time.realtimeSinceStartupAsDouble + 8;
-            while (network?.IsConnected == true &&
-                UiLocalPlayer?.RoomContentNodeId != content.id &&
+            while (network?.IsConnected == true && UiLocalPlayer?.RoomContentNodeId != content.id &&
                 Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
@@ -106,7 +92,6 @@ namespace SmartTraining
 
             status = UiLocalPlayer?.RoomContentNodeId == content.id ? "콘텐츠를 변경했습니다. 다시 준비한 후 시작해주세요." : "콘텐츠를 저장했습니다. 서버 동기화를 기다리고 있습니다.";
         }
-
 
         private IEnumerator SetReady(bool value)
         {
@@ -117,9 +102,7 @@ namespace SmartTraining
             }
 
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while (network?.IsConnected == true &&
-                network.LocalPlayer != null &&
-                network.LocalPlayer.IsReady != value &&
+            while (network?.IsConnected == true && network.LocalPlayer != null && network.LocalPlayer.IsReady != value &&
                 Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
@@ -135,7 +118,6 @@ namespace SmartTraining
             }
         }
 
-
         private IEnumerator TransferRoomMaster(string targetId, string targetName)
         {
             if (network?.IsConnected != true || api?.IsLoggedIn != true)
@@ -144,19 +126,24 @@ namespace SmartTraining
             }
 
             bool transferred = false;
-            yield return api.TransferRoomMaster(networkLobbyId, networkRoomId, targetId, () =>
-            {
-                transferred = true;
-                status = targetName + "에게 방장을 위임했습니다. 표시를 갱신하는 중입니다.";
-            }, Failure);
+            yield return api.TransferRoomMaster(
+                networkLobbyId,
+                networkRoomId,
+                targetId,
+                () =>
+                {
+                    transferred = true;
+                    status = targetName + "에게 방장을 위임했습니다. 표시를 갱신하는 중입니다.";
+                },
+                Failure
+            );
             if (!transferred)
             {
                 yield break;
             }
 
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while (network?.IsConnected == true &&
-                network.LocalPlayer != null &&
+            while (network?.IsConnected == true && network.LocalPlayer != null &&
                 network.LocalPlayer.RoomMasterUserId != targetId &&
                 Time.realtimeSinceStartupAsDouble < until)
             {
@@ -165,7 +152,6 @@ namespace SmartTraining
 
             status = targetName + "에게 방장을 위임했습니다.";
         }
-
 
         private IEnumerator SetRoomEntryLock(bool locked)
         {
@@ -182,8 +168,7 @@ namespace SmartTraining
             }
 
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while (network?.IsConnected == true &&
-                network.LocalPlayer != null &&
+            while (network?.IsConnected == true && network.LocalPlayer != null &&
                 network.LocalPlayer.RoomEntryLocked != locked &&
                 Time.realtimeSinceStartupAsDouble < until)
             {
@@ -192,7 +177,6 @@ namespace SmartTraining
 
             status = locked ? "새 참가자의 입장을 잠갔습니다. 기존 참가자의 연결은 유지됩니다." : "새 참가자의 입장을 열었습니다.";
         }
-
 
         private IEnumerator KickRoomUser(string targetId, string targetName)
         {
@@ -209,8 +193,7 @@ namespace SmartTraining
             }
 
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while (network?.IsConnected == true &&
-                Array.Exists(network.Players, player => player.UserId == targetId) &&
+            while (network?.IsConnected == true && Array.Exists(network.Players, player => player.UserId == targetId) &&
                 Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
@@ -218,7 +201,6 @@ namespace SmartTraining
 
             status = network?.IsConnected == true && !Array.Exists(network.Players, player => player.UserId == targetId) ? targetName + "님을 강퇴했습니다." : "강퇴 요청을 전달했습니다. 접속 종료 확인을 기다리는 중입니다.";
         }
-
 
         private IEnumerator CloseRoom()
         {
@@ -232,7 +214,6 @@ namespace SmartTraining
             ForgetReconnect();
             yield return LeaveRoom("방장이 방을 닫았습니다. 로비로 돌아왔습니다.");
         }
-
 
         private IEnumerator UpdateRoomPassword(string password)
         {

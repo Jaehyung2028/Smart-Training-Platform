@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 
 namespace SmartTraining
 {
@@ -21,7 +21,8 @@ namespace SmartTraining
                 yield break;
             }
 
-            if (network?.IsConnected == true || source.User.currentRoomId.Length > 0 || source.User.pendingRoomId.Length > 0)
+            if (network?.IsConnected == true || source.User.currentRoomId.Length > 0 ||
+                source.User.pendingRoomId.Length > 0)
             {
                 Failure("현재 방에서 나가거나 접속 예약을 취소한 뒤 다른 참가자의 방을 찾아주세요.");
                 yield break;
@@ -116,7 +117,6 @@ namespace SmartTraining
             participantsLoaded = true;
             status = ParticipantRoomViewStatus(detail);
         }
-
 
         private static string ParticipantRoomViewStatus(RoomSummary room)
         {

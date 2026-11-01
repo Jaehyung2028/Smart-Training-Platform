@@ -19,15 +19,13 @@ namespace SmartTraining
 
         public bool IsWorking => WorkDuration > 0;
 
-
         public float GetWorkProgress(double serverTime)
         {
             return IsWorking ? UnityEngine.Mathf.Clamp01((float)((serverTime - WorkStartedAt) / WorkDuration)) : 0;
         }
 
-
         public void NetworkSerialize<T>(BufferSerializer<T> serializer)
-            where T : IReaderWriter
+        where T : IReaderWriter
         {
             serializer.SerializeValue(ref CompletedSteps);
             serializer.SerializeValue(ref Revision);
@@ -42,20 +40,18 @@ namespace SmartTraining
             serializer.SerializeValue(ref TargetErrors);
         }
 
-
         public bool Equals(ScenarioProgressState other)
         {
-            return CompletedSteps == other.CompletedSteps &&
-                Revision == other.Revision &&
-                RunRevision == other.RunRevision &&
-                LastActor.Equals(other.LastActor) &&
-                WorkStartedAt == other.WorkStartedAt &&
-                WorkDuration == other.WorkDuration &&
-                WorkClientId == other.WorkClientId &&
-                RunStartedAt == other.RunStartedAt &&
-                RunEndedAt == other.RunEndedAt &&
-                ToolErrors == other.ToolErrors &&
-                TargetErrors == other.TargetErrors;
+            return CompletedSteps == other.CompletedSteps && Revision == other.Revision &&
+            RunRevision == other.RunRevision &&
+            LastActor.Equals(other.LastActor) &&
+            WorkStartedAt == other.WorkStartedAt &&
+            WorkDuration == other.WorkDuration &&
+            WorkClientId == other.WorkClientId &&
+            RunStartedAt == other.RunStartedAt &&
+            RunEndedAt == other.RunEndedAt &&
+            ToolErrors == other.ToolErrors &&
+            TargetErrors == other.TargetErrors;
         }
     }
 }

@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -35,7 +35,6 @@ namespace SmartTraining
 
         internal bool UiContentSceneActive => contentSession != null && contentSession.IsActive;
 
-
         private void OnEnable()
         {
             previousRunInBackground = Application.runInBackground;
@@ -43,7 +42,6 @@ namespace SmartTraining
             InitializeServerAddress();
             EnsureUgui();
         }
-
 
         private static bool WaitingForExitCleanup
         {
@@ -57,8 +55,10 @@ namespace SmartTraining
             }
         }
 
-
-        private void Run(IEnumerator operation) => RunOperation(operation, "작업을 처리하고 있습니다.");
+        private void Run(IEnumerator operation)
+        {
+            RunOperation(operation, "작업을 처리하고 있습니다.");
+        }
 
         private void RunOperation(IEnumerator operation, string message)
         {
@@ -74,7 +74,6 @@ namespace SmartTraining
             StartCoroutine(Execute(operation));
         }
 
-
         private IEnumerator Execute(IEnumerator operation)
         {
             try
@@ -89,12 +88,10 @@ namespace SmartTraining
             }
         }
 
-
         private void ClearRoomPasswords()
         {
             createRoomPassword = joinRoomPassword = reconnectPassword = editRoomPassword = "";
         }
-
 
         private void ClearLobbyData()
         {
@@ -105,7 +102,6 @@ namespace SmartTraining
             selectedRoom = null;
             joinRoomPassword = "";
         }
-
 
         private void ClearView()
         {
@@ -136,7 +132,6 @@ namespace SmartTraining
             ResetUguiTransientState();
         }
 
-
         private static string RoomStateLabel(int state)
         {
             switch (state)
@@ -160,7 +155,6 @@ namespace SmartTraining
             }
         }
 
-
         private void Failure(string message)
         {
             // 하단 상태 줄 대신 기존 상단 공지 영역에서 필요한 실패 안내만 표시합니다.
@@ -180,7 +174,6 @@ namespace SmartTraining
                 ClearView();
             }
         }
-
 
         private bool EnsureClient()
         {
@@ -213,7 +206,6 @@ namespace SmartTraining
             }
         }
 
-
         private IEnumerator CheckHealth()
         {
             if (EnsureClient())
@@ -221,7 +213,6 @@ namespace SmartTraining
                 yield return api.CheckHealth(() => status = "서버가 응답했습니다.", Failure);
             }
         }
-
 
         private IEnumerator Login()
         {
@@ -231,17 +222,20 @@ namespace SmartTraining
             }
 
             bool loggedIn = false;
-            yield return api.Login(nickname.Trim(), () =>
-            {
-                loggedIn = true;
-                status = "로그인했습니다.";
-            }, Failure);
+            yield return api.Login(
+                nickname.Trim(),
+                () =>
+                {
+                    loggedIn = true;
+                    status = "로그인했습니다.";
+                },
+                Failure
+            );
             if (loggedIn)
             {
                 yield return LoadState();
             }
         }
-
 
         private IEnumerator LoadState()
         {
@@ -253,12 +247,15 @@ namespace SmartTraining
             }
 
             loaded = false;
-            yield return api.GetLobbies(items =>
-            {
-                lobbies = items;
-                loaded = true;
-                status = "로비 " + items.Length + "개를 조회했습니다.";
-            }, Failure);
+            yield return api.GetLobbies(
+                items =>
+                {
+                    lobbies = items;
+                    loaded = true;
+                    status = "로비 " + items.Length + "개를 조회했습니다.";
+                },
+                Failure
+            );
             if (!loaded)
             {
                 yield break;
@@ -287,51 +284,57 @@ namespace SmartTraining
             }
         }
 
-
         // 카탈로그 트리를 선택용 목록으로도 펼칩니다. children 관계는 그대로 보존해 트리 UI에 사용합니다.
         private IEnumerator LoadLobbyData()
         {
             bool loaded = false;
-            yield return api.GetContents(selectedLobbyId, items =>
-            {
-                contents = ContentSummary.Flatten(items);
-                loaded = true;
-                if (!Array.Exists(
-                    contents,
-                    item => item.rootContent == selectedContentId && item.id == selectedContentNodeId
-                ))
+            yield return api.GetContents(
+                selectedLobbyId,
+                items =>
                 {
-                    selectedContentId = "";
-                    selectedContentNodeId = 0;
-                }
-            }, Failure);
+                    contents = ContentSummary.Flatten(items);
+                    loaded = true;
+                    if (!Array.Exists(contents, item => item.rootContent == selectedContentId && item.id == selectedContentNodeId))
+                    {
+                        selectedContentId = "";
+                        selectedContentNodeId = 0;
+                    }
+                },
+                Failure
+            );
             if (loaded)
             {
                 yield return LoadRooms();
             }
         }
 
-
         private IEnumerator LoadRooms()
         {
-            yield return api.GetRooms(selectedLobbyId, items =>
-            {
-                rooms = items;
-                selectedRoom = Array.Find(rooms, item => item.id == selectedRoom?.id);
-            }, Failure);
+            yield return api.GetRooms(
+                selectedLobbyId,
+                items =>
+                {
+                    rooms = items;
+                    selectedRoom = Array.Find(rooms, item => item.id == selectedRoom?.id);
+                },
+                Failure
+            );
         }
-
 
         private IEnumerator SelectRoom(string roomId)
         {
             joinRoomPassword = "";
             selectedRoom = null;
-            yield return api.GetRoom(selectedLobbyId, roomId, room =>
-            {
-                selectedRoom = room;
-            }, Failure);
+            yield return api.GetRoom(
+                selectedLobbyId,
+                roomId,
+                room =>
+                {
+                    selectedRoom = room;
+                },
+                Failure
+            );
         }
-
 
         // 입력값을 검사하고 선택한 콘텐츠로 방을 생성한 뒤 같은 비밀번호로 자동 입장합니다.
         private IEnumerator CreateRoom()
@@ -347,11 +350,20 @@ namespace SmartTraining
             // 생성 직후 같은 비밀번호로 자동 입장합니다. 입력란을 비워도 이번 요청에는 보관한 값을 사용합니다.
             string password = createRoomPassword;
             string creationError = null;
-            yield return api.CreateRoom(lobbyId, roomName.Trim(), selectedContentId, maxUsers, id => createdId = id, message =>
-            {
-                creationError = message;
-                Failure(message);
-            }, password, selectedContentNodeId);
+            yield return api.CreateRoom(
+                lobbyId,
+                roomName.Trim(),
+                selectedContentId,
+                maxUsers,
+                id => createdId = id,
+                message =>
+                {
+                    creationError = message;
+                    Failure(message);
+                },
+                password,
+                selectedContentNodeId
+            );
             if (createdId == null)
             {
                 yield return RecoverRoomCreation(creationError ?? "방 생성 결과를 확인하지 못했습니다.");
@@ -377,13 +389,12 @@ namespace SmartTraining
             yield return api.LeaveRoom(lobbyId, createdId, () =>
             {
             }, _ =>
-            {
-            });
+                {
+                });
             string joinStatus = status;
             yield return LoadState();
             Failure("방 생성 후 자동 입장에 실패했습니다. " + joinStatus);
         }
-
 
         // 응답이 유실돼도 서버에 예약이 생겼을 수 있으므로 재생성·자동 재시도 대신 실제 소속을 확인합니다.
         private IEnumerator RecoverRoomCreation(string creationError)
@@ -409,7 +420,8 @@ namespace SmartTraining
                 yield break;
             }
 
-            bool hasRoom = !string.IsNullOrEmpty(source.User.pendingRoomId) || !string.IsNullOrEmpty(source.User.currentRoomId);
+            bool hasRoom = !string.IsNullOrEmpty(source.User.pendingRoomId) ||
+            !string.IsNullOrEmpty(source.User.currentRoomId);
             yield return LoadState();
             if (api != source || !source.IsLoggedIn)
             {
@@ -418,7 +430,6 @@ namespace SmartTraining
 
             status = creationError + (hasRoom ? " 서버에 방 접속 정보가 남아 있습니다. ‘남은 방 접속 정리’를 눌러 정리해주세요." : " 남은 방 접속 정보는 없습니다. 다시 생성할 수 있습니다.");
         }
-
 
         private IEnumerator LeaveLobby()
         {
@@ -432,7 +443,6 @@ namespace SmartTraining
                 yield return LoadState();
             }
         }
-
 
         private void Update()
         {
@@ -448,7 +458,6 @@ namespace SmartTraining
             }
         }
 
-
         // 서버가 확정한 진행 상태만 씬 전환에 전달합니다. 대기 UI와 네트워크 연결은 유지합니다.
         private void UpdateContentScene()
         {
@@ -461,7 +470,6 @@ namespace SmartTraining
             contentSession.Synchronize(this, running);
         }
 
-
         private void UpdateRoomMovement()
         {
             if (network?.IsConnected != true)
@@ -471,7 +479,6 @@ namespace SmartTraining
 
             network.SendMovement(ReadRoomMovement());
         }
-
 
         // 이동은 콘텐츠의 공통 1인칭 입력만 사용합니다. 대기실과 처리 중에는 이동하지 않습니다.
         private Vector2 ReadRoomMovement()
@@ -488,7 +495,6 @@ namespace SmartTraining
 
             return Vector2.zero;
         }
-
 
         private void OnDisable()
         {

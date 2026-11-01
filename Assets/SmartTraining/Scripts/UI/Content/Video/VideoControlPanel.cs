@@ -1,8 +1,8 @@
 using System;
-using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -22,7 +22,7 @@ namespace SmartTraining
         private bool pending, dragging;
         private float requested, nextSend, editedAt = float.NegativeInfinity;
 
-        public VideoControlPanel(Transform parent, Transform subtitleParent, Font font)
+        public VideoControlPanel(Transform parent, Transform subtitleParent)
         {
             var view = UiPrefab.Instantiate("VideoControlPanel", parent);
             root = view.Get<GameObject>("root");
@@ -76,7 +76,6 @@ namespace SmartTraining
             subtitleRoot.SetActive(false);
         }
 
-
         internal void Refresh(VideoContentPlayer current, bool visible, bool canInteract)
         {
             if (viewer != current)
@@ -105,13 +104,7 @@ namespace SmartTraining
                 subtitleBottom = bounds.max.y - canvasRect.rect.yMin + 12;
             }
 
-            subtitleRect.anchoredPosition = new Vector2(
-                subtitlePosition.x,
-                Mathf.Min(
-                Mathf.Max(subtitlePosition.y, subtitleBottom),
-                canvasRect.rect.height - 170
-            )
-            );
+            subtitleRect.anchoredPosition = new Vector2(subtitlePosition.x, Mathf.Min(Mathf.Max(subtitlePosition.y, subtitleBottom), canvasRect.rect.height - 170));
             subtitleRect.sizeDelta = new Vector2(Mathf.Min(subtitleSize.x, canvasRect.rect.width - 48), subtitleSize.y);
             subtitleToggle.interactable = canInteract && viewer.HasSubtitles;
             subtitleToggleLabel.text = !viewer.HasSubtitles ? "자막 없음" : viewer.SubtitlesEnabled ? "자막 켜짐" : "자막 꺼짐";
@@ -146,7 +139,6 @@ namespace SmartTraining
             volumeLabel.text = "내 영상 음량: " + Mathf.RoundToInt(viewer.Volume * 100) + "%";
         }
 
-
         public void Dispose()
         {
             root.SetActive(false);
@@ -154,7 +146,6 @@ namespace SmartTraining
             UiPrefab.Destroy(root);
             UiPrefab.Destroy(subtitleRoot);
         }
-
 
         private void BindPlayback(Button button, Action action, bool flushPendingSeek = true)
         {
@@ -172,7 +163,6 @@ namespace SmartTraining
             });
         }
 
-
         private void FlushSeek()
         {
             if (pending && viewer != null && viewer.CanControl)
@@ -183,7 +173,6 @@ namespace SmartTraining
 
             pending = false;
         }
-
 
         private static string FormatTime(double seconds)
         {

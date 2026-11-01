@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using UnityEngine.Video;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -27,7 +27,6 @@ namespace SmartTraining
             this.display = display;
         }
 
-
         public bool IsReady => initialized && error.Length == 0 && player != null && player.isPrepared;
 
         public string Error => error;
@@ -37,7 +36,6 @@ namespace SmartTraining
         public double Length => IsReady ? player.length : 0;
 
         public float Volume => volume;
-
 
         public void Update(double position, double duration, bool playing)
         {
@@ -71,10 +69,10 @@ namespace SmartTraining
             SynchronizePlayback(position, duration, playing);
         }
 
-
         public bool TryInitialize(out string message)
         {
-            if (player == null || audioSource == null || clip == null || display == null || display.sharedMaterial == null)
+            if (player == null || audioSource == null || clip == null || display == null ||
+                display.sharedMaterial == null)
             {
                 message = "영상 프리팹에 VideoClip과 화면 Renderer를 연결해주세요.";
                 return false;
@@ -105,7 +103,6 @@ namespace SmartTraining
             message = null;
             return true;
         }
-
 
         private void CreateVideoSurface()
         {
@@ -138,7 +135,6 @@ namespace SmartTraining
             display.sharedMaterial = material;
         }
 
-
         private void ConfigureAudio()
         {
             player.audioOutputMode = VideoAudioOutputMode.AudioSource;
@@ -149,7 +145,6 @@ namespace SmartTraining
                 player.SetTargetAudioSource(0, audioSource);
             }
         }
-
 
         private void SynchronizePlayback(double position, double duration, bool playing)
         {
@@ -194,7 +189,6 @@ namespace SmartTraining
             }
         }
 
-
         private void OnFrameReady(VideoPlayer source, long frameIndex)
         {
             if (!seeking || Math.Abs(frameIndex / Math.Max(1, source.frameRate) - seekTarget) > 0.15)
@@ -211,14 +205,12 @@ namespace SmartTraining
             audioSource.mute = false;
         }
 
-
         private void OnError(VideoPlayer source, string message)
         {
             error = "영상 재생 오류: " + message;
             source.Stop();
             Debug.LogWarning(error);
         }
-
 
         public void SetVolume(float value)
         {
@@ -228,7 +220,6 @@ namespace SmartTraining
                 audioSource.volume = volume;
             }
         }
-
 
         public void Dispose()
         {

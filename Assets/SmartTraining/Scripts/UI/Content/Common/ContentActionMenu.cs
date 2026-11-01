@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -21,8 +21,7 @@ namespace SmartTraining
 
         public bool IsOpen => panel != null && panel.activeSelf;
 
-
-        public ContentActionMenu(Transform parent, Font font)
+        public ContentActionMenu(Transform parent)
         {
             var view = UiPrefab.Bind("ContentActionMenu", parent);
             root = view.Get<GameObject>("root");
@@ -34,7 +33,6 @@ namespace SmartTraining
             Close();
         }
 
-
         // 콘텐츠 전용 UI도 같은 기능 메뉴의 배치·닫기·정리 수명주기에 포함합니다.
         public RectTransform AddSection(string name)
         {
@@ -44,7 +42,6 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
             return (RectTransform)section.transform;
         }
-
 
         public void AddAction(string label, Action execute, Func<bool> canExecute)
         {
@@ -61,7 +58,6 @@ namespace SmartTraining
             actions.Add((button, canExecute));
             emptyLabel.gameObject.SetActive(false);
         }
-
 
         // 슬라이더는 메뉴를 닫지 않습니다. 선택 변경 후에도 개인별 설정을 그대로 사용합니다.
         public void AddTransparencyControls(Action<bool, float> apply, Func<bool> canUse)
@@ -100,7 +96,6 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
         }
 
-
         private Slider CreateSlider(string name)
         {
             var slider = UiPrefab.Instantiate("ActionSlider", panel.transform).GetComponent<Slider>();
@@ -108,15 +103,8 @@ namespace SmartTraining
             return slider;
         }
 
-
         // 서버의 공통 값을 표시합니다. 드래그 중 최신 입력만 0.1초 간격으로 보내고 마지막 값도 전송합니다.
-        public void AddSharedSlider(
-            string title,
-            string name,
-            Func<float> getValue,
-            Action<float> setValue,
-            Func<bool> canUse
-        )
+        public void AddSharedSlider(string title, string name, Func<float> getValue, Action<float> setValue, Func<bool> canUse)
         {
             var caption = CreateLabel(title + ": 0%", panel.transform);
             caption.gameObject.GetComponent<LayoutElement>().preferredHeight = 28;
@@ -175,7 +163,6 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
         }
 
-
         public void AddPlaybackControls(Action<int> execute, Func<int, bool> canExecute, Func<string> getStatus)
         {
             var status = CreateLabel("조립 상태", panel.transform);
@@ -188,7 +175,6 @@ namespace SmartTraining
                 (Label: "일시정지", Direction: 0),
                 (Label: "재조립", Direction: -1)
             }
-
             )
             {
                 int direction = item.Direction;
@@ -216,7 +202,6 @@ namespace SmartTraining
             emptyLabel.gameObject.SetActive(false);
         }
 
-
         public void ClearActions()
         {
             Close();
@@ -239,7 +224,6 @@ namespace SmartTraining
             flushSliders.Clear();
             emptyLabel.gameObject.SetActive(true);
         }
-
 
         public void Refresh(bool visible, bool canInteract)
         {
@@ -266,7 +250,6 @@ namespace SmartTraining
             }
         }
 
-
         public void Toggle()
         {
             if (!toggleButton.interactable)
@@ -279,7 +262,6 @@ namespace SmartTraining
             toggleLabel.text = open ? "기능 메뉴 닫기" : "기능 메뉴";
         }
 
-
         public void Close()
         {
             if (panel == null)
@@ -291,7 +273,6 @@ namespace SmartTraining
             toggleLabel.text = "기능 메뉴";
         }
 
-
         private Button CreateButton(string text, Transform parent)
         {
             var button = UiPrefab.Instantiate("ActionButton", parent).GetComponent<Button>();
@@ -299,7 +280,6 @@ namespace SmartTraining
             button.GetComponentInChildren<Text>(true).text = text;
             return button;
         }
-
 
         private Text CreateLabel(string text, Transform parent)
         {

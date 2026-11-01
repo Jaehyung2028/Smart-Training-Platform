@@ -1,12 +1,11 @@
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
     public sealed class UguiSelectionHighlight : MonoBehaviour
     {
         public Outline border;
-
         public Color normalColor, selectedColor;
 
         public void SetSelected(bool selected)

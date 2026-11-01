@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using System;
 
 namespace SmartTraining
 {
@@ -18,17 +18,16 @@ namespace SmartTraining
             }
 
             var text = input.Trim();
-            if (text.Any(char.IsWhiteSpace) ||
-                !Uri.TryCreate(text, UriKind.Absolute, out var uri) ||
-                (uri.Scheme != "http" &&
-                uri.Scheme != "https") ||
+            if (text.Any(char.IsWhiteSpace) || !Uri.TryCreate(text, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != "http" && uri.Scheme != "https") ||
                 string.IsNullOrEmpty(uri.Host) ||
                 uri.Port <= 0)
             {
                 return false;
             }
 
-            if (!string.IsNullOrEmpty(uri.UserInfo) || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
+            if (!string.IsNullOrEmpty(uri.UserInfo) || !string.IsNullOrEmpty(uri.Query) ||
+                !string.IsNullOrEmpty(uri.Fragment))
             {
                 error = "서버 주소에 사용자 정보·쿼리·# 조각을 포함하지 말아주세요.";
                 return false;
@@ -56,7 +55,6 @@ namespace SmartTraining
             error = null;
             return true;
         }
-
 
         public static string Normalize(string input)
         {

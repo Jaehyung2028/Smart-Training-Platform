@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -12,10 +12,12 @@ namespace SmartTraining
         private float nextCourseLoadAt;
 
         internal CourseSummary[] UiCourses => courses;
+
         internal string UiCourseId => selectedCourseId;
-        internal bool UiCanCourseLogin => !UiProcessing &&
-            ServerAddress.TryNormalize(serverUrl, out var address, out _) && courseSourceAddress == address &&
-            Array.Exists(courses, course => course.id == selectedCourseId && course.canEnter);
+
+        internal bool UiCanCourseLogin => !UiProcessing && ServerAddress.TryNormalize(serverUrl, out var address, out _) &&
+        courseSourceAddress == address &&
+        Array.Exists(courses, course => course.id == selectedCourseId && course.canEnter);
 
         private void ClearCourses()
         {
@@ -28,14 +30,17 @@ namespace SmartTraining
         private void UpdateCoursesBeforeLogin()
         {
             if (UiLoggedIn || UiProcessing || Time.unscaledTime < nextCourseLoadAt ||
-                !ServerAddress.TryNormalize(serverUrl, out var address, out _) || courseAttemptedAddress == address)
+                !ServerAddress.TryNormalize(serverUrl, out var address, out _) ||
+                courseAttemptedAddress == address)
             {
                 return;
             }
+
             if (uguiView != null && uguiView.addressInput.isFocused)
             {
                 return;
             }
+
             RunOperation(LoadCourses(), "교육과정을 불러오고 있습니다.");
         }
 
@@ -45,6 +50,7 @@ namespace SmartTraining
             {
                 yield break;
             }
+
             var source = api;
             courseAttemptedAddress = source.BaseUrl;
             CourseSummary[] loaded = null;
@@ -54,6 +60,7 @@ namespace SmartTraining
             {
                 yield break;
             }
+
             if (loaded == null)
             {
                 courses = Array.Empty<CourseSummary>();
@@ -61,12 +68,14 @@ namespace SmartTraining
                 status = "교육과정 목록을 불러오지 못했습니다. 서버 연결 확인을 눌러 다시 조회해주세요. " + error;
                 yield break;
             }
+
             courses = loaded;
             courseSourceAddress = source.BaseUrl;
             if (!Array.Exists(courses, course => course.id == selectedCourseId))
             {
                 selectedCourseId = "";
             }
+
             status = courses.Length == 0 ? "등록된 교육과정이 없습니다." : "교육과정 " + courses.Length + "개를 불러왔습니다. 하나를 선택해주세요.";
         }
 
@@ -76,6 +85,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             selectedCourseId = id;
             var selected = Array.Find(courses, course => course.id == id);
             status = selected == null ? "교육과정을 선택해주세요." : selected.canEnter ? selected.name + " 과정을 선택했습니다." : "입장할 수 없는 교육과정입니다. " + selected.unavailableReason;
@@ -96,6 +106,7 @@ namespace SmartTraining
                 status = "교육과정을 먼저 선택해주세요.";
                 yield break;
             }
+
             // 선택 후 점검으로 바뀌었거나 다른 서버로 주소가 바뀐 경우를 다시 확인합니다.
             yield return LoadCourses();
             var selected = Array.Find(courses, course => course.id == courseId);
@@ -104,20 +115,24 @@ namespace SmartTraining
                 status = "선택한 교육과정에 입장할 수 없습니다. " + (selected?.unavailableReason ?? "목록을 다시 확인해주세요.");
                 yield break;
             }
+
             if (!UiLoggedIn)
             {
                 yield return Login();
             }
+
             if (!UiLoggedIn)
             {
                 yield break;
             }
+
             // 응답을 잃고 이미 입장한 경우 재입장 대신 현재 상태를 표시합니다.
             if (!string.IsNullOrEmpty(api.User.currentLobbyId))
             {
                 yield return LoadState();
                 yield break;
             }
+
             selectedLobbyId = courseId;
             yield return JoinLobby(courseId);
         }

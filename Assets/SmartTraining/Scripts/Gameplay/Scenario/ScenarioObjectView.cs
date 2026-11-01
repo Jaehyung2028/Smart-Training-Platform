@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -32,7 +32,6 @@ namespace SmartTraining
                 originals.Add(saved);
             }
         }
-
 
         public void Refresh(bool active, float loosenAmount, bool completed)
         {
@@ -82,7 +81,6 @@ namespace SmartTraining
             item.transform.localPosition = initialPosition + item.LoosenOffset * loosenAmount;
             item.transform.localRotation = initialRotation * Quaternion.AngleAxis(-360 * item.LoosenTurns * loosenAmount, Vector3.up);
         }
-
 
         public void Dispose()
         {

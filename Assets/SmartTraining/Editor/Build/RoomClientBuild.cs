@@ -1,6 +1,6 @@
 using System;
-using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -28,17 +28,13 @@ namespace SmartTraining.Editor
             }
 
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-            {
-                scenes = new[]
                 {
-                    "Assets/SmartTraining/Scenes/ApiLobby.unity",
-                    ContentSceneSession.ScenePath
-                },
-                locationPathName = output,
-                target = BuildTarget.StandaloneWindows64,
-                subtarget = (int)StandaloneBuildSubtarget.Player,
-                options = BuildOptions.Development
-            });
+                    scenes = new[] { "Assets/SmartTraining/Scenes/ApiLobby.unity", ContentSceneSession.ScenePath },
+                    locationPathName = output,
+                    target = BuildTarget.StandaloneWindows64,
+                    subtarget = (int)StandaloneBuildSubtarget.Player,
+                    options = BuildOptions.Development
+                });
             if (report.summary.result != BuildResult.Succeeded)
             {
                 throw new InvalidOperationException("Room client build failed.");

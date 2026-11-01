@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -17,7 +17,6 @@ namespace SmartTraining
         private float pitchLimit = 85;
         [SerializeField, Range(0.1f, 1)]
         private float inspectionRatio = 0.75f;
-
         private Camera viewCamera;
         private IFirstPersonCameraInput input;
         private Transform followTarget;
@@ -30,9 +29,11 @@ namespace SmartTraining
         private int lookInputStartsAtFrame;
 
         public Camera ViewCamera => viewCamera;
+
         public float Yaw => yaw;
-        public bool CanInteract => isActiveAndEnabled && followTarget != null &&
-            Application.isFocused && (inputAllowed?.Invoke() ?? true);
+
+        public bool CanInteract => isActiveAndEnabled && followTarget != null && Application.isFocused &&
+        (inputAllowed?.Invoke() ?? true);
 
         private void Awake()
         {
@@ -49,6 +50,7 @@ namespace SmartTraining
                 viewCamera.clearFlags = CameraClearFlags.SolidColor;
                 viewCamera.backgroundColor = new Color32(148, 163, 184, 255);
             }
+
             input ??= new FirstPersonCameraInput();
         }
 
@@ -67,10 +69,12 @@ namespace SmartTraining
             {
                 throw new ArgumentNullException(nameof(source));
             }
+
             if (ReferenceEquals(input, source))
             {
                 return;
             }
+
             input?.Disable();
             input?.Dispose();
             input = source;
@@ -115,6 +119,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             if (canLook && Time.frameCount >= lookInputStartsAtFrame && input.Looking)
             {
                 var delta = input.LookDelta;
@@ -122,6 +127,7 @@ namespace SmartTraining
                 yaw = Mathf.Repeat(yaw + delta.x * 0.12f * sensitivity, 360);
                 pitch = Mathf.Clamp(pitch + vertical * 0.12f * sensitivity, -pitchLimit, pitchLimit);
             }
+
             transform.SetPositionAndRotation(followTarget.position + eyeOffset, Quaternion.Euler(pitch, yaw, 0));
         }
 
@@ -135,6 +141,7 @@ namespace SmartTraining
             {
                 zoom = target;
             }
+
             viewCamera.fieldOfView = fieldOfView * zoom;
         }
 

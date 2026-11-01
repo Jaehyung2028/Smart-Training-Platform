@@ -1,10 +1,10 @@
 using System;
-using UnityEngine;
 using UnityEngine.Video;
+using UnityEngine;
 
 namespace SmartTraining
 {
-    // 콘텐츠 프리팹의 리소스와 방의 공유 시계를 연결하는 조정자입니다. 실제 디코딩·렌더링은 공통 모듈에 맡깁니다.
+    // 방의 재생 시계와 로컬 영상을 연결합니다. 디코딩과 오디오 자원은 VideoSurfacePlayer가 관리합니다.
     [RequireComponent(typeof(VideoPlayer), typeof(AudioSource))]
     public sealed class VideoContentPlayer : MonoBehaviour
     {
@@ -43,17 +43,49 @@ namespace SmartTraining
         public bool SubtitlesEnabled => subtitlesEnabled;
 
         // 공통 재생 시각으로 자막을 조회하며 초기·정지 상태의 0초에서는 숨깁니다.
-        public string SubtitleText => subtitlesEnabled && IsReady && Duration > 0 && Position < Duration && (IsPlaying || Position > 0) ? subtitles?.GetText(Position) ?? "" : "";
+        public string SubtitleText
+        {
+            get
+            {
+                double position = Position;
+                double duration = Duration;
+                bool visible = subtitlesEnabled && IsReady && duration > 0 && position < duration &&
+                    (IsPlaying || position > 0);
+                return visible ? subtitles?.GetText(position) ?? "" : "";
+            }
+        }
 
-        public bool CanControl => IsReady &&
-            Duration > 0 &&
-            localPlayer != null &&
-            localPlayer.IsSpawned &&
-            localPlayer.RoomIsRunning &&
-            !localPlayer.PhasePending;
+        public bool CanControl => IsReady && Duration > 0 && localPlayer != null && localPlayer.IsSpawned &&
+        localPlayer.RoomIsRunning &&
+        !localPlayer.PhasePending;
 
-        public string Status => Error.Length > 0 ? Error : !IsReady ? "영상을 준비하고 있습니다…" : Duration <= 0 ? "방장의 영상 준비를 기다리고 있습니다…" : IsPlaying ? "재생 중" : Position >= Duration ? "영상이 끝났습니다." : "일시정지";
+        public string Status
+        {
+            get
+            {
+                if (Error.Length > 0)
+                {
+                    return Error;
+                }
 
+                if (!IsReady)
+                {
+                    return "영상을 준비하고 있습니다…";
+                }
+
+                if (Duration <= 0)
+                {
+                    return "방장의 영상 준비를 기다리고 있습니다…";
+                }
+
+                if (IsPlaying)
+                {
+                    return "재생 중";
+                }
+
+                return Position >= Duration ? "영상이 끝났습니다." : "일시정지";
+            }
+        }
 
         public bool TryInitialize(out string message)
         {
@@ -73,7 +105,6 @@ namespace SmartTraining
             return surface.TryInitialize(out message);
         }
 
-
         internal void Bind(RoomPlayer participant)
         {
             localPlayer = participant;
@@ -82,7 +113,6 @@ namespace SmartTraining
                 shared = SharedVideo.Find(participant.NetworkManager);
             }
         }
-
 
         private void Update()
         {
@@ -93,16 +123,14 @@ namespace SmartTraining
                 watchRun = progress.Run;
                 watchCoverage = new VideoWatchCoverage();
             }
+
             if (progress != null && IsReady && localPlayer.RoomIsRunning)
             {
                 watchCoverage.Sample(LocalTime, Duration, IsPlaying, Time.realtimeSinceStartupAsDouble);
                 progress.ReportPersonal(watchCoverage.Percent);
             }
-            if (IsReady &&
-                shared != null &&
-                shared.IsSpawned &&
-                Duration <= 0 &&
-                localPlayer != null &&
+
+            if (IsReady && shared != null && shared.IsSpawned && Duration <= 0 && localPlayer != null &&
                 localPlayer.IsRoomMaster &&
                 !localPlayer.PhasePending &&
                 Time.unscaledTime >= nextConfigure)
@@ -112,12 +140,10 @@ namespace SmartTraining
             }
         }
 
-
         internal void ToggleSubtitles()
         {
             subtitlesEnabled = !subtitlesEnabled;
         }
-
 
         internal void TogglePlayback()
         {
@@ -127,7 +153,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void Seek(float normalized)
         {
             if (CanControl && !float.IsNaN(normalized) && !float.IsInfinity(normalized))
@@ -135,7 +160,6 @@ namespace SmartTraining
                 shared.SeekRpc(Mathf.Clamp01(normalized) * Duration);
             }
         }
-
 
         internal void Skip(int seconds)
         {
@@ -145,7 +169,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void StopPlayback()
         {
             if (CanControl)
@@ -154,13 +177,11 @@ namespace SmartTraining
             }
         }
 
-
         internal void SetVolume(float value)
         {
             volume = Mathf.Clamp01(value);
             surface?.SetVolume(volume);
         }
-
 
         private void OnDisable()
         {

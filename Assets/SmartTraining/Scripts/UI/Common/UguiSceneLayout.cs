@@ -1,5 +1,5 @@
-using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -7,13 +7,9 @@ namespace SmartTraining
     public sealed class UguiSceneLayout : MonoBehaviour
     {
         public ApiLobbyScreen controller;
-
         public LobbyUguiView loginView;
-
         public LobbyInteriorUguiView interiorView;
-
         public RoomUguiView roomView;
-
         public EventSystem eventSystem;
     }
 }

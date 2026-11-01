@@ -20,7 +20,6 @@ namespace SmartTraining
 
         public ContentResourceContext Resources => resources;
 
-
         public void ValidateReferences()
         {
             if (playerCamera == null || hud == null || resources == null)

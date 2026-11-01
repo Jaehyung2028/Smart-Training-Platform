@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,10 +27,10 @@ namespace SmartTraining.Editor
                 yield return api.CheckHealth(
                     () => throw new Exception("Restricted remote HTTP was accepted"),
                     error =>
-                {
-                    message = error;
-                    failures++;
-                }
+                    {
+                        message = error;
+                        failures++;
+                    }
                 );
                 ExpectHttpStartFailure = false;
                 Check(
@@ -71,7 +71,6 @@ namespace SmartTraining.Editor
                 "127.0.0.1",
                 "::1"
             }
-
             )
             {
                 Check(
@@ -89,11 +88,11 @@ namespace SmartTraining.Editor
                 "localhost:6000",
                 " localhost "
             }
-
             )
             {
                 Check(
-                    !RoomEndpoint.TryValidate(host, 6000, "http://192.168.1.20:5229", out var error) && !string.IsNullOrEmpty(error),
+                    !RoomEndpoint.TryValidate(host, 6000, "http://192.168.1.20:5229", out var error) &&
+                    !string.IsNullOrEmpty(error),
                     "invalid advertised room endpoint rejected " + host
                 );
             }
@@ -106,7 +105,6 @@ namespace SmartTraining.Editor
                 "::ffff:127.0.0.1",
                 "room.localhost"
             }
-
             )
             {
                 Check(
@@ -148,16 +146,17 @@ namespace SmartTraining.Editor
                     api.BaseUrl
                 );
                 Check(
-                    !network.IsConnected && network.ServerEndpoint.Length == 0 && message != null && message.Contains("LAN IP"),
+                    !network.IsConnected && network.ServerEndpoint.Length == 0 && message != null &&
+                    message.Contains("LAN IP"),
                     "room connect rejects remote loopback advertisement before UDP and explains server configuration"
                 );
                 yield return api.GetRoom(
                     reservation.room.lobbyId,
                     reservation.room.id,
                     room => Check(
-                        room.reservedUsers == 1 && room.connectedUsers == 0,
-                        "endpoint validation does not consume or confirm admission reservation"
-                    ),
+                            room.reservedUsers == 1 && room.connectedUsers == 0,
+                            "endpoint validation does not consume or confirm admission reservation"
+                        ),
                     error => throw new Exception(error)
                 );
             }

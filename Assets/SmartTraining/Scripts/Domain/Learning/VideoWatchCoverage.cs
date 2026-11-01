@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace SmartTraining
 {
@@ -14,13 +14,9 @@ namespace SmartTraining
 
         public int Percent { get; private set; }
 
-
         public void Sample(double position, double duration, bool playing, double clock)
         {
-            if (double.IsNaN(position) ||
-                double.IsInfinity(position) ||
-                duration <= 0 ||
-                double.IsNaN(duration) ||
+            if (double.IsNaN(position) || double.IsInfinity(position) || duration <= 0 || double.IsNaN(duration) ||
                 double.IsInfinity(duration))
             {
                 return;
@@ -29,7 +25,8 @@ namespace SmartTraining
             position = Math.Max(0, Math.Min(position, duration));
             double elapsed = clock - previousClock;
             double delta = position - previousTime;
-            if (sampled && previousPlaying && elapsed > 0 && elapsed < 2 && delta > 0 && delta <= elapsed * 1.5 + .1)
+            if (sampled && previousPlaying && elapsed > 0 && elapsed < 2 && delta > 0 &&
+                delta <= elapsed * 1.5 + .1)
             {
                 Add(previousTime, position);
             }
@@ -42,7 +39,6 @@ namespace SmartTraining
             bool complete = WatchedSeconds >= duration - tolerance && position >= duration - tolerance;
             Percent = complete || Percent == 100 ? 100 : Math.Max(Percent, Math.Min(99, (int)(WatchedSeconds / duration * 100)));
         }
-
 
         private void Add(double start, double end)
         {

@@ -1,5 +1,5 @@
-using System;
 using System.Reflection;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,7 +29,7 @@ namespace SmartTraining.Editor
         }
 
         private static void Check<T>(string path, ApiLobbyScreen controller)
-            where T : MonoBehaviour
+        where T : MonoBehaviour
         {
             var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (asset.GetComponent<CanvasGroup>() == null)

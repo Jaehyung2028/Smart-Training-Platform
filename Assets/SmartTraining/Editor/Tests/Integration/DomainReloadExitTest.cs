@@ -1,6 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,11 +10,8 @@ namespace SmartTraining.Editor
     public static class DomainReloadExitTest
     {
         private const string Key = "SmartTraining.ExitTest.";
-
         private static readonly Stack<IEnumerator> stack = new Stack<IEnumerator>();
-
         private static TrainingApiClient api;
-
         private static double deadline;
 
         static DomainReloadExitTest()
@@ -80,9 +77,9 @@ namespace SmartTraining.Editor
             var lobbyId = SessionState.GetString(Key + "lobby", "");
             yield return api.GetLobbies(
                 items => Check(
-                    Array.Exists(items, item => item.id == lobbyId && item.roomCount == 0 && item.userCount == 0),
-                    "default reload stop cleans owned room and retains catalog lobby"
-                ),
+                        Array.Exists(items, item => item.id == lobbyId && item.roomCount == 0 && item.userCount == 0),
+                        "default reload stop cleans owned room and retains catalog lobby"
+                    ),
                 fail
             );
             yield return api.Logout(() =>

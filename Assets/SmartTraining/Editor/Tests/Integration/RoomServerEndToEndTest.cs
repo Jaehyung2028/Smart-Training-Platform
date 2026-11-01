@@ -1,7 +1,7 @@
+using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,17 +10,11 @@ namespace SmartTraining.Editor
     public static class RoomServerEndToEndTest
     {
         private static readonly Stack<IEnumerator> routines = new Stack<IEnumerator>();
-
         private static TrainingApiClient first, second, visitor;
-
         private static RoomNetworkClient client, other, visitingClient;
-
         private static bool optionsEnabled;
-
         private static EnterPlayModeOptions options;
-
         private static double deadline;
-
         private static string runtimeError;
 
         private static void Log(string message, string trace, LogType kind)
@@ -63,24 +57,29 @@ namespace SmartTraining.Editor
         private static IEnumerator LatencyChecks(RoomNetworkClient firstClient, RoomNetworkClient secondClient)
         {
             float until = Time.realtimeSinceStartup + 15;
-            while (Time.realtimeSinceStartup < until && (Array.Exists(firstClient.Players, p => p.RoundTripMilliseconds < 0) || Array.Exists(secondClient.Players, p => p.RoundTripMilliseconds < 0)))
+            while (Time.realtimeSinceStartup < until &&
+                (Array.Exists(firstClient.Players, p => p.RoundTripMilliseconds < 0) ||
+                Array.Exists(secondClient.Players, p => p.RoundTripMilliseconds < 0)))
             {
                 yield return null;
             }
 
             Check(
-                firstClient.Players.Length == 2 && Array.TrueForAll(firstClient.Players, p => p.RoundTripMilliseconds > 0),
+                firstClient.Players.Length == 2 &&
+                Array.TrueForAll(firstClient.Players, p => p.RoundTripMilliseconds > 0),
                 "dedicated server RTT reaches both participant objects on first client"
             );
             Check(
-                secondClient.Players.Length == 2 && Array.TrueForAll(secondClient.Players, p => p.RoundTripMilliseconds > 0),
+                secondClient.Players.Length == 2 &&
+                Array.TrueForAll(secondClient.Players, p => p.RoundTripMilliseconds > 0),
                 "late joining client receives RTT for both participant objects"
             );
             int before = firstClient.LocalPlayer.RoundTripMilliseconds;
             firstClient.LocalPlayer.SetLatencyServer(999999);
             Check(firstClient.LocalPlayer.RoundTripMilliseconds == before, "client cannot overwrite server measured latency");
             Check(firstClient.LocalPlayer.LatencyLabel == before + " ms", "participant latency label reports milliseconds");
-            yield return new WaitUntil(() => Array.TrueForAll(firstClient.Players, p => p.ConnectionState == ParticipantConnectionState.Connected) && Array.TrueForAll(secondClient.Players, p => p.ConnectionState == ParticipantConnectionState.Connected));
+            yield return new WaitUntil(() => Array.TrueForAll(firstClient.Players, p => p.ConnectionState == ParticipantConnectionState.Connected) &&
+                Array.TrueForAll(secondClient.Players, p => p.ConnectionState == ParticipantConnectionState.Connected));
             Check(true, "server heartbeat health reaches every participant on both clients");
             firstClient.LocalPlayer.SampleConnectionHealthServer(999999);
             Check(
@@ -93,16 +92,19 @@ namespace SmartTraining.Editor
             try
             {
                 double deadline = Time.realtimeSinceStartupAsDouble + 10;
-                while (Time.realtimeSinceStartupAsDouble < deadline && !Array.Exists(
-                    secondClient.Players,
-                    p => p.UserId == paused.UserId && p.ConnectionState == ParticipantConnectionState.Checking
-                ))
+                while (Time.realtimeSinceStartupAsDouble < deadline &&
+                    !Array.Exists(
+                        secondClient.Players,
+                        p => p.UserId == paused.UserId && p.ConnectionState == ParticipantConnectionState.Checking
+                    ))
                 {
                     yield return null;
                 }
 
                 Check(
-                    firstClient.IsConnected && secondClient.Players.Length == 2 && secondClient.LocalPlayer.RoomMasterUserId == masterBefore && Array.Exists(
+                    firstClient.IsConnected && secondClient.Players.Length == 2 &&
+                    secondClient.LocalPlayer.RoomMasterUserId == masterBefore &&
+                    Array.Exists(
                         secondClient.Players,
                         p => p.UserId == paused.UserId && p.ConnectionState == ParticipantConnectionState.Checking
                     ),
@@ -118,16 +120,18 @@ namespace SmartTraining.Editor
             }
 
             double recoverBy = Time.realtimeSinceStartupAsDouble + 10;
-            while (Time.realtimeSinceStartupAsDouble < recoverBy && !Array.Exists(
-                secondClient.Players,
-                p => p.UserId == paused.UserId && p.ConnectionState == ParticipantConnectionState.Connected
-            ))
+            while (Time.realtimeSinceStartupAsDouble < recoverBy &&
+                !Array.Exists(
+                    secondClient.Players,
+                    p => p.UserId == paused.UserId && p.ConnectionState == ParticipantConnectionState.Connected
+                ))
             {
                 yield return null;
             }
 
             Check(
-                firstClient.IsConnected && Array.Exists(
+                firstClient.IsConnected &&
+                Array.Exists(
                     secondClient.Players,
                     p => p.UserId == paused.UserId && p.ConnectionState == ParticipantConnectionState.Connected
                 ),
@@ -146,11 +150,13 @@ namespace SmartTraining.Editor
                 "new participant health waits for measurement"
             );
             Check(
-                ParticipantConnectionHealth.Evaluate(1, true, 499) == ParticipantConnectionState.Connected && ParticipantConnectionHealth.Evaluate(1, true, 500) == ParticipantConnectionState.Delayed,
+                ParticipantConnectionHealth.Evaluate(1, true, 499) == ParticipantConnectionState.Connected &&
+                ParticipantConnectionHealth.Evaluate(1, true, 500) == ParticipantConnectionState.Delayed,
                 "heartbeat health classifies latency threshold"
             );
             Check(
-                ParticipantConnectionHealth.Evaluate(3, true, 20) == ParticipantConnectionState.Checking && ParticipantConnectionHealth.Evaluate(0, true, 20) == ParticipantConnectionState.Connected,
+                ParticipantConnectionHealth.Evaluate(3, true, 20) == ParticipantConnectionState.Checking &&
+                ParticipantConnectionHealth.Evaluate(0, true, 20) == ParticipantConnectionState.Connected,
                 "missing heartbeat becomes checking and fresh response recovers"
             );
             ServerAddressChecks.Run();
@@ -194,7 +200,6 @@ namespace SmartTraining.Editor
                 room = reservation.room,
                 expiresAtUtc = reservation.expiresAtUtc,
                 admissionToken = "wrong-admission-token"
-
             };
             other = new RoomNetworkClient();
             bool denied = false;
@@ -254,16 +259,17 @@ namespace SmartTraining.Editor
             yield return WaitMaster(client, second.User.id);
             yield return WaitMaster(other, second.User.id);
             Check(
-                !client.LocalPlayer.IsRoomMaster && other.LocalPlayer.IsRoomMaster && client.IsConnected && other.IsConnected,
+                !client.LocalPlayer.IsRoomMaster && other.LocalPlayer.IsRoomMaster && client.IsConnected &&
+                other.IsConnected,
                 "manual transfer synchronizes both clients without reconnecting"
             );
             yield return first.GetRoom(
                 lobby,
                 room,
                 value => Check(
-                    value.masterUserId == second.User.id && value.connectedUsers == 2,
-                    "manual transfer preserves connected count and matches ASP.NET authority"
-                ),
+                        value.masterUserId == second.User.id && value.connectedUsers == 2,
+                        "manual transfer preserves connected count and matches ASP.NET authority"
+                    ),
                 fail
             );
             yield return RejectTransfer(first, lobby, room, first.User.id, "former master cannot take authority back");
@@ -274,7 +280,8 @@ namespace SmartTraining.Editor
             yield return WaitMaster(client, first.User.id);
             yield return WaitMaster(other, first.User.id);
             Check(
-                client.LocalPlayer.OwnerClientId != other.LocalPlayer.OwnerClientId && Vector3.Distance(client.LocalPlayer.Position, other.LocalPlayer.Position) > 1,
+                client.LocalPlayer.OwnerClientId != other.LocalPlayer.OwnerClientId &&
+                Vector3.Distance(client.LocalPlayer.Position, other.LocalPlayer.Position) > 1,
                 "participants own separate players at separate spawn positions"
             );
             yield return first.GetRoom(
@@ -335,9 +342,9 @@ namespace SmartTraining.Editor
             );
             yield return first.GetMe(
                 user => Check(
-                    user.currentLobbyId == lobby && string.IsNullOrEmpty(user.pendingRoomId),
-                    "network disconnect preserves lobby and clears reservation"
-                ),
+                        user.currentLobbyId == lobby && string.IsNullOrEmpty(user.pendingRoomId),
+                        "network disconnect preserves lobby and clears reservation"
+                    ),
                 fail
             );
             yield return Move(other, Vector2.up, 0.6f);
@@ -401,7 +408,8 @@ namespace SmartTraining.Editor
         private static IEnumerator WaitPlayers(RoomNetworkClient connection, int count)
         {
             double until = Time.realtimeSinceStartupAsDouble + 10;
-            while ((connection.LocalPlayer == null || connection.Players.Length != count) && Time.realtimeSinceStartupAsDouble < until)
+            while ((connection.LocalPlayer == null || connection.Players.Length != count) &&
+                Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
             }
@@ -424,13 +432,17 @@ namespace SmartTraining.Editor
         private static IEnumerator WaitMaster(RoomNetworkClient connection, string userId)
         {
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while ((connection.LocalPlayer == null || Array.Exists(connection.Players, player => player.RoomMasterUserId != userId)) && Time.realtimeSinceStartupAsDouble < until)
+            while ((connection.LocalPlayer == null ||
+                Array.Exists(connection.Players, player => player.RoomMasterUserId != userId)) &&
+                Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
             }
 
             Check(
-                connection.LocalPlayer != null && connection.Players.Length > 0 && Array.TrueForAll(connection.Players, player => player.RoomMasterUserId == userId) && Array.FindAll(connection.Players, player => player.IsRoomMaster).Length == 1,
+                connection.LocalPlayer != null && connection.Players.Length > 0 &&
+                Array.TrueForAll(connection.Players, player => player.RoomMasterUserId == userId) &&
+                Array.FindAll(connection.Players, player => player.IsRoomMaster).Length == 1,
                 "exactly one authoritative room master is replicated to every player"
             );
         }
@@ -451,7 +463,8 @@ namespace SmartTraining.Editor
         private static IEnumerator WaitPhase(RoomNetworkClient connection, bool running)
         {
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while (connection.LocalPlayer == null || connection.LocalPlayer.RoomIsRunning != running || connection.LocalPlayer.PhasePending)
+            while (connection.LocalPlayer == null || connection.LocalPlayer.RoomIsRunning != running ||
+                connection.LocalPlayer.PhasePending)
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -483,16 +496,28 @@ namespace SmartTraining.Editor
             {
                 closeTree.Invoke(popup, null);
             }
-            Check(events.currentSelectedGameObject == roomView.chatInput.gameObject,
-                "repeated hidden tree close preserves room chat focus");
+
+            Check(
+                events.currentSelectedGameObject == roomView.chatInput.gameObject,
+                "repeated hidden tree close preserves room chat focus"
+            );
             typeof(RoomUguiView).GetMethod("OpenSettings", flags).Invoke(roomView, null);
-            foreach (var field in new[] { roomView.nameInput, roomView.capacityInput, roomView.passwordInput })
+            foreach (var field in new[]
+            {
+                roomView.nameInput,
+                roomView.capacityInput,
+                roomView.passwordInput
+            }
+            )
             {
                 events.SetSelectedGameObject(field.gameObject);
                 closeTree.Invoke(popup, null);
-                Check(events.currentSelectedGameObject == field.gameObject,
-                    "hidden tree close preserves room settings input focus " + field.name);
+                Check(
+                    events.currentSelectedGameObject == field.gameObject,
+                    "hidden tree close preserves room settings input focus " + field.name
+                );
             }
+
             typeof(RoomUguiView).GetMethod("CloseSettings", flags).Invoke(roomView, null);
             roomView.chatInput.text = "";
             refreshRoomView.Invoke(roomView, null);
@@ -541,9 +566,9 @@ namespace SmartTraining.Editor
                 lobby,
                 room,
                 value => Check(
-                    value.isRunning && value.connectedUsers == 2,
-                    "master start synchronizes phase in ASP.NET and both clients without reconnecting"
-                ),
+                        value.isRunning && value.connectedUsers == 2,
+                        "master start synchronizes phase in ASP.NET and both clients without reconnecting"
+                    ),
                 fail
             );
             Check(!other.SetReady(false), "client preparation control is disabled during running phase");
@@ -641,7 +666,10 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                client.LocalPlayer.RoomName == "renamed-room" && client.LocalPlayer.RoomCapacity == 2 && client.LocalPlayer.OwnerClientId == owner && client.GetReadiness().AllReady && other.GetReadiness().AllReady,
+                client.LocalPlayer.RoomName == "renamed-room" && client.LocalPlayer.RoomCapacity == 2 &&
+                client.LocalPlayer.OwnerClientId == owner &&
+                client.GetReadiness().AllReady &&
+                other.GetReadiness().AllReady,
                 "settings button synchronizes name and capacity while preserving connection and readiness"
             );
             yield return second.GetMe(user => Check(user.currentRoomName == "renamed-room", "renaming updates participant API room name"), fail);
@@ -658,9 +686,9 @@ namespace SmartTraining.Editor
                 lobby,
                 room,
                 value => Check(
-                    denied && value.name == "renamed-room" && value.maxUsers == 2 && value.availableSlots == 0,
-                    "shrink below connected count is atomic and preserves prior settings"
-                ),
+                        denied && value.name == "renamed-room" && value.maxUsers == 2 && value.availableSlots == 0,
+                        "shrink below connected count is atomic and preserves prior settings"
+                    ),
                 fail
             );
             yield return first.UpdateRoomSettings(lobby, room, "renamed-room", 3, _ =>
@@ -681,9 +709,9 @@ namespace SmartTraining.Editor
                 lobby,
                 room,
                 value => Check(
-                    denied && value.maxUsers == 3 && value.reservedUsers == 1 && value.name == "renamed-room",
-                    "capacity change respects outstanding reservation without cancelling it"
-                ),
+                        denied && value.maxUsers == 3 && value.reservedUsers == 1 && value.name == "renamed-room",
+                        "capacity change respects outstanding reservation without cancelling it"
+                    ),
                 fail
             );
             visitingClient = new RoomNetworkClient();
@@ -692,7 +720,8 @@ namespace SmartTraining.Editor
             }, fail);
             yield return WaitPlayers(visitingClient, 3);
             until = Time.realtimeSinceStartupAsDouble + 5;
-            while (visitingClient.LocalPlayer.RoomName != "renamed-room" || visitingClient.LocalPlayer.RoomCapacity != 3)
+            while (visitingClient.LocalPlayer.RoomName != "renamed-room" ||
+                visitingClient.LocalPlayer.RoomCapacity != 3)
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -720,7 +749,8 @@ namespace SmartTraining.Editor
         {
             double until = Time.realtimeSinceStartupAsDouble + 5;
             RoomPlayer player;
-            while ((player = Array.Find(connection.Players, value => value.UserId == userId)) == null || (expected ? !player.IsReady && !player.IsRoomMaster : player.IsReady))
+            while ((player = Array.Find(connection.Players, value => value.UserId == userId)) == null ||
+                (expected ? !player.IsReady && !player.IsRoomMaster : player.IsReady))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -734,7 +764,8 @@ namespace SmartTraining.Editor
         private static IEnumerator ReadinessChecks(string lobby, string room)
         {
             Check(
-                client.GetReadiness().ParticipantCount == 2 && client.GetReadiness().ReadyCount == 0 && !client.GetReadiness().AllReady,
+                client.GetReadiness().ParticipantCount == 2 && client.GetReadiness().ReadyCount == 0 &&
+                !client.GetReadiness().AllReady,
                 "only ordinary participant requires readiness; master starts without ready"
             );
             var disconnected = new RoomNetworkClient();
@@ -759,8 +790,11 @@ namespace SmartTraining.Editor
             Check(!client.SetReady(true), "master cannot use client readiness control");
             client.LocalPlayer.SetReadyRpc(true, client.LocalPlayer.RoomContentNodeId);
             yield return Settle();
-            Check(!client.LocalPlayer.IsReady && !client.GetReadiness().AllReady && client.GetReadiness().ReadyTargetCount == 1,
-                "server rejects master ready RPC and waits for ordinary participant");
+            Check(
+                !client.LocalPlayer.IsReady && !client.GetReadiness().AllReady &&
+                client.GetReadiness().ReadyTargetCount == 1,
+                "server rejects master ready RPC and waits for ordinary participant"
+            );
             Check(other.SetReady(true), "ordinary participant can prepare");
             yield return WaitReady(client, second.User.id, true);
             yield return WaitReady(other, second.User.id, true);
@@ -788,7 +822,9 @@ namespace SmartTraining.Editor
             yield return WaitReady(visitingClient, first.User.id, true);
             yield return WaitReady(visitingClient, second.User.id, true);
             Check(
-                !visitingClient.LocalPlayer.IsReady && visitingClient.GetReadiness().ReadyCount == 1 && !client.GetReadiness().AllReady && client.GetReadiness().ParticipantCount == 3,
+                !visitingClient.LocalPlayer.IsReady && visitingClient.GetReadiness().ReadyCount == 1 &&
+                !client.GetReadiness().AllReady &&
+                client.GetReadiness().ParticipantCount == 3,
                 "late join receives existing readiness and starts unready, clearing all-ready"
             );
             visitingClient.Dispose();
@@ -808,7 +844,8 @@ namespace SmartTraining.Editor
             other.SetReady(false);
             yield return WaitReady(client, second.User.id, false);
             Check(
-                !client.GetReadiness().AllReady && client.GetReadiness().ReadyCount == 0 && !other.LocalPlayer.IsReady,
+                !client.GetReadiness().AllReady && client.GetReadiness().ReadyCount == 0 &&
+                !other.LocalPlayer.IsReady,
                 "cancel ready button clears all-ready without changing other participant"
             );
             other.SetReady(true);
@@ -850,7 +887,8 @@ namespace SmartTraining.Editor
             );
             transport.DisconnectLocalClient();
             double until = Time.realtimeSinceStartupAsDouble + 20;
-            while (string.IsNullOrEmpty((string)typeof(ApiLobbyScreen).GetField("reconnectRoomId", flags).GetValue(screen)) || (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(screen))
+            while (string.IsNullOrEmpty((string)typeof(ApiLobbyScreen).GetField("reconnectRoomId", flags).GetValue(screen)) ||
+                (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(screen))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -861,7 +899,9 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                first.IsLoggedIn && first.User.currentLobbyId == lobby && string.IsNullOrEmpty(first.User.currentRoomId) && string.IsNullOrEmpty(first.User.pendingRoomId),
+                first.IsLoggedIn && first.User.currentLobbyId == lobby &&
+                string.IsNullOrEmpty(first.User.currentRoomId) &&
+                string.IsNullOrEmpty(first.User.pendingRoomId),
                 "unexpected disconnect UI clears membership and retains login and lobby"
             );
             yield return WaitPlayers(other, 1);
@@ -873,7 +913,8 @@ namespace SmartTraining.Editor
             }, message => throw new Exception(message));
             yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ReconnectRoom", flags).Invoke(screen, null);
             Check(
-                typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen) == null && ((string)typeof(ApiLobbyScreen).GetField("status", flags).GetValue(screen)).Contains("잠겨"),
+                typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen) == null &&
+                ((string)typeof(ApiLobbyScreen).GetField("status", flags).GetValue(screen)).Contains("잠겨"),
                 "reconnect respects current room lock without creating reservation"
             );
             yield return second.SetRoomEntryLock(lobby, room, false, () =>
@@ -882,7 +923,8 @@ namespace SmartTraining.Editor
             yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ReconnectRoom", flags).Invoke(screen, null);
             client = (RoomNetworkClient)typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen);
             Check(
-                client != null && client.IsConnected && client.LocalPlayer.UserId == first.User.id && client.LocalPlayer.OwnerClientId != previousOwner,
+                client != null && client.IsConnected && client.LocalPlayer.UserId == first.User.id &&
+                client.LocalPlayer.OwnerClientId != previousOwner,
                 "reconnect button creates fresh admission and owned player"
             );
             Check(!client.LocalPlayer.IsReady && !client.GetReadiness().AllReady, "reconnecting participant starts unready");
@@ -930,9 +972,9 @@ namespace SmartTraining.Editor
                 lobby,
                 room,
                 value => Check(
-                    value.reservedUsers == 1 && value.connectedUsers == 0,
-                    "incorrect password preserves only initial creation reservation"
-                ),
+                        value.reservedUsers == 1 && value.connectedUsers == 0,
+                        "incorrect password preserves only initial creation reservation"
+                    ),
                 fail
             );
             yield return first.JoinRoom(lobby, room, value => admission = value, fail, roomPassword);
@@ -960,7 +1002,8 @@ namespace SmartTraining.Editor
             var manager = (Unity.Netcode.NetworkManager)typeof(RoomNetworkClient).GetField("manager", flags).GetValue(client);
             ((Unity.Netcode.Transports.UTP.UnityTransport)manager.NetworkConfig.NetworkTransport).DisconnectLocalClient();
             double reconnectUntil = Time.realtimeSinceStartupAsDouble + 20;
-            while (typeof(ApiLobbyScreen).GetField("network", flags).GetValue(reconnectScreen) != null || (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(reconnectScreen))
+            while (typeof(ApiLobbyScreen).GetField("network", flags).GetValue(reconnectScreen) != null ||
+                (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(reconnectScreen))
             {
                 if (Time.realtimeSinceStartupAsDouble > reconnectUntil)
                 {
@@ -980,7 +1023,8 @@ namespace SmartTraining.Editor
             yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ReconnectRoom", flags).Invoke(reconnectScreen, null);
             client = (RoomNetworkClient)typeof(ApiLobbyScreen).GetField("network", flags).GetValue(reconnectScreen);
             Check(
-                client != null && client.IsConnected && string.IsNullOrEmpty((string)typeof(ApiLobbyScreen).GetField("reconnectPassword", flags).GetValue(reconnectScreen)),
+                client != null && client.IsConnected &&
+                string.IsNullOrEmpty((string)typeof(ApiLobbyScreen).GetField("reconnectPassword", flags).GetValue(reconnectScreen)),
                 "correct password reconnects with fresh player and clears password input"
             );
             yield return WaitPlayers(client, 2);
@@ -1007,7 +1051,8 @@ namespace SmartTraining.Editor
             RoomActionChecks.Request(screen, "Close");
             yield return RoomActionChecks.Confirm(screen);
             double until = Time.realtimeSinceStartupAsDouble + 15;
-            while (typeof(ApiLobbyScreen).GetField("network", flags).GetValue(target) != null || (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(target))
+            while (typeof(ApiLobbyScreen).GetField("network", flags).GetValue(target) != null ||
+                (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(target))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -1018,11 +1063,15 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                first.IsLoggedIn && second.IsLoggedIn && first.User.currentLobbyId == lobby && second.User.currentLobbyId == lobby && string.IsNullOrEmpty(first.User.currentRoomId) && string.IsNullOrEmpty(second.User.currentRoomId),
+                first.IsLoggedIn && second.IsLoggedIn && first.User.currentLobbyId == lobby &&
+                second.User.currentLobbyId == lobby &&
+                string.IsNullOrEmpty(first.User.currentRoomId) &&
+                string.IsNullOrEmpty(second.User.currentRoomId),
                 "closing running room returns both users to lobby and preserves login"
             );
             Check(
-                ((string)typeof(ApiLobbyScreen).GetField("status", flags).GetValue(target)).Contains("방을 닫았습니다") && string.IsNullOrEmpty((string)typeof(ApiLobbyScreen).GetField("reconnectRoomId", flags).GetValue(target)),
+                ((string)typeof(ApiLobbyScreen).GetField("status", flags).GetValue(target)).Contains("방을 닫았습니다") &&
+                string.IsNullOrEmpty((string)typeof(ApiLobbyScreen).GetField("reconnectRoomId", flags).GetValue(target)),
                 "participant sees master close reason and no reconnect target"
             );
             yield return first.GetRooms(
@@ -1068,9 +1117,9 @@ namespace SmartTraining.Editor
                 lobby,
                 room,
                 value => Check(
-                    value.reservedUsers == 0 && value.connectedUsers == 2 && value.hasPassword,
-                    "password update cancels unused reservation and preserves two confirmed connections"
-                ),
+                        value.reservedUsers == 0 && value.connectedUsers == 2 && value.hasPassword,
+                        "password update cancels unused reservation and preserves two confirmed connections"
+                    ),
                 fail
             );
             visitingClient = new RoomNetworkClient();
@@ -1137,7 +1186,8 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                client.IsConnected && other.IsConnected && client.LocalPlayer.OwnerClientId == firstOwner && other.LocalPlayer.OwnerClientId == secondOwner,
+                client.IsConnected && other.IsConnected && client.LocalPlayer.OwnerClientId == firstOwner &&
+                other.LocalPlayer.OwnerClientId == secondOwner,
                 "password set on public room restores marker while existing owned players remain connected"
             );
             typeof(ApiLobbyScreen).GetMethod("DisposeLobbyUpdates", flags).Invoke(observer, null);
@@ -1180,7 +1230,8 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                string.IsNullOrEmpty(visitor.User.currentLobbyId) && displayed().roomCount == 1 && displayed().userCount == 2,
+                string.IsNullOrEmpty(visitor.User.currentLobbyId) && displayed().roomCount == 1 &&
+                displayed().userCount == 2,
                 "lobby counts load automatically before lobby entry over configured HTTP address"
             );
             string extraRoom = null;
@@ -1347,7 +1398,9 @@ namespace SmartTraining.Editor
             var connection = (RoomHubConnection)typeof(ApiLobbyScreen).GetField("lobbyUpdates", flags).GetValue(screen);
             connection.Dispose();
             until = Time.realtimeSinceStartupAsDouble + 20;
-            while (typeof(ApiLobbyScreen).GetField("lobbyUpdates", flags).GetValue(screen) == connection || typeof(ApiLobbyScreen).GetField("lobbyUpdates", flags).GetValue(screen) == null || (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(screen))
+            while (typeof(ApiLobbyScreen).GetField("lobbyUpdates", flags).GetValue(screen) == connection ||
+                typeof(ApiLobbyScreen).GetField("lobbyUpdates", flags).GetValue(screen) == null ||
+                (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(screen))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -1376,7 +1429,9 @@ namespace SmartTraining.Editor
                 "notification reconnect refreshes snapshot while Netcode connections survive"
             );
             Check(
-                visible().Length == 1 && (string)typeof(ApiLobbyScreen).GetField("roomSearch", flags).GetValue(screen) == "LIVE-" && (RoomSortOrder)typeof(ApiLobbyScreen).GetField("roomSort", flags).GetValue(screen) == RoomSortOrder.Vacancies,
+                visible().Length == 1 &&
+                (string)typeof(ApiLobbyScreen).GetField("roomSearch", flags).GetValue(screen) == "LIVE-" &&
+                (RoomSortOrder)typeof(ApiLobbyScreen).GetField("roomSort", flags).GetValue(screen) == RoomSortOrder.Vacancies,
                 "unlock and notification reconnect restore filtered result while preserving sort and search"
             );
             typeof(ApiLobbyScreen).GetMethod("ResetRoomBrowser", flags).Invoke(screen, null);
@@ -1405,7 +1460,8 @@ namespace SmartTraining.Editor
             var manager = (Unity.Netcode.NetworkManager)typeof(RoomNetworkClient).GetField("manager", flags).GetValue(client);
             ((Unity.Netcode.Transports.UTP.UnityTransport)manager.NetworkConfig.NetworkTransport).DisconnectLocalClient();
             double until = Time.realtimeSinceStartupAsDouble + 20;
-            while (typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen) != null || (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(screen))
+            while (typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen) != null ||
+                (bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(screen))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -1418,21 +1474,23 @@ namespace SmartTraining.Editor
             yield return WaitPlayers(other, 1);
             yield return WaitMaster(other, second.User.id);
             Check(
-                other.IsConnected && !other.WasDisconnected && other.LocalPlayer.RoomIsRunning && !other.LocalPlayer.PhasePending,
+                other.IsConnected && !other.WasDisconnected && other.LocalPlayer.RoomIsRunning &&
+                !other.LocalPlayer.PhasePending,
                 "unexpected running master disconnect preserves survivor connection and transfers authority without stuck transition"
             );
             yield return first.GetRoom(
                 lobby,
                 room,
                 value => Check(
-                    value.isRunning && value.connectedUsers == 1,
-                    "ASP.NET running phase matches surviving client after master disconnect"
-                ),
+                        value.isRunning && value.connectedUsers == 1,
+                        "ASP.NET running phase matches surviving client after master disconnect"
+                    ),
                 fail
             );
             yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ReconnectRoom", flags).Invoke(screen, null);
             Check(
-                typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen) == null && string.IsNullOrEmpty(first.User.pendingRoomId),
+                typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen) == null &&
+                string.IsNullOrEmpty(first.User.pendingRoomId),
                 "running room rejects reconnect without leaving an admission reservation"
             );
             other.LocalPlayer.RequestPhaseRpc(false);
@@ -1440,7 +1498,8 @@ namespace SmartTraining.Editor
             yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("ReconnectRoom", flags).Invoke(screen, null);
             client = (RoomNetworkClient)typeof(ApiLobbyScreen).GetField("network", flags).GetValue(screen);
             Check(
-                client != null && client.IsConnected && !client.LocalPlayer.IsReady && !client.LocalPlayer.RoomIsRunning,
+                client != null && client.IsConnected && !client.LocalPlayer.IsReady &&
+                !client.LocalPlayer.RoomIsRunning,
                 "reconnect succeeds after new master returns to waiting and resets readiness"
             );
             yield return WaitPlayers(client, 2);
@@ -1486,7 +1545,8 @@ namespace SmartTraining.Editor
             yield return RoomActionChecks.Confirm(screen);
             RoomActionChecks.VerifyDepartedTarget(pendingObserver);
             double until = Time.realtimeSinceStartupAsDouble + 10;
-            while ((bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(targetScreen) || typeof(ApiLobbyScreen).GetField("network", flags).GetValue(targetScreen) != null)
+            while ((bool)typeof(ApiLobbyScreen).GetField("busy", flags).GetValue(targetScreen) ||
+                typeof(ApiLobbyScreen).GetField("network", flags).GetValue(targetScreen) != null)
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -1497,7 +1557,8 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                !other.IsConnected && second.IsLoggedIn && second.User.currentLobbyId == lobby && string.IsNullOrEmpty(second.User.currentRoomId),
+                !other.IsConnected && second.IsLoggedIn && second.User.currentLobbyId == lobby &&
+                string.IsNullOrEmpty(second.User.currentRoomId),
                 "kick returns target UI to lobby while preserving login"
             );
             Check(
@@ -1514,13 +1575,14 @@ namespace SmartTraining.Editor
                 lobby,
                 room,
                 value => Check(
-                    value.connectedUsers == 1 && value.reservedUsers == 0 && value.availableSlots == 2,
-                    "confirmed UDP kick frees exactly one room slot"
-                ),
+                        value.connectedUsers == 1 && value.reservedUsers == 0 && value.availableSlots == 2,
+                        "confirmed UDP kick frees exactly one room slot"
+                    ),
                 fail
             );
             Check(
-                client.IsConnected && client.LocalPlayer.OwnerClientId == ownerId && ((string)typeof(ApiLobbyScreen).GetField("status", flags).GetValue(screen)).Contains("강퇴했습니다"),
+                client.IsConnected && client.LocalPlayer.OwnerClientId == ownerId &&
+                ((string)typeof(ApiLobbyScreen).GetField("status", flags).GetValue(screen)).Contains("강퇴했습니다"),
                 "kick button confirms departure while master connection survives"
             );
             BindScreen(targetScreen, null, null, "", "");
@@ -1539,11 +1601,13 @@ namespace SmartTraining.Editor
             yield return WaitPlayers(other, 2);
             yield return WaitMaster(other, first.User.id);
             Check(
-                other.LocalPlayer.OwnerClientId != oldOtherId && client.LocalPlayer.OwnerClientId == ownerId && !other.LocalPlayer.IsRoomMaster,
+                other.LocalPlayer.OwnerClientId != oldOtherId && client.LocalPlayer.OwnerClientId == ownerId &&
+                !other.LocalPlayer.IsRoomMaster,
                 "kicked user rejoins with fresh connection while master and room remain intact"
             );
             Check(
-                !other.LocalPlayer.IsReady && client.GetReadiness().ReadyCount == 1 && !client.GetReadiness().AllReady,
+                !other.LocalPlayer.IsReady && client.GetReadiness().ReadyCount == 1 &&
+                !client.GetReadiness().AllReady,
                 "kicked participant rejoins unready while remaining participant keeps readiness"
             );
         }
@@ -1564,13 +1628,16 @@ namespace SmartTraining.Editor
         private static IEnumerator WaitEntryLock(RoomNetworkClient connection, bool locked)
         {
             double until = Time.realtimeSinceStartupAsDouble + 5;
-            while ((connection.LocalPlayer == null || Array.Exists(connection.Players, player => player.RoomEntryLocked != locked)) && Time.realtimeSinceStartupAsDouble < until)
+            while ((connection.LocalPlayer == null ||
+                Array.Exists(connection.Players, player => player.RoomEntryLocked != locked)) &&
+                Time.realtimeSinceStartupAsDouble < until)
             {
                 yield return null;
             }
 
             Check(
-                connection.LocalPlayer != null && connection.IsConnected && connection.Players.Length > 0 && Array.TrueForAll(connection.Players, player => player.RoomEntryLocked == locked),
+                connection.LocalPlayer != null && connection.IsConnected && connection.Players.Length > 0 &&
+                Array.TrueForAll(connection.Players, player => player.RoomEntryLocked == locked),
                 "entry lock state replicates to all existing participants: " + locked
             );
         }
@@ -1599,18 +1666,18 @@ namespace SmartTraining.Editor
             yield return WaitEntryLock(other, true);
             yield return visitor.GetMe(
                 user => Check(
-                    string.IsNullOrEmpty(user.pendingRoomId) && user.currentLobbyId == lobby,
-                    "lock button cancels pending admission and preserves lobby"
-                ),
+                        string.IsNullOrEmpty(user.pendingRoomId) && user.currentLobbyId == lobby,
+                        "lock button cancels pending admission and preserves lobby"
+                    ),
                 fail
             );
             yield return first.GetRoom(
                 lobby,
                 room,
                 value => Check(
-                    value.isEntryLocked && value.reservedUsers == 0 && value.connectedUsers == 2,
-                    "locked room summary preserves connected users and releases reservations"
-                ),
+                        value.isEntryLocked && value.reservedUsers == 0 && value.connectedUsers == 2,
+                        "locked room summary preserves connected users and releases reservations"
+                    ),
                 fail
             );
             visitingClient = new RoomNetworkClient();
@@ -1631,7 +1698,8 @@ namespace SmartTraining.Editor
             yield return Move(client, Vector2.right, 0.4f);
             yield return Settle();
             Check(
-                client.IsConnected && other.IsConnected && Vector3.Distance(client.LocalPlayer.Position, start) < 0.1f,
+                client.IsConnected && other.IsConnected &&
+                Vector3.Distance(client.LocalPlayer.Position, start) < 0.1f,
                 "entry lock preserves connections while waiting phase blocks movement"
             );
             yield return first.TransferRoomMaster(lobby, room, second.User.id, () =>
@@ -1701,29 +1769,41 @@ namespace SmartTraining.Editor
             // 클라이언트 전송 함수 우회 요청도 서버가 대기 상태에서 거절해야 합니다.
             client.LocalPlayer.MoveRpc(Vector2.right, 0);
             yield return Settle();
-            Check(Vector3.Distance(waitingPosition, client.LocalPlayer.Position) < 0.1f,
-                "server rejects direct movement RPC before room start");
+            Check(
+                Vector3.Distance(waitingPosition, client.LocalPlayer.Position) < 0.1f,
+                "server rejects direct movement RPC before room start"
+            );
             client.LocalPlayer.RequestPhaseRpc(true);
             yield return WaitPhase(client, true);
             yield return WaitPhase(other, true);
             // 네트워크 상태만으로 메시가 생성되지 않고, 표시 계층이 명시적으로 연결할 때만 표시합니다.
             yield return null;
-            Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
-                "network state alone does not create avatar visuals");
+            Check(
+                client.Players.All(player => !HasVisibleCharacter(player)) &&
+                other.Players.All(player => !HasVisibleCharacter(player)),
+                "network state alone does not create avatar visuals"
+            );
             foreach (var participant in client.Players.Concat(other.Players))
             {
                 participant.SetPresentationVisible(true);
             }
+
             yield return null;
-            Check(client.Players.All(HasVisibleCharacter) && other.Players.All(HasVisibleCharacter),
-                "presentation owner explicitly enables avatar visuals");
+            Check(
+                client.Players.All(HasVisibleCharacter) && other.Players.All(HasVisibleCharacter),
+                "presentation owner explicitly enables avatar visuals"
+            );
             foreach (var participant in client.Players.Concat(other.Players))
             {
                 participant.SetPresentationVisible(false);
             }
+
             yield return null;
-            Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
-                "presentation owner explicitly disables avatar visuals");
+            Check(
+                client.Players.All(player => !HasVisibleCharacter(player)) &&
+                other.Players.All(player => !HasVisibleCharacter(player)),
+                "presentation owner explicitly disables avatar visuals"
+            );
             var start = client.LocalPlayer.Position;
             var otherStart = other.LocalPlayer.Position;
             // 스폰 줄의 다른 참가자를 밀지 않는 방향에서 순수 이동 속도를 확인합니다.
@@ -1765,10 +1845,7 @@ namespace SmartTraining.Editor
             start = after;
             yield return Move(client, new Vector2(float.NaN, float.PositiveInfinity), 0.4f);
             yield return Settle();
-            Check(
-                Vector3.Distance(start, client.LocalPlayer.Position) < 0.1f,
-                "server rejects non-finite movement input"
-            );
+            Check(Vector3.Distance(start, client.LocalPlayer.Position) < 0.1f, "server rejects non-finite movement input");
             yield return Move(client, Vector2.up, 0.2f);
             double stopBy = Time.realtimeSinceStartupAsDouble + 0.7f;
             while (Time.realtimeSinceStartupAsDouble < stopBy)
@@ -1796,8 +1873,11 @@ namespace SmartTraining.Editor
             client.LocalPlayer.RequestPhaseRpc(false);
             yield return WaitPhase(client, false);
             yield return WaitPhase(other, false);
-            Check(client.Players.All(player => !HasVisibleCharacter(player)) && other.Players.All(player => !HasVisibleCharacter(player)),
-                "waiting return removes characters without losing participant objects");
+            Check(
+                client.Players.All(player => !HasVisibleCharacter(player)) &&
+                other.Players.All(player => !HasVisibleCharacter(player)),
+                "waiting return removes characters without losing participant objects"
+            );
         }
 
         private static bool HasVisibleCharacter(RoomPlayer player)

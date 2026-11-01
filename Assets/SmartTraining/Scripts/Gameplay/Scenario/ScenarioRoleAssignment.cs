@@ -11,13 +11,12 @@ namespace SmartTraining
         public int RunRevision;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer)
-            where T : IReaderWriter
+        where T : IReaderWriter
         {
             serializer.SerializeValue(ref ClientId);
             serializer.SerializeValue(ref Role);
             serializer.SerializeValue(ref RunRevision);
         }
-
 
         public bool Equals(ScenarioRoleAssignment other)
         {

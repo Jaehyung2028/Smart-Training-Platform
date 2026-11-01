@@ -1,7 +1,7 @@
-using System;
 using System.Linq;
-using UnityEditor;
+using System;
 using UnityEditor.AddressableAssets;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -23,7 +23,10 @@ namespace SmartTraining.Editor
                 throw new InvalidOperationException("Addressables에 콘텐츠 프리팹을 등록해주세요.");
             }
 
-            var entries = settings.groups.Where(group => group != null).SelectMany(group => group.entries).Where(entry => entry.address.StartsWith("content/", StringComparison.Ordinal)).ToArray();
+            var entries = settings.groups.Where(group => group != null)
+                .SelectMany(group => group.entries)
+                .Where(entry => entry.address.StartsWith("content/", StringComparison.Ordinal))
+                .ToArray();
             foreach (var entry in entries)
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(entry.AssetPath);

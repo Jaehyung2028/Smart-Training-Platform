@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace SmartTraining
 {
@@ -10,11 +10,9 @@ namespace SmartTraining
 
         internal string UiActiveRoomId => networkRoomId;
 
-        internal bool UseUguiRoom => roomView != null &&
-            isActiveAndEnabled &&
-            network?.IsConnected == true &&
-            string.IsNullOrEmpty(roomJoinProgress) &&
-            string.IsNullOrEmpty(lobbyJoinProgress);
+        internal bool UseUguiRoom => roomView != null && isActiveAndEnabled && network?.IsConnected == true &&
+        string.IsNullOrEmpty(roomJoinProgress) &&
+        string.IsNullOrEmpty(lobbyJoinProgress);
 
         internal RoomPlayer UiLocalPlayer => network?.LocalPlayer;
 
@@ -26,17 +24,15 @@ namespace SmartTraining
 
         internal bool UiRoomCanEdit => UiRoomCanManage && !UiLocalPlayer.RoomIsRunning && !UiLocalPlayer.PhasePending;
 
-        internal bool UiRoomCanReady => UiRoomCanAct && !UiLocalPlayer.IsRoomMaster && !UiLocalPlayer.RoomIsRunning && !UiLocalPlayer.PhasePending;
+        internal bool UiRoomCanReady => UiRoomCanAct && !UiLocalPlayer.IsRoomMaster && !UiLocalPlayer.RoomIsRunning &&
+        !UiLocalPlayer.PhasePending;
 
-        internal bool UiRoomCanPhase => UiRoomCanManage &&
-            !UiLocalPlayer.PhasePending &&
-            (UiLocalPlayer.RoomIsRunning ||
-            network.GetReadiness().AllReady);
+        internal bool UiRoomCanPhase => UiRoomCanManage && !UiLocalPlayer.PhasePending &&
+        (UiLocalPlayer.RoomIsRunning || network.GetReadiness().AllReady);
 
         internal string UiRoomHeading => UiLocalPlayer?.RoomName ?? api?.User?.currentRoomName ?? "방 접속 중";
 
         internal string UiRoomConnection => "방 서버: " + (network?.ServerEndpoint ?? "");
-
 
         internal string UiRoomSummary()
         {
@@ -51,22 +47,14 @@ namespace SmartTraining
             return (local.PhasePending ? "상태 변경 중…" : local.RoomIsRunning ? "진행 중" : "대기 중") + " · 접속 " + UiRoomPlayers.Length + "/" + local.RoomCapacity + " · 준비 " + ready.ReadyCount + "/" + ready.ReadyTargetCount + " (방장 제외)" + "\n방장: " + (master?.UserName ?? "확인 중…") + " · 내 역할: " + (local.IsRoomMaster ? "방장" : "참가자") + " · 새 입장: " + (local.RoomEntryLocked ? "잠김" : "허용");
         }
 
-
         internal void UiChangeRoomContent(ContentSummary content)
         {
-            if (UiRoomCanEdit &&
-                content != null &&
-                IsSelectableContent(content) &&
-                Array.Exists(
-                contents,
-                item => item.id == content.id &&
-                item.rootContent == content.rootContent
-            ))
+            if (UiRoomCanEdit && content != null && IsSelectableContent(content) &&
+                Array.Exists(contents, item => item.id == content.id && item.rootContent == content.rootContent))
             {
                 RunOperation(ChangeRoomContent(content), "콘텐츠를 변경하고 있습니다.");
             }
         }
-
 
         internal void UiToggleReady()
         {
@@ -76,7 +64,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void UiTogglePhase()
         {
             if (UiRoomCanPhase)
@@ -84,7 +71,6 @@ namespace SmartTraining
                 RunOperation(ChangeRoomPhase(!UiLocalPlayer.RoomIsRunning), "방 진행 상태를 변경하고 있습니다.");
             }
         }
-
 
         internal void UiLeaveRoom()
         {
@@ -95,7 +81,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void UiRoomLogout()
         {
             if (UiRoomCanAct)
@@ -103,7 +88,6 @@ namespace SmartTraining
                 RunOperation(Logout(), "로그아웃하고 있습니다.");
             }
         }
-
 
         internal void UiRequestTransfer(string id)
         {
@@ -113,7 +97,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void UiRequestKick(string id)
         {
             if (UiRoomCanManage)
@@ -122,7 +105,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void UiRequestClose()
         {
             if (UiRoomCanManage)
@@ -130,7 +112,6 @@ namespace SmartTraining
                 RequestRoomAction(RoomAction.Close);
             }
         }
-
 
         internal bool UiRoomConfirmation => ValidateRoomAction();
 
@@ -142,17 +123,21 @@ namespace SmartTraining
             _ => ""
         };
 
+        internal void UiConfirmRoomAction()
+        {
+            ConfirmRoomAction();
+        }
 
-        internal void UiConfirmRoomAction() => ConfirmRoomAction();
-
-        internal void UiCancelRoomAction() => CancelRoomAction();
+        internal void UiCancelRoomAction()
+        {
+            CancelRoomAction();
+        }
 
         internal string UiEditRoomName { get => editRoomName; set => editRoomName = value; }
 
         internal string UiEditRoomCapacity { get => editRoomCapacity; set => editRoomCapacity = value; }
 
         internal string UiEditRoomPassword { get => editRoomPassword; set => editRoomPassword = value; }
-
 
         internal void UiPrepareRoomSettings()
         {
@@ -166,7 +151,6 @@ namespace SmartTraining
             editRoomPassword = "";
         }
 
-
         internal void UiSaveRoomSettings()
         {
             if (UiRoomCanEdit)
@@ -174,7 +158,6 @@ namespace SmartTraining
                 RunOperation(UpdateRoomSettings(editRoomName, editRoomCapacity), "방 설정을 저장하고 있습니다.");
             }
         }
-
 
         internal void UiSaveRoomPassword()
         {
@@ -184,7 +167,6 @@ namespace SmartTraining
             }
         }
 
-
         internal void UiClearRoomPassword()
         {
             if (UiRoomCanManage)
@@ -192,7 +174,6 @@ namespace SmartTraining
                 RunOperation(UpdateRoomPassword(""), "방 비밀번호를 해제하고 있습니다.");
             }
         }
-
 
         internal void UiToggleRoomLock()
         {
@@ -202,11 +183,9 @@ namespace SmartTraining
             }
         }
 
-
         internal string UiRoomPasswordStatus => "방 비밀번호: " + (Array.Find(rooms, x => x.id == networkRoomId)?.hasPassword == true ? "설정됨" : "없음");
 
         internal int UiRoomChatChannel => chatChannel;
-
 
         internal void UiSelectRoomChat(int channel)
         {
@@ -220,16 +199,15 @@ namespace SmartTraining
             chatStatus = "";
         }
 
-
         // 알림 재연결과 자동 조회 중에도 초안은 작성할 수 있습니다. 전송 권한은 별도로 확인합니다.
-        internal bool UiCanEditRoomChat => UseUguiRoom && UiLoggedIn && UiLocalPlayer != null && !HasPendingRoomAction && !WaitingForExitCleanup;
+        internal bool UiCanEditRoomChat => UseUguiRoom && UiLoggedIn && UiLocalPlayer != null && !HasPendingRoomAction &&
+        !WaitingForExitCleanup;
 
         internal bool UiCanSendRoomScreenChat => UiRoomCanAct && UiCanChat && (chatChannel == 0 || RoomChatIsBound());
 
         internal string UiRoomChatStatus => UiProcessing ? UiStatus : UiChatConnected && (chatChannel == 0 || RoomChatIsBound()) ? chatStatus : "채팅 연결 중…";
 
         internal IReadOnlyList<LobbyChatMessage> UiRoomScreenMessages => chatChannel == 1 ? roomChatMessages : chatMessages;
-
 
         internal void UiSendRoomScreenChat()
         {
@@ -239,12 +217,7 @@ namespace SmartTraining
             }
         }
 
-
-        internal string UiRoomNotices => string.Join(
-            "\n",
-            roomNotices.Messages.Select(x => "[" + x.ObservedAt.ToString("HH:mm:ss") + "] " + x.Text)
-        );
-
+        internal string UiRoomNotices => string.Join("\n", roomNotices.Messages.Select(x => "[" + x.ObservedAt.ToString("HH:mm:ss") + "] " + x.Text));
 
         internal void UiClearRoomNotices()
         {

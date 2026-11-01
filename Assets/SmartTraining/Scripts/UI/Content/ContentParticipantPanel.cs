@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+using System;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -21,17 +20,13 @@ namespace SmartTraining
             ConnectionLabel = connectionLabel;
         }
 
-
         public bool Equals(ContentParticipantState other)
         {
-            return Id == other.Id &&
-                Name == other.Name &&
-                ConnectionLabel == other.ConnectionLabel &&
-                IsLocal == other.IsLocal &&
-                IsMaster == other.IsMaster;
+            return Id == other.Id && Name == other.Name && ConnectionLabel == other.ConnectionLabel &&
+            IsLocal == other.IsLocal &&
+            IsMaster == other.IsMaster;
         }
     }
-
 
     // 콘텐츠 종류에 관계없이 함께 접속한 방 참가자를 표시하는 읽기 전용 목록입니다.
     internal sealed class ContentParticipantPanel
@@ -49,8 +44,7 @@ namespace SmartTraining
 
         public bool IsOpen => open;
 
-
-        public ContentParticipantPanel(Transform parent, Font font)
+        public ContentParticipantPanel(Transform parent)
         {
             var view = UiPrefab.Bind("ContentParticipantPanel", parent);
             root = view.Get<GameObject>("root");
@@ -60,20 +54,17 @@ namespace SmartTraining
             root.SetActive(false);
         }
 
-
         public void Toggle()
         {
             open = !open;
             root.SetActive(open);
         }
 
-
         public void Close()
         {
             open = false;
             root.SetActive(false);
         }
-
 
         public void Refresh(ContentParticipantState[] participants, bool visible)
         {
@@ -90,10 +81,7 @@ namespace SmartTraining
 
             participants ??= Array.Empty<ContentParticipantState>();
             var parentSize = ((RectTransform)root.transform.parent).rect.size;
-            root.GetComponent<RectTransform>().sizeDelta = new Vector2(
-                Mathf.Min(preferredSize.x, parentSize.x - 32),
-                Mathf.Min(preferredSize.y, parentSize.y - 150)
-            );
+            root.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Min(preferredSize.x, parentSize.x - 32), Mathf.Min(preferredSize.y, parentSize.y - 150));
             bool changed = displayed.Count != participants.Length;
             for (int position = 0; !changed && position < participants.Length; position++)
             {

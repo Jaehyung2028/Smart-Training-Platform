@@ -1,6 +1,6 @@
 using System;
-using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -22,7 +22,8 @@ namespace SmartTraining.Editor
                 output = System.IO.Path.GetFullPath("Builds/RoomServer/Smart Training Room.exe");
             }
 
-            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                {
                     scenes = new[] { "Assets/SmartTraining/Scenes/RoomServer.unity" },
                     locationPathName = output,
                     target = BuildTarget.StandaloneWindows64,

@@ -1,14 +1,12 @@
-using System;
 using System.Collections;
+using System;
 
 namespace SmartTraining
 {
     public sealed partial class ApiLobbyScreen
     {
         private string lobbyJoinProgress = "", lobbyJoinName = "";
-
         private bool lobbyJoinCanCancel, lobbyJoinCancelRequested;
-
         private string lobbyJoinRetryId = "", lobbyJoinError = "";
 
         private void ClearLobbyJoinFailure()
@@ -60,6 +58,7 @@ namespace SmartTraining
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         private bool testPauseLobbyJoinAfterApproval;
+
 #endif
         private void ClearLobbyJoinProgress()
         {
@@ -101,19 +100,23 @@ namespace SmartTraining
                     id,
                     () => joined = true,
                     message =>
-                {
-                    if (!lobbyJoinCancelRequested)
                     {
-                        HandleLobbyJoinFailure(id, message);
-                    }
-                },
+                        if (!lobbyJoinCancelRequested)
+                        {
+                            HandleLobbyJoinFailure(id, message);
+                        }
+                    },
                     () => lobbyJoinCancelRequested
                 );
                 if (joined && !lobbyJoinCancelRequested)
                 {
                     lobbyJoinProgress = "2/2 · 입장 승인 완료 — 로비 정보를 불러오고 있습니다…";
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-                    while (testPauseLobbyJoinAfterApproval && !lobbyJoinCancelRequested) yield return null;
+                    while (testPauseLobbyJoinAfterApproval && !lobbyJoinCancelRequested)
+                    {
+                        yield return null;
+                    }
+
 #endif
                     if (!lobbyJoinCancelRequested)
                     {

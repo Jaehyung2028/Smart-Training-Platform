@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -9,11 +9,20 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static void Call(ApiLobbyScreen screen, string method) => typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, null);
+        private static void Call(ApiLobbyScreen screen, string method)
+        {
+            typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, null);
+        }
 
         private static void Check(bool ok, string name)
         {
@@ -24,7 +33,6 @@ namespace SmartTraining.Editor
 
             Debug.Log("ROOM PASS: " + name);
         }
-
 
         public static IEnumerator Run(TrainingApiClient authenticated)
         {
@@ -48,9 +56,7 @@ namespace SmartTraining.Editor
                 Call(screen, "ResetServerAddress");
                 bool switched = (bool)typeof(ApiLobbyScreen).GetMethod("EnsureClient", Flags).Invoke(screen, null);
                 Check(
-                    !switched &&
-                    Get(screen, "api") == authenticated &&
-                    authenticated.IsLoggedIn &&
+                    !switched && Get(screen, "api") == authenticated && authenticated.IsLoggedIn &&
                     authenticated.User.currentRoomId == oldRoom,
                     "endpoint change guard preserves authenticated API and existing room membership"
                 );

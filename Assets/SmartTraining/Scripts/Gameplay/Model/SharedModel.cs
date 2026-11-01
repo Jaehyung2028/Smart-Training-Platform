@@ -1,6 +1,6 @@
 using System;
-using Unity.Netcode;
 using Unity.Netcode.Components;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace SmartTraining
@@ -12,10 +12,11 @@ namespace SmartTraining
     {
         public const string ResourcePath = "SmartTraining/SharedModel";
         public const float InteractionDistance = 6f;
-
         // 서버만 재생 상태를 확정합니다. 재접속한 참가자도 현재 시각의 같은 포즈를 계산합니다.
         private readonly NetworkVariable<ModelPlaybackState> playback = new(new ModelPlaybackState(0, 0, 0, 5));
+
         public float ExplosionAmount => IsSpawned ? playback.Value.Evaluate(NetworkManager.ServerTime.Time) : 0;
+
         public int PlaybackDirection => IsSpawned ? playback.Value.GetDirection(NetworkManager.ServerTime.Time) : 0;
 
         private NetworkTransform networkTransform;
@@ -31,6 +32,7 @@ namespace SmartTraining
             {
                 throw new InvalidOperationException("SharedModel 네트워크 프리팹을 준비해주세요.");
             }
+
             manager.AddNetworkPrefab(prefab);
             return prefab;
         }
@@ -41,6 +43,7 @@ namespace SmartTraining
             {
                 return null;
             }
+
             foreach (var spawned in manager.SpawnManager.SpawnedObjects.Values)
             {
                 if (spawned.TryGetComponent<SharedModel>(out var model))
@@ -48,6 +51,7 @@ namespace SmartTraining
                     return model;
                 }
             }
+
             return null;
         }
 
@@ -72,9 +76,11 @@ namespace SmartTraining
         private bool CanManipulate(ulong clientId)
         {
             return NetworkManager.ConnectedClients.TryGetValue(clientId, out var client) &&
-                client.PlayerObject != null && client.PlayerObject.TryGetComponent<RoomPlayer>(out var player) &&
-                player.RoomIsRunning && !player.PhasePending &&
-                Vector3.Distance(player.Position, transform.position) <= InteractionDistance + 1f;
+            client.PlayerObject != null &&
+            client.PlayerObject.TryGetComponent<RoomPlayer>(out var player) &&
+            player.RoomIsRunning &&
+            !player.PhasePending &&
+            Vector3.Distance(player.Position, transform.position) <= InteractionDistance + 1f;
         }
 
         // 서버가 먼저 받은 요청 하나만 승인합니다. 다른 사용자가 조작 중이면 소유권을 빼앗지 않습니다.
@@ -86,6 +92,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             lastActivityAt = Time.unscaledTime;
             lastRotation = transform.rotation;
             NetworkObject.ChangeOwnership(sender);
@@ -95,10 +102,12 @@ namespace SmartTraining
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void ResetRotationRpc(RpcParams rpcParams = default)
         {
-            if (!IsServer || !IsSpawned || !NetworkObject.IsOwnedByServer || !CanManipulate(rpcParams.Receive.SenderClientId))
+            if (!IsServer || !IsSpawned || !NetworkObject.IsOwnedByServer ||
+                !CanManipulate(rpcParams.Receive.SenderClientId))
             {
                 return;
             }
+
             networkTransform.SetState(rotIn: initialRotation);
         }
 
@@ -109,10 +118,12 @@ namespace SmartTraining
             ulong sender = rpcParams.Receive.SenderClientId;
             if (!IsServer || !IsSpawned || !CanManipulate(sender) ||
                 (!NetworkObject.IsOwnedByServer && OwnerClientId != sender) ||
-                float.IsNaN(amount) || float.IsInfinity(amount))
+                float.IsNaN(amount) ||
+                float.IsInfinity(amount))
             {
                 return;
             }
+
             // 직접 구간을 옮기면 자동 재생을 중지하고 요청한 위치에 고정합니다.
             playback.Value = new ModelPlaybackState(Mathf.Clamp01(amount), 0, NetworkManager.ServerTime.Time, playback.Value.Duration);
         }
@@ -124,17 +135,24 @@ namespace SmartTraining
             ulong sender = rpcParams.Receive.SenderClientId;
             if (!IsServer || !IsSpawned || !CanManipulate(sender) ||
                 (!NetworkObject.IsOwnedByServer && OwnerClientId != sender) ||
-                direction < -1 || direction > 1 || float.IsNaN(duration) || float.IsInfinity(duration) ||
-                duration < 0.1f || duration > 3600)
+                direction < -1 ||
+                direction > 1 ||
+                float.IsNaN(duration) ||
+                float.IsInfinity(duration) ||
+                duration < 0.1f ||
+                duration > 3600)
             {
                 return;
             }
+
             double now = NetworkManager.ServerTime.Time;
             float amount = playback.Value.Evaluate(now);
-            if (direction == playback.Value.GetDirection(now) || (direction > 0 && amount >= 1) || (direction < 0 && amount <= 0))
+            if (direction == playback.Value.GetDirection(now) || (direction > 0 && amount >= 1) ||
+                (direction < 0 && amount <= 0))
             {
                 return;
             }
+
             playback.Value = new ModelPlaybackState(amount, direction, now, duration);
         }
 
@@ -142,10 +160,12 @@ namespace SmartTraining
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void ReleaseControlRpc(Quaternion finalRotation, RpcParams rpcParams = default)
         {
-            if (!IsServer || !IsSpawned || NetworkObject.IsOwnedByServer || OwnerClientId != rpcParams.Receive.SenderClientId)
+            if (!IsServer || !IsSpawned || NetworkObject.IsOwnedByServer ||
+                OwnerClientId != rpcParams.Receive.SenderClientId)
             {
                 return;
             }
+
             if (IsValidRotation(finalRotation))
             {
                 ReclaimControl(finalRotation.normalized);
@@ -183,20 +203,24 @@ namespace SmartTraining
             {
                 return;
             }
+
             // 끝에 도달했을 때만 정지 상태를 확정합니다. 재생 도중에는 네트워크 상태를 계속 덮어쓰지 않습니다.
             if (playback.Value.Direction != 0 && playback.Value.GetDirection(NetworkManager.ServerTime.Time) == 0)
             {
                 playback.Value = new ModelPlaybackState(ExplosionAmount, 0, NetworkManager.ServerTime.Time, playback.Value.Duration);
             }
+
             if (NetworkObject.IsOwnedByServer)
             {
                 return;
             }
+
             if (Quaternion.Angle(lastRotation, transform.rotation) > 0.01f)
             {
                 lastRotation = transform.rotation;
                 lastActivityAt = Time.unscaledTime;
             }
+
             // 종료 요청 누락·거리 이탈·대기 전환에 대비합니다. 회전 없이 30초가 지나도 조작권을 회수합니다.
             if (!CanManipulate(OwnerClientId) || Time.unscaledTime - lastActivityAt > 30f)
             {

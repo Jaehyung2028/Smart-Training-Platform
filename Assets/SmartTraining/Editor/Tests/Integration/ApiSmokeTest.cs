@@ -1,6 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,13 +9,9 @@ namespace SmartTraining.Editor
     public static class ApiSmokeTest
     {
         private static readonly Stack<IEnumerator> stack = new Stack<IEnumerator>();
-
         private static TrainingApiClient api;
-
         private static double deadline;
-
         private static bool previousPlayOptionsEnabled;
-
         private static EnterPlayModeOptions previousPlayOptions;
 
         public static void Run()
@@ -50,8 +46,14 @@ namespace SmartTraining.Editor
             bool healthy = false;
             yield return api.CheckHealth(() => healthy = true, fail);
             Check(healthy, "health");
-            yield return api.GetCourses(items => Check(items.Length > 0 && Array.TrueForAll(items, item => !string.IsNullOrEmpty(item.id) && !string.IsNullOrEmpty(item.name)),
-                "course catalog loads before login without a token"), fail);
+            yield return api.GetCourses(
+                items => Check(
+                        items.Length > 0 &&
+                        Array.TrueForAll(items, item => !string.IsNullOrEmpty(item.id) && !string.IsNullOrEmpty(item.name)),
+                        "course catalog loads before login without a token"
+                    ),
+                fail
+            );
             string nickname = "unity-" + Guid.NewGuid().ToString("N").Substring(0, 8);
             yield return api.Login(nickname, () =>
             {
@@ -66,13 +68,13 @@ namespace SmartTraining.Editor
             yield return api.GetContents(
                 lobbyId,
                 items =>
-            {
-                Check(
-                    items != null && items.Length == 1 && items[0].rootContent == lobbyId,
-                    "catalog lobby has its own content root"
-                );
-                contentId = items[0].rootContent;
-            },
+                {
+                    Check(
+                        items != null && items.Length == 1 && items[0].rootContent == lobbyId,
+                        "catalog lobby has its own content root"
+                    );
+                    contentId = items[0].rootContent;
+                },
                 fail
             );
             bool membershipRequired = false;
@@ -97,9 +99,9 @@ namespace SmartTraining.Editor
             }, fail);
             yield return api.GetLobbies(
                 items => Check(
-                    Array.Exists(items, item => item.id == lobbyId && item.userCount == 0),
-                    "empty catalog lobby remains listed"
-                ),
+                        Array.Exists(items, item => item.id == lobbyId && item.userCount == 0),
+                        "empty catalog lobby remains listed"
+                    ),
                 fail
             );
             yield return api.JoinLobby(lobbyId, () =>
@@ -110,9 +112,9 @@ namespace SmartTraining.Editor
                 lobbyId,
                 roomId,
                 room => Check(
-                    room.id == roomId && room.contentId == contentId && room.masterUserId == userId,
-                    "room creation uses token identity and catalog content"
-                ),
+                        room.id == roomId && room.contentId == contentId && room.masterUserId == userId,
+                        "room creation uses token identity and catalog content"
+                    ),
                 fail
             );
             // 생성은 성공했지만 생성 응답을 화면이 받지 못한 상황의 복구 경로를 직접 호출합니다.
@@ -125,7 +127,8 @@ namespace SmartTraining.Editor
             {
                 yield return (IEnumerator)typeof(ApiLobbyScreen).GetMethod("RecoverRoomCreation", recoveryFlags).Invoke(recoveryScreen, new object[] { "방 생성 응답을 확인하지 못했습니다." });
                 Check(
-                    api.User.pendingRoomId == roomId && (bool)typeof(ApiLobbyScreen).GetProperty("UiHasRoomCleanup", recoveryFlags).GetValue(recoveryScreen),
+                    api.User.pendingRoomId == roomId &&
+                    (bool)typeof(ApiLobbyScreen).GetProperty("UiHasRoomCleanup", recoveryFlags).GetValue(recoveryScreen),
                     "lost creation response recovery reveals authoritative reservation and cleanup action"
                 );
                 Check(
@@ -140,9 +143,9 @@ namespace SmartTraining.Editor
 
             yield return api.GetMe(
                 user => Check(
-                    string.IsNullOrEmpty(user.currentRoomId) && user.pendingRoomId == roomId,
-                    "creation reserves initial master without claiming Netcode connection"
-                ),
+                        string.IsNullOrEmpty(user.currentRoomId) && user.pendingRoomId == roomId,
+                        "creation reserves initial master without claiming Netcode connection"
+                    ),
                 fail
             );
             yield return api.Logout(() =>
@@ -154,9 +157,9 @@ namespace SmartTraining.Editor
             }, fail);
             yield return api.GetLobbies(
                 items => Check(
-                    Array.Exists(items, item => item.id == lobbyId && item.roomCount == 0 && item.userCount == 0),
-                    "logout clears owned room and retains fixed catalog lobby"
-                ),
+                        Array.Exists(items, item => item.id == lobbyId && item.roomCount == 0 && item.userCount == 0),
+                        "logout clears owned room and retains fixed catalog lobby"
+                    ),
                 fail
             );
             yield return api.Logout(() =>

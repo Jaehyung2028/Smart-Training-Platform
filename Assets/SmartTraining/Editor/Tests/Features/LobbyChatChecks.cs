@@ -1,7 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -10,11 +10,20 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static IEnumerator Call(ApiLobbyScreen screen, string method, params object[] args) => (IEnumerator)typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, args);
+        private static IEnumerator Call(ApiLobbyScreen screen, string method, params object[] args)
+        {
+            return (IEnumerator)typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, args);
+        }
 
         private static void Check(bool ok, string name)
         {
@@ -26,9 +35,15 @@ namespace SmartTraining.Editor
             Debug.Log("ROOM PASS: " + name);
         }
 
-        private static List<LobbyChatMessage> Messages(ApiLobbyScreen screen) => (List<LobbyChatMessage>)Get(screen, "chatMessages");
+        private static List<LobbyChatMessage> Messages(ApiLobbyScreen screen)
+        {
+            return (List<LobbyChatMessage>)Get(screen, "chatMessages");
+        }
 
-        private static RoomHubConnection Connection(ApiLobbyScreen screen) => (RoomHubConnection)Get(screen, "lobbyUpdates");
+        private static RoomHubConnection Connection(ApiLobbyScreen screen)
+        {
+            return (RoomHubConnection)Get(screen, "lobbyUpdates");
+        }
 
         private static ApiLobbyScreen Screen(TrainingApiClient api, string lobby)
         {
@@ -73,7 +88,8 @@ namespace SmartTraining.Editor
                 yield return Call(a, "ConnectLobbyRooms", lobby);
                 yield return Call(b, "ConnectLobbyRooms", lobby);
                 Check(
-                    Connection(a) != null && !(bool)Get(a, "liveConnecting") && Connection(b) != null && !(bool)Get(b, "liveConnecting"),
+                    Connection(a) != null && !(bool)Get(a, "liveConnecting") && Connection(b) != null &&
+                    !(bool)Get(b, "liveConnecting"),
                     "chat screens establish authenticated SignalR subscriptions"
                 );
                 var connect = stranger.ConnectLobbyUpdates(foreign);
@@ -103,7 +119,9 @@ namespace SmartTraining.Editor
                     "chat button delivers once to sender and same-lobby participant"
                 );
                 Check(
-                    Messages(b)[0].nickname == first.User.name && Messages(b)[0].userId == first.User.id && Messages(b)[0].text == "안녕하세요 🙂" && DateTimeOffset.TryParse(Messages(b)[0].sentAt, out _),
+                    Messages(b)[0].nickname == first.User.name && Messages(b)[0].userId == first.User.id &&
+                    Messages(b)[0].text == "안녕하세요 🙂" &&
+                    DateTimeOffset.TryParse(Messages(b)[0].sentAt, out _),
                     "chat wire preserves unicode and server identity with timestamp"
                 );
                 Check(foreignMessages == 0, "chat never broadcasts to another lobby");
@@ -120,7 +138,7 @@ namespace SmartTraining.Editor
                 yield return Call(a, "SendLobbyChat");
                 yield return Pump(a, b, foreign, .3);
                 Check(Messages(b).Count == 2 && foreignMessages == 0, "browsing another lobby preserves current-lobby chat");
-                // Token refresh invalidates both sending and receiving on the old subscription.
+                // 토큰을 갱신하면 이전 구독의 송신·수신 권한도 함께 만료됩니다.
                 typeof(TrainingApiClient).GetField("expiresAt", Flags).SetValue(second, DateTimeOffset.UtcNow);
                 yield return second.GetMe(_ =>
                 {
@@ -165,7 +183,6 @@ namespace SmartTraining.Editor
                     a,
                     b
                 }
-
                 )
                 {
                     if (screen != null)

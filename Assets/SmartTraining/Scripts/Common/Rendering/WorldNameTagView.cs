@@ -23,7 +23,6 @@ namespace SmartTraining
             view.gameObject.SetActive(false);
         }
 
-
         public void Refresh(string displayName, Camera viewCamera, string detail = "")
         {
             bool visible = viewCamera != null && !string.IsNullOrEmpty(displayName);
@@ -63,7 +62,6 @@ namespace SmartTraining
             view.Canvas.worldCamera = viewCamera;
             view.transform.rotation = viewCamera.transform.rotation;
         }
-
 
         public void Dispose()
         {

@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -21,7 +21,6 @@ namespace SmartTraining
         public ContentParticipantState[] Participants;
     }
 
-
     internal sealed class ContentHudActions
     {
         public Action SettingsChanged;
@@ -30,13 +29,11 @@ namespace SmartTraining
         public Action<string, Action<bool>> SendChat;
     }
 
-
-    // 콘텐츠 화면·메뉴·설정 편집을 담당합니다. API 화면이나 씬 수명주기 클래스는 참조하지 않습니다.
+    // 콘텐츠 HUD와 메뉴를 갱신하고 옵션의 미리보기·저장·취소를 처리합니다.
     internal sealed class ContentHudController : IDisposable
     {
         private readonly ClientPreferences preferences;
         private readonly ContentHudActions actions;
-        private readonly Font font;
         private readonly InputAction menuAction;
         private ContentHudState state = new()
         {
@@ -55,6 +52,7 @@ namespace SmartTraining
         private ScenarioRoleMenu scenarioRoles;
         private ContentChatPanel chatPanel;
         private Button chatButton, participantsButton;
+        private readonly Text chatLabel, participantsLabel;
         private ContentParticipantPanel participantsPanel;
         private Text notice, modelControlStatus, learningStatus;
         private RectTransform learningPanel;
@@ -69,15 +67,8 @@ namespace SmartTraining
 
         public bool BlocksGameplayInput => menuOpen || state.Error.Length > 0 || HasScenarioResults || chatPanel?.IsEditing == true;
 
-
-        public ContentHudController(
-            UiPrefabReferences view,
-            Font font,
-            ClientPreferences preferences,
-            ContentHudActions actions
-        )
+        public ContentHudController(UiPrefabReferences view, ClientPreferences preferences, ContentHudActions actions)
         {
-            this.font = font;
             this.preferences = preferences;
             this.actions = actions;
             pauseMenu = view.Get<GameObject>("pauseMenu");
@@ -85,6 +76,8 @@ namespace SmartTraining
             modelControlPanel = view.Get<GameObject>("modelControlPanel");
             chatButton = view.Get<Button>("chatButton");
             participantsButton = view.Get<Button>("participantsButton");
+            chatLabel = chatButton.GetComponentInChildren<Text>(true);
+            participantsLabel = participantsButton.GetComponentInChildren<Text>(true);
             notice = view.Get<Text>("notice");
             modelControlStatus = view.Get<Text>("modelControlStatus");
             learningStatus = view.Get<Text>("learningStatus");
@@ -109,37 +102,24 @@ namespace SmartTraining
             view.Get<Button>("설정:Button").onClick.AddListener(OpenOptions);
             returnButton.onClick.AddListener(() => actions.ReturnToWaiting?.Invoke());
             leaveButton.onClick.AddListener(() => actions.LeaveRoom?.Invoke());
-            partDetails = new ModelPartDetailsPanel(Root.transform, font, () => state.Model?.ClearSelection());
-            partList = new ModelPartListPanel(Root.transform, font);
-            actionMenu = new ContentActionMenu(Root.transform, font);
-            scenarioPanel = new ScenarioControlPanel(Root.transform, font);
-            scenarioResults = new ScenarioResultPanel(Root.transform, font, () => actions.ReturnToWaiting?.Invoke());
-            chatPanel = new ContentChatPanel(
-                Root.transform,
-                font,
-                (text, completed) => actions.SendChat?.Invoke(text, completed)
-            );
-            participantsPanel = new ContentParticipantPanel(Root.transform, font);
-            optionsPanel = new ClientSettingsPanel(
-                pauseMenu.transform,
-                font,
-                preferences,
-                ApplyPreferences,
-                SaveOptions,
-                CloseOptions
-            );
+            partDetails = new ModelPartDetailsPanel(Root.transform, () => state.Model?.ClearSelection());
+            partList = new ModelPartListPanel(Root.transform);
+            actionMenu = new ContentActionMenu(Root.transform);
+            scenarioPanel = new ScenarioControlPanel(Root.transform);
+            scenarioResults = new ScenarioResultPanel(Root.transform, () => actions.ReturnToWaiting?.Invoke());
+            chatPanel = new ContentChatPanel(Root.transform, (text, completed) => actions.SendChat?.Invoke(text, completed));
+            participantsPanel = new ContentParticipantPanel(Root.transform);
+            optionsPanel = new ClientSettingsPanel(pauseMenu.transform, preferences, ApplyPreferences, SaveOptions, CloseOptions);
             pauseMenu.transform.SetAsLastSibling();
             menuAction = new InputAction("Content Menu", InputActionType.Button, "<Keyboard>/escape");
             menuAction.performed += ToggleMenu;
             EnableInput();
         }
 
-
         public void EnableInput()
         {
             menuAction.Enable();
         }
-
 
         public void DisableInput()
         {
@@ -148,22 +128,16 @@ namespace SmartTraining
             CloseOptions();
         }
 
-
         public void ClearContent()
         {
             participantsPanel.Close();
             chatPanel.Close();
-            videoPanel?.Dispose();
-            videoPanel = null;
-            actionMenu.ClearActions();
-            scenarioTools = null;
-            scenarioRoles = null;
+            ClearContentActions();
             partList.Clear();
             state.Model = null;
             state.Video = null;
             state.Scenario = null;
         }
-
 
         public void EndSession()
         {
@@ -180,13 +154,11 @@ namespace SmartTraining
             }
         }
 
-
         private void ApplyPreferences()
         {
             preferences.ApplyAudioVolume();
             actions.SettingsChanged?.Invoke();
         }
-
 
         public void Dispose()
         {
@@ -196,10 +168,9 @@ namespace SmartTraining
             if (Root != null)
             {
                 Root.SetActive(false);
-                // HUD 오브젝트는 콘텐츠 씬이 소유하므로 씬 언로드에서 함께 정리합니다.
+                // HUD 오브젝트는 씬 언로드에서 해제합니다.
             }
         }
-
 
         public void Refresh(ContentHudState state)
         {
@@ -208,21 +179,25 @@ namespace SmartTraining
             this.state = state;
             Root.SetActive(state.Active);
             notice.text = GetNotice();
-            bool showChat = state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0;
-            chatButton.interactable = showChat;
-            participantsButton.interactable = showChat;
-            participantsPanel.Refresh(state.Participants, showChat);
-            participantsButton.GetComponentInChildren<Text>().text = "참가자 (" + (state.Participants?.Length ?? 0) + ")";
-            chatPanel.Refresh(
-                state.RoomId,
-                state.LocalUserId,
-                state.ChatMessages,
-                state.ChatStatus,
-                showChat,
-                state.CanSendChat
-            );
-            chatButton.GetComponentInChildren<Text>().text = chatPanel.IsOpen ? "채팅 닫기" : "방 채팅";
-            // 기본 위치는 HUD 프리팹에서 편집합니다.
+            bool visible = state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0;
+            RefreshSocialPanels(visible);
+            RefreshLearningProgress();
+            RefreshContentPanels(visible);
+            RefreshMenu();
+        }
+
+        private void RefreshSocialPanels(bool visible)
+        {
+            chatButton.interactable = visible;
+            participantsButton.interactable = visible;
+            participantsPanel.Refresh(state.Participants, visible);
+            participantsLabel.text = "참가자 (" + (state.Participants?.Length ?? 0) + ")";
+            chatPanel.Refresh(state.RoomId, state.LocalUserId, state.ChatMessages, state.ChatStatus, visible, state.CanSendChat);
+            chatLabel.text = chatPanel.IsOpen ? "채팅 닫기" : "방 채팅";
+        }
+
+        private void RefreshLearningProgress()
+        {
             learningStatus.text = state.Progress == null ? "학습 준비 중" : state.Progress.Label;
             if (state.Model != null)
             {
@@ -231,27 +206,17 @@ namespace SmartTraining
 
             learningStatus.color = state.Progress?.IsComplete == true ? new Color32(74, 222, 128, 255) : Color.white;
             learningPanel.gameObject.SetActive(state.Requested && state.SceneReady && !menuOpen);
-            bool showModelStatus = state.Requested && state.SceneReady && state.Model != null && !menuOpen && state.Error.Length == 0;
+        }
+
+        private void RefreshContentPanels(bool visible)
+        {
+            bool scenarioVisible = visible && !HasScenarioResults;
+            bool showModelStatus = visible && state.Model != null;
             modelControlPanel.SetActive(showModelStatus);
-            videoPanel?.Refresh(
-                state.Video,
-                state.Requested && state.SceneReady && !menuOpen && state.Error.Length == 0,
-                state.CanInteract
-            );
-            scenarioPanel.Refresh(
-                state.Scenario,
-                state.Requested && state.SceneReady && !menuOpen && !HasScenarioResults && state.Error.Length == 0
-            );
-            scenarioRoles?.Refresh(
-                state.Scenario,
-                state.Requested && state.SceneReady && !menuOpen && !HasScenarioResults && state.Error.Length == 0,
-                state.CanInteract
-            );
-            scenarioTools?.Refresh(
-                state.Scenario,
-                state.Requested && state.SceneReady && !menuOpen && !HasScenarioResults && state.Error.Length == 0,
-                state.CanInteract
-            );
+            videoPanel?.Refresh(state.Video, visible, state.CanInteract);
+            scenarioPanel.Refresh(state.Scenario, scenarioVisible);
+            scenarioRoles?.Refresh(state.Scenario, scenarioVisible, state.CanInteract);
+            scenarioTools?.Refresh(state.Scenario, scenarioVisible, state.CanInteract);
             scenarioResults.Refresh(
                 state.Scenario,
                 HasScenarioResults && !menuOpen && state.Error.Length == 0,
@@ -263,9 +228,27 @@ namespace SmartTraining
             if (showModelStatus)
             {
                 modelControlStatus.text = state.Model.GetControlStatus();
-                modelControlStatus.color = state.Model.IsLocalManipulator ? new Color32(74, 222, 128, 255) : state.Model.IsBeingManipulated ? new Color32(251, 191, 36, 255) : Color.white;
+                modelControlStatus.color = GetModelControlColor(state.Model);
+            }
+        }
+
+        private static Color GetModelControlColor(ModelViewer model)
+        {
+            if (model.IsLocalManipulator)
+            {
+                return new Color32(74, 222, 128, 255);
             }
 
+            if (model.IsBeingManipulated)
+            {
+                return new Color32(251, 191, 36, 255);
+            }
+
+            return Color.white;
+        }
+
+        private void RefreshMenu()
+        {
             pauseMenu.SetActive(state.Requested && (menuOpen || state.Error.Length > 0));
             menuCard.SetActive(!optionsOpen);
             optionsPanel.Root.SetActive(optionsOpen);
@@ -280,12 +263,10 @@ namespace SmartTraining
             leaveButton.interactable = state.CanLeave;
         }
 
-
         private void ToggleMenu(InputAction.CallbackContext context)
         {
             HandleBack();
         }
-
 
         // Esc와 다른 UI 내비게이션이 동일한 닫기 우선순위와 설정 취소 경로를 사용합니다.
         internal void HandleBack()
@@ -319,7 +300,6 @@ namespace SmartTraining
             }
         }
 
-
         private string GetNotice()
         {
             if (state.Error.Length > 0)
@@ -350,24 +330,27 @@ namespace SmartTraining
             return menuOpen ? "메뉴 열림 · Esc로 조작 재개" : "WASD 이동 · 우클릭 드래그 시점 · 휠 버튼 누르는 동안 응시 · Esc 메뉴";
         }
 
-
-        // 조작 안내와 분리해 현재 소유자를 표시합니다. 레이캐스트를 받지 않아 모델 클릭을 가리지 않습니다.
-        // 콘텐츠 유형별로 기능을 등록합니다. 영상·시나리오 기능도 구현 시 이 메뉴에 각각 추가할 수 있습니다.
-        internal void ConfigureContentActions(string contentType)
+        private void ClearContentActions()
         {
             videoPanel?.Dispose();
             videoPanel = null;
             actionMenu.ClearActions();
             scenarioTools = null;
             scenarioRoles = null;
+        }
+
+        // 콘텐츠를 바꿀 때 이전 메뉴와 이벤트 참조를 정리한 뒤 새 기능을 연결합니다.
+        internal void ConfigureContentActions(string contentType)
+        {
+            ClearContentActions();
             if (contentType == "video")
             {
-                videoPanel = new VideoControlPanel(actionMenu.AddSection("Video Menu"), Root.transform, font);
+                videoPanel = new VideoControlPanel(actionMenu.AddSection("Video Menu"), Root.transform);
             }
             else if (contentType == "scenario")
             {
-                scenarioRoles = new ScenarioRoleMenu(actionMenu.AddSection("Scenario Role Menu"), font);
-                scenarioTools = new ScenarioToolMenu(actionMenu.AddSection("Scenario Tool Menu"), font);
+                scenarioRoles = new ScenarioRoleMenu(actionMenu.AddSection("Scenario Role Menu"));
+                scenarioTools = new ScenarioToolMenu(actionMenu.AddSection("Scenario Tool Menu"));
                 actionMenu.AddAction(
                     "실습 처음부터 (방장)",
                     () => state.Scenario?.ResetPractice(),
@@ -376,11 +359,7 @@ namespace SmartTraining
             }
             else if (contentType == "model")
             {
-                actionMenu.AddAction(
-                    "부품 목록",
-                    () => partList.Toggle(),
-                    () => state.Model != null && state.Model.Parts.Count > 0
-                );
+                actionMenu.AddAction("부품 목록", () => partList.Toggle(), () => state.Model != null && state.Model.Parts.Count > 0);
                 actionMenu.AddPlaybackControls(
                     direction => state.Model?.SetPlayback(state.Camera, direction),
                     direction => state.Model != null && state.Model.CanSetPlayback(state.Camera, direction),
@@ -405,7 +384,6 @@ namespace SmartTraining
             }
         }
 
-
         // 화면 전체의 배경이 뒤쪽 UI 클릭을 막고, 중앙 창에서 계속하기·복귀·퇴장을 선택합니다.
         // 멀티플레이 시간은 멈추지 않으며, 메뉴를 연 사용자 자신의 이동과 시점 입력만 차단합니다.
         internal void SetMenuOpen(bool value)
@@ -423,7 +401,6 @@ namespace SmartTraining
             }
         }
 
-
         private void OpenOptions()
         {
             preferences.BeginEdit();
@@ -431,13 +408,11 @@ namespace SmartTraining
             optionsOpen = true;
         }
 
-
         private void SaveOptions()
         {
             preferences.Save();
             optionsOpen = false;
         }
-
 
         // Esc·취소·메뉴 종료·퇴장 모두 같은 취소 경로를 사용해 감도·FOV·음량을 복구합니다.
         internal void CloseOptions()

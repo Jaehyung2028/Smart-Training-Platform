@@ -38,14 +38,9 @@ namespace SmartTraining.Editor
             );
             InvalidObject(prefab, "Bolt A", data => data.FindProperty("id").stringValue = "missing");
             InvalidObject(prefab, "Bolt A", data => data.FindProperty("id").stringValue = "bolt-b");
-            InvalidObject(
-                prefab,
-                "Bolt A",
-                data => data.FindProperty("kind").enumValueIndex = (int)ScenarioObjectKind.Tool
-            );
+            InvalidObject(prefab, "Bolt A", data => data.FindProperty("kind").enumValueIndex = (int)ScenarioObjectKind.Tool);
             Debug.Log("SCENARIO DATA CHECKS PASSED (9)");
         }
-
 
         private static void InvalidDefinition(ScenarioDefinition source, Action<SerializedObject> change)
         {
@@ -63,7 +58,6 @@ namespace SmartTraining.Editor
             }
         }
 
-
         private static void InvalidObject(GameObject source, string name, Action<SerializedObject> change)
         {
             var copy = UnityEngine.Object.Instantiate(source);
@@ -79,7 +73,6 @@ namespace SmartTraining.Editor
                 UnityEngine.Object.DestroyImmediate(copy);
             }
         }
-
 
         private static void Check(bool condition, string name)
         {

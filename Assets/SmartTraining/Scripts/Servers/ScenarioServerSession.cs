@@ -19,7 +19,6 @@ namespace SmartTraining
             this.networkPrefab = networkPrefab;
         }
 
-
         public void Synchronize(bool running, string assetId)
         {
             string desired = running ? assetId ?? "" : "";
@@ -37,24 +36,26 @@ namespace SmartTraining
             }
         }
 
-
         private IEnumerator Load(ContentAssetScope scope, string assetId)
         {
-            yield return scope.LoadAsset<GameObject>(assetId, prefab =>
-            {
-                // 취소된 로딩은 ContentAssetScope가 콜백을 실행하지 않습니다.
-                if (!prefab.TryGetComponent<ScenarioContent>(out var source) || !source.TryInitialize(out _))
+            yield return scope.LoadAsset<GameObject>(
+                assetId,
+                prefab =>
                 {
-                    Debug.LogError("서버가 시나리오 원본을 확인하지 못했습니다: " + assetId);
-                    return;
-                }
+                // 취소된 로딩은 ContentAssetScope가 콜백을 실행하지 않습니다.
+                    if (!prefab.TryGetComponent<ScenarioContent>(out var source) || !source.TryInitialize(out _))
+                    {
+                        Debug.LogError("서버가 시나리오 원본을 확인하지 못했습니다: " + assetId);
+                        return;
+                    }
 
-                shared = Instantiate(networkPrefab).GetComponent<SharedScenario>();
-                shared.InitializeServer(source);
-                shared.NetworkObject.Spawn();
-            }, Debug.LogError);
+                    shared = Instantiate(networkPrefab).GetComponent<SharedScenario>();
+                    shared.InitializeServer(source);
+                    shared.NetworkObject.Spawn();
+                },
+                Debug.LogError
+            );
         }
-
 
         private void Clear()
         {
@@ -76,7 +77,6 @@ namespace SmartTraining
             assets = null;
             activeAsset = "";
         }
-
 
         private void OnDisable()
         {

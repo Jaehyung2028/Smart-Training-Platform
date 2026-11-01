@@ -1,15 +1,12 @@
-﻿using System;
 using System.Text.Json;
+using System;
 
 namespace SmartTraining
 {
     // HTTP와 SignalR에서 같은 JSON 규칙을 사용합니다. Unity DTO의 public 필드도 직렬화합니다.
     public static class TrainingJson
     {
-        public static JsonSerializerOptions Options
-        {
-            get;
-        } = new JsonSerializerOptions
+        public static JsonSerializerOptions Options { get; } = new JsonSerializerOptions
         {
             IncludeFields = true,
             PropertyNameCaseInsensitive = true

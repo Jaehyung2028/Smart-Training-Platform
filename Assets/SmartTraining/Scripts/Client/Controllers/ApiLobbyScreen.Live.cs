@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -7,18 +7,14 @@ namespace SmartTraining
     public sealed partial class ApiLobbyScreen
     {
         private RoomHubConnection lobbyUpdates;
-
         private string liveLobbyId = "";
-
         private TrainingApiClient liveApi;
-
         private bool liveConnecting, roomsDirty;
-
         private float nextLiveAttempt;
-
 #if UNITY_EDITOR
         // 검사 도구는 이 화면의 API 클라이언트를 공유하면서 다른 UI 동작도 함께 확인합니다.
         private bool testPauseLobbyUpdates;
+
 #endif
         private void DisposeLobbyUpdates()
         {
@@ -37,7 +33,12 @@ namespace SmartTraining
             SyncParticipantsContext();
             SyncChatLobby();
 #if UNITY_EDITOR
-            if (testPauseLobbyUpdates) { DisposeLobbyUpdates(); return; }
+            if (testPauseLobbyUpdates)
+            {
+                DisposeLobbyUpdates();
+                return;
+            }
+
 #endif
             ObserveConnectionSession();
             string target = api?.IsLoggedIn == true ? api.User.currentLobbyId ?? "" : "";
@@ -174,10 +175,10 @@ namespace SmartTraining
             bool loaded = false;
             yield return api.GetLobbies(
                 items =>
-            {
-                lobbies = items;
-                loaded = true;
-            },
+                {
+                    lobbies = items;
+                    loaded = true;
+                },
                 ScheduleLiveRetry
             );
             if (!loaded || string.IsNullOrEmpty(lobby))
@@ -194,15 +195,15 @@ namespace SmartTraining
             yield return api.GetRooms(
                 lobby,
                 items =>
-            {
-                if (api != liveApi || selectedLobbyId != lobby)
                 {
-                    return;
-                }
+                    if (api != liveApi || selectedLobbyId != lobby)
+                    {
+                        return;
+                    }
 
-                rooms = items;
-                selectedRoom = Array.Find(rooms, item => item.id == selectedRoom?.id);
-            },
+                    rooms = items;
+                    selectedRoom = Array.Find(rooms, item => item.id == selectedRoom?.id);
+                },
                 ScheduleLiveRetry
             );
         }

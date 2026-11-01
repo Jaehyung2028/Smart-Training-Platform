@@ -16,7 +16,6 @@ namespace SmartTraining.Editor
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(AssetPath));
         }
 
-
         [MenuItem("Smart Training/UI/Check Room Prefab")]
         public static void EnsureAssets()
         {

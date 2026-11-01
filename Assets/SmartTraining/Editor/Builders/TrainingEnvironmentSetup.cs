@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +13,8 @@ namespace SmartTraining.Editor
         public static void Validate()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-            if (prefab == null || !prefab.GetComponentsInChildren<Collider>(true).Any(collider => !collider.isTrigger))
+            if (prefab == null ||
+                !prefab.GetComponentsInChildren<Collider>(true).Any(collider => !collider.isTrigger))
             {
                 throw new InvalidOperationException("TrainingEnvironment 프리팹의 벽·바닥 Collider를 확인해주세요.");
             }
@@ -23,7 +24,6 @@ namespace SmartTraining.Editor
                 ContentSceneSession.ScenePath,
                 "Assets/SmartTraining/Scenes/RoomServer.unity"
             }
-
             )
             {
                 if (!AssetDatabase.GetDependencies(scene).Contains(PrefabPath))

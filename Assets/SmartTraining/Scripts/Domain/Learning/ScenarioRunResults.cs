@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace SmartTraining
 {
@@ -9,7 +9,6 @@ namespace SmartTraining
         WrongTool,
         WrongTarget
     }
-
 
     // 한 실습의 서버 기록입니다. UI·Netcode 없이 시각, 단계 완료, 단계별 오류 합계를 관리합니다.
     public sealed class ScenarioRunResults
@@ -26,14 +25,7 @@ namespace SmartTraining
 
             public double DurationSeconds { get; }
 
-
-            public StepResult(
-                int index,
-                string actorName,
-                int toolErrors,
-                int targetErrors,
-                double durationSeconds
-            )
+            public StepResult(int index, string actorName, int toolErrors, int targetErrors, double durationSeconds)
             {
                 Index = index;
                 ActorName = actorName;
@@ -42,7 +34,6 @@ namespace SmartTraining
                 DurationSeconds = durationSeconds;
             }
         }
-
 
         private readonly int stepCount;
         private readonly List<StepResult> steps = new();
@@ -62,7 +53,6 @@ namespace SmartTraining
 
         public bool IsComplete => steps.Count == stepCount;
 
-
         public ScenarioRunResults(int stepCount)
         {
             if (stepCount <= 0)
@@ -72,7 +62,6 @@ namespace SmartTraining
 
             this.stepCount = stepCount;
         }
-
 
         public void Begin(double now)
         {
@@ -87,7 +76,6 @@ namespace SmartTraining
             ToolErrors = TargetErrors = stepToolErrors = stepTargetErrors = 0;
             started = true;
         }
-
 
         // 권한·버전·거리 검사 후 현재 단계에 대한 공구·대상 오류만 전달받습니다.
         public bool RecordError(int stepIndex, ScenarioInteractionError error)
@@ -114,11 +102,11 @@ namespace SmartTraining
             return false;
         }
 
-
         // 완료 수는 한 단계씩 늘어납니다. 중복 완료와 취소·오래된 상태의 기록은 거절합니다.
         public bool CompleteStep(int completedSteps, string actorName, double now)
         {
-            if (!started || IsComplete || completedSteps != steps.Count + 1 || !ValidTime(now) || now < stepStartedAt)
+            if (!started || IsComplete || completedSteps != steps.Count + 1 || !ValidTime(now) ||
+                now < stepStartedAt)
             {
                 return false;
             }
@@ -134,12 +122,10 @@ namespace SmartTraining
             return true;
         }
 
-
         public double Elapsed(double now)
         {
             return started && ValidTime(now) ? Math.Max(0, (IsComplete ? EndedAt : now) - StartedAt) : 0;
         }
-
 
         private static bool ValidTime(double now)
         {

@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -13,7 +13,7 @@ namespace SmartTraining
         private readonly ScrollRect scroll;
         private int displayedVersion = -1;
 
-        public ModelPartDetailsPanel(Transform parent, Font font, Action close)
+        public ModelPartDetailsPanel(Transform parent, Action close)
         {
             var view = UiPrefab.Bind("ModelPartDetailsPanel", parent);
             root = view.Get<GameObject>("root");
@@ -23,7 +23,6 @@ namespace SmartTraining
             view.Get<Button>("Close Part Details:Button").onClick.AddListener(() => close());
             root.SetActive(false);
         }
-
 
         internal void Refresh(ModelViewer viewer, bool visible)
         {

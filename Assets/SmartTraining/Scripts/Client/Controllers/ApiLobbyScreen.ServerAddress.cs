@@ -14,8 +14,10 @@ namespace SmartTraining
             }
         }
 
-
-        private bool CanEditServerAddress() => !busy && !WaitingForExitCleanup && api?.IsLoggedIn != true && network?.IsConnected != true;
+        private bool CanEditServerAddress()
+        {
+            return !busy && !WaitingForExitCleanup && api?.IsLoggedIn != true && network?.IsConnected != true;
+        }
 
         private void ResetServerAddress()
         {

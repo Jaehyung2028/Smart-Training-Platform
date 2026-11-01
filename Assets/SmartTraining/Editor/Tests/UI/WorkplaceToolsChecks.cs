@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
+using System;
 using UnityEditor.AddressableAssets;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -20,10 +20,7 @@ namespace SmartTraining.Editor
                 new HashSet<string>()
             };
             int count = 0;
-            foreach (string guid in AssetDatabase.FindAssets(
-                "t:ScenarioDefinition",
-                new[] { ScenarioContentBuilder.DirectoryPath }
-            ))
+            foreach (string guid in AssetDatabase.FindAssets("t:ScenarioDefinition", new[] { ScenarioContentBuilder.DirectoryPath }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var definition = AssetDatabase.LoadAssetAtPath<ScenarioDefinition>(path);
@@ -35,10 +32,7 @@ namespace SmartTraining.Editor
                     "콘텐츠마다 세 종류 이상 공구 사용"
                 );
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path.Replace(".asset", ".prefab"));
-                Require(
-                    prefab.GetComponent<ScenarioContent>().TryInitialize(out var error),
-                    path + ": " + error
-                );
+                Require(prefab.GetComponent<ScenarioContent>().TryInitialize(out var error), path + ": " + error);
                 var progress = new ScenarioProgress(definition);
                 foreach (var role in ScenarioRoles.Enumerate(definition.Roles))
                 {
@@ -52,10 +46,7 @@ namespace SmartTraining.Editor
                     if (step.RequiresTool)
                     {
                         used[definition.RequiresRoles ? 1 : 0].Add(step.ToolId);
-                        Require(
-                            !progress.TryInteract(99, step.TargetId, progress.Revision, time, out _),
-                            "타인의 공구·역할 공유 불가"
-                        );
+                        Require(!progress.TryInteract(99, step.TargetId, progress.Revision, time, out _), "타인의 공구·역할 공유 불가");
                         Require(progress.TrySelectTool(actor, step.ToolId, 0, out _), "올바른 공구 선택");
                     }
                     else
@@ -63,10 +54,7 @@ namespace SmartTraining.Editor
                         Require(progress.TrySelectTool(actor, "", 0, out _), "공구 선택 해제");
                     }
 
-                    Require(
-                        progress.TryInteract(actor, step.TargetId, progress.Revision, time, out _),
-                        "대상 승인: " + step.Title
-                    );
+                    Require(progress.TryInteract(actor, step.TargetId, progress.Revision, time, out _), "대상 승인: " + step.Title);
                     if (progress.IsWorking)
                     {
                         Require(!progress.TryCompleteWork(time + .1), "작업 시간 유지");
@@ -85,10 +73,7 @@ namespace SmartTraining.Editor
                 Require(progress.CompletedSteps == 0 && !progress.IsWorking, "재실습 진행 초기화");
                 foreach (var tool in definition.Tools)
                 {
-                    Require(
-                        tool.AnimateWork && tool.HeldPrefab.transform.Find("Work Contact") != null,
-                        "공구 동작·접촉점"
-                    );
+                    Require(tool.AnimateWork && tool.HeldPrefab.transform.Find("Work Contact") != null, "공구 동작·접촉점");
                     Require(
                         tool.HeldPrefab.GetComponentsInChildren<MeshFilter>(true).Any(mesh => AssetDatabase.GetAssetPath(mesh.sharedMesh).StartsWith("Assets/Workplace Tools/")),
                         "공용 모델 사용"
@@ -113,17 +98,15 @@ namespace SmartTraining.Editor
                 used.All(tools => tools.SetEquals(new[] { "spanner", "screwdriver", "hammer", "axe", "drill", "pipe-wrench", "pliers", "saw" })),
                 "일반·협동 실습 각각 8종 전체 사용"
             );
+            Require(!AssetDatabase.IsValidFolder(ScenarioContentBuilder.DirectoryPath + "/WorkplaceTools"), "별도 종합 실습 삭제");
             Require(
-                !AssetDatabase.IsValidFolder(ScenarioContentBuilder.DirectoryPath + "/WorkplaceTools"),
-                "별도 종합 실습 삭제"
-            );
-            Require(
-                !AddressableAssetSettingsDefaultObject.Settings.groups.Where(group => group != null).SelectMany(group => group.entries).Any(entry => entry.address == "content/scenario/workplace-tools"),
+                !AddressableAssetSettingsDefaultObject.Settings.groups.Where(group => group != null)
+                    .SelectMany(group => group.entries)
+                    .Any(entry => entry.address == "content/scenario/workplace-tools"),
                 "기존 주소 제거"
             );
             Debug.Log("MIXED SCENARIO CHECKS PASSED (6 scenarios / 8 tools in each family)");
         }
-
 
         private static void Require(bool success, string message)
         {

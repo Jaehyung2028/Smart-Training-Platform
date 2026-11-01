@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace SmartTraining
 {
@@ -37,18 +37,18 @@ namespace SmartTraining
     public sealed class RoomNoticeTracker
     {
         public const int Limit = 20;
-
         private readonly List<RoomNotice> messages = new List<RoomNotice>();
-
         private Dictionary<string, RoomNoticeParticipant> previous;
-
         private string previousMaster;
 
         public IReadOnlyList<RoomNotice> Messages => messages;
 
         public long Revision { get; private set; }
 
-        public void ClearMessages() => messages.Clear();
+        public void ClearMessages()
+        {
+            messages.Clear();
+        }
 
         public void Reset()
         {
@@ -69,10 +69,8 @@ namespace SmartTraining
 
         public void Observe(RoomNoticeParticipant[] participants, string masterId)
         {
-            if (participants == null ||
-                participants.Length == 0 ||
-                participants.Any(p => string.IsNullOrEmpty(p.UserId) ||
-                string.IsNullOrEmpty(p.Name)) ||
+            if (participants == null || participants.Length == 0 ||
+                participants.Any(p => string.IsNullOrEmpty(p.UserId) || string.IsNullOrEmpty(p.Name)) ||
                 participants.Select(p => p.UserId).Distinct().Count() != participants.Length)
             {
                 return;

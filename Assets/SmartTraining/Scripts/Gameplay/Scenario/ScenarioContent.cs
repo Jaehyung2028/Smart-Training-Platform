@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -28,18 +28,15 @@ namespace SmartTraining
 
         public ScenarioRole SelectedRoles => IsReady ? shared.LocalRoles : ScenarioRole.None;
 
-
         public string RoleParticipantName(ScenarioRole role)
         {
             return IsReady ? shared.GetRoleParticipantName(role) : "미배정";
         }
 
-
         public bool IsRoleAssigned(ScenarioRole role)
         {
             return IsReady && shared.IsRoleAssigned(role);
         }
-
 
         // 공통 이름표와 참가자 목록에는 콘텐츠를 모르는 표시 문자열만 전달합니다.
         public string ParticipantRoleLabel(ulong clientId)
@@ -53,7 +50,6 @@ namespace SmartTraining
             return role == ScenarioRole.None ? "역할 미선택" : ScenarioRoles.Label(role, "\n");
         }
 
-
         public void SelectRole(ScenarioRole role)
         {
             if (CanInteract)
@@ -62,7 +58,6 @@ namespace SmartTraining
                 shared.SelectRoleRpc(role, RunRevision);
             }
         }
-
 
         public bool IsReady => shared != null && shared.IsSpawned;
 
@@ -93,7 +88,6 @@ namespace SmartTraining
             (IsComplete ? shared.State.RunEndedAt : shared.NetworkManager.ServerTime.Time) - shared.State.RunStartedAt
         ) : 0;
 
-
         public void SelectTool(string toolId)
         {
             if (CanSelectTool)
@@ -103,25 +97,32 @@ namespace SmartTraining
             }
         }
 
-
         public string LastActor => IsReady ? shared.State.LastActor.ToString() : "";
 
-        public bool CanInteract => IsReady &&
-            participant != null &&
-            participant.IsSpawned &&
-            participant.RoomIsRunning &&
-            !participant.PhasePending;
+        public bool CanInteract => IsReady && participant != null && participant.IsSpawned && participant.RoomIsRunning &&
+        !participant.PhasePending;
 
         public bool CanReset => CanInteract && participant.IsRoomMaster;
 
-        public bool CanSelectTool => CanInteract && !IsComplete && !(IsWorking && shared.State.WorkClientId == participant.OwnerClientId);
+        public bool CanSelectTool => CanInteract && !IsComplete &&
+        !(IsWorking && shared.State.WorkClientId == participant.OwnerClientId);
 
-        public string Feedback => localMessage.Length > 0 && messageRevision == Revision ? localMessage : IsReady && shared.FeedbackRevision == Revision ? shared.Feedback : "";
+        public string Feedback
+        {
+            get
+            {
+                if (localMessage.Length > 0 && messageRevision == Revision)
+                {
+                    return localMessage;
+                }
+
+                return IsReady && shared.FeedbackRevision == Revision ? shared.Feedback : "";
+            }
+        }
 
         public int FeedbackVersion => localMessageVersion + (IsReady ? shared.FeedbackVersion : 0);
 
         public ScenarioObject Hovered { get; private set; }
-
 
         public void Bind(RoomPlayer player)
         {
@@ -132,7 +133,6 @@ namespace SmartTraining
             }
         }
 
-
         public void UpdateInteraction(Camera camera, RoomPlayer player, bool allowed)
         {
             Bind(player);
@@ -141,12 +141,8 @@ namespace SmartTraining
             equipmentView ??= new ScenarioEquipmentView(handRig);
             equipmentView.Refresh(shared, definition, player, camera, objects);
             Hovered = null;
-            if (allowed &&
-                CanInteract &&
-                camera != null &&
-                Mouse.current != null &&
-                !(EventSystem.current != null &&
-                EventSystem.current.IsPointerOverGameObject()))
+            if (allowed && CanInteract && camera != null && Mouse.current != null &&
+                !(EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()))
             {
                 bool hitObject = false;
                 var ray = camera.ScreenPointToRay(Mouse.current.position.ReadValue());
@@ -182,7 +178,6 @@ namespace SmartTraining
             }
         }
 
-
         public void Interact(string objectId)
         {
             if (!CanInteract || IsComplete || Time.unscaledTime < nextClickAt)
@@ -208,14 +203,12 @@ namespace SmartTraining
             shared.InteractRpc(objectId, Revision);
         }
 
-
         private void ShowLocalMessage(string message)
         {
             localMessageVersion++;
             localMessage = message;
             messageRevision = Revision;
         }
-
 
         public void CancelWork()
         {
@@ -226,7 +219,6 @@ namespace SmartTraining
             }
         }
 
-
         public void ResetPractice()
         {
             if (CanReset)
@@ -234,7 +226,6 @@ namespace SmartTraining
                 shared.ResetRpc(Revision);
             }
         }
-
 
         private void RefreshViews()
         {
@@ -251,13 +242,7 @@ namespace SmartTraining
                     views.Add(pair.Key, view);
                 }
 
-                float loosenAmount = ScenarioObjectPose.Evaluate(
-                    definition.Steps,
-                    pair.Key,
-                    CompletedSteps,
-                    IsWorking,
-                    WorkProgress
-                );
+                float loosenAmount = ScenarioObjectPose.Evaluate(definition.Steps, pair.Key, CompletedSteps, IsWorking, WorkProgress);
                 bool completed = false;
                 for (int index = 0; index < CompletedSteps && index < definition.Steps.Count; index++)
                 {
@@ -274,7 +259,6 @@ namespace SmartTraining
             }
         }
 
-
         private void OnDisable()
         {
             foreach (var view in views.Values)
@@ -289,7 +273,6 @@ namespace SmartTraining
             participant = null;
             Hovered = null;
         }
-
 
         public bool TryInitialize(out string message)
         {
@@ -318,8 +301,7 @@ namespace SmartTraining
                     continue;
                 }
 
-                if (string.IsNullOrWhiteSpace(item.Id) ||
-                    System.Text.Encoding.UTF8.GetByteCount(item.Id) > 60 ||
+                if (string.IsNullOrWhiteSpace(item.Id) || System.Text.Encoding.UTF8.GetByteCount(item.Id) > 60 ||
                     !objects.TryAdd(item.Id, item))
                 {
                     message = "시나리오 공구·대상의 ID는 비어 있거나 중복될 수 없습니다.";

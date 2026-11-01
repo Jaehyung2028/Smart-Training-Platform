@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace SmartTraining
 {
@@ -13,7 +13,6 @@ namespace SmartTraining
         public string traceId;
     }
 
-
     // 로그인 전 선택할 최상위 교육과정입니다. 상세 콘텐츠 트리와는 구분합니다.
     [Serializable]
     public class CourseSummary
@@ -22,14 +21,12 @@ namespace SmartTraining
         public bool canEnter;
     }
 
-
     // 닉네임 로그인 입력입니다. 본인 사용자 ID는 서버에서 발급합니다.
     [Serializable]
     public class LoginRequest
     {
         public string userName;
     }
-
 
     // 로그인 또는 토큰 갱신 결과입니다. 이후 요청에 사용할 토큰과 사용자 상태를 받습니다.
     [Serializable]
@@ -41,7 +38,6 @@ namespace SmartTraining
         public string expiresAtUtc;
         public CurrentUser user;
     }
-
 
     // /me에서 받은 사용자 소속입니다. 접속 확정 방과 입장 예약 중인 방을 구분합니다.
     [Serializable]
@@ -58,7 +54,6 @@ namespace SmartTraining
         public int lobbyIndex;
         public int roomIndex;
     }
-
 
     // 로비 카드에 표시할 요약입니다. 운영 상태와 사용자·방 개수를 포함합니다.
     [Serializable]
@@ -84,7 +79,6 @@ namespace SmartTraining
         public long shutdownRevision;
     }
 
-
     // 로비 참가자의 대기·방 접속 상태와 방장 여부를 표시합니다.
     [Serializable]
     public class LobbyParticipant
@@ -98,7 +92,6 @@ namespace SmartTraining
         public bool roomIsRunning;
     }
 
-
     // 서버의 { status: ok } JSON을 읽는 클라이언트 형식입니다. 서버에 같은 이름의 클래스가 필요한 것은 아닙니다.
     [Serializable]
     public class HealthResponse
@@ -106,14 +99,12 @@ namespace SmartTraining
         public string status;
     }
 
-
     // 일반 HTTP 요청에는 본인 userId를 넣지 않습니다. 서버가 Authorization 토큰으로 요청자를 확인합니다.
     [Serializable]
     public class LobbyMembershipRequest
     {
         public string lobbyId;
     }
-
 
     // 카탈로그 노드입니다. rootContent는 트리, id는 같은 트리 안의 노드를 구분합니다.
     [Serializable]
@@ -144,7 +135,6 @@ namespace SmartTraining
             return result.ToArray();
         }
 
-
         private static void AddToList(ContentSummary content, List<ContentSummary> result)
         {
             if (content == null)
@@ -160,7 +150,6 @@ namespace SmartTraining
         }
     }
 
-
     // 방 생성 입력입니다. 콘텐츠 루트와 선택 노드 ID를 함께 전달합니다.
     [Serializable]
     public class CreateRoomRequest
@@ -174,7 +163,6 @@ namespace SmartTraining
         public int contentNodeId;
     }
 
-
     // 생성한 방 ID를 받아 바로 입장 요청으로 이어갈 때 사용합니다.
     [Serializable]
     public class CreateRoomResponse
@@ -182,7 +170,6 @@ namespace SmartTraining
         public bool success;
         public RoomSummary room;
     }
-
 
     // 방 목록과 상세 화면에서 사용하는 공개 정보입니다. 입장 토큰은 포함하지 않습니다.
     [Serializable]
@@ -211,7 +198,6 @@ namespace SmartTraining
         public bool isRunning;
     }
 
-
     // 로비·방 ID는 작업할 장소입니다. 요청자 신원은 본문이 아닌 인증 헤더에서 전달됩니다.
     [Serializable]
     public class RoomMembershipRequest
@@ -219,7 +205,6 @@ namespace SmartTraining
         public string lobbyId;
         public string roomId;
     }
-
 
     // 입장할 방과 비밀번호를 전달합니다. 공개 방에서는 비밀번호를 생략할 수 있습니다.
     [Serializable]
@@ -230,7 +215,6 @@ namespace SmartTraining
         public string password;
     }
 
-
     // 방장용 비밀번호 변경 입력입니다. 빈 문자열은 해제이며 입장 요청과 의미가 다릅니다.
     [Serializable]
     public class UpdateRoomPasswordRequest
@@ -239,7 +223,6 @@ namespace SmartTraining
         public string roomId;
         public string password;
     }
-
 
     // 예약한 방의 접속 주소와 포트입니다. HTTP API 주소와 구분합니다.
     [Serializable]
@@ -254,7 +237,6 @@ namespace SmartTraining
         public int port;
     }
 
-
     // 입장 예약 결과입니다. 이 성공만으로 Netcode 연결이 완료된 것은 아닙니다.
     [Serializable]
     public class JoinRoomResponse
@@ -266,7 +248,6 @@ namespace SmartTraining
         public string expiresAtUtc;
     }
 
-
     // Netcode 접속 승인 데이터입니다. 일반 HTTP 본문과 달리 예약 토큰에 연결된 참가자를 식별하는 userId가 필요합니다.
     [Serializable]
     public class RoomConnectionData
@@ -276,7 +257,6 @@ namespace SmartTraining
         // 방 입장 예약을 증명하는 토큰입니다. 로그인용 accessToken과 다릅니다.
         public string admissionToken;
     }
-
 
     // 전용 서버와 클라이언트가 읽는 Hub 응답입니다. 호출 종류에 필요한 필드를 사용합니다.
     [Serializable]
@@ -298,7 +278,6 @@ namespace SmartTraining
         public long chatSequence;
     }
 
-
     [Serializable]
     public class ChangeRoomContentRequest
     {
@@ -307,7 +286,6 @@ namespace SmartTraining
         public string contentId;
         public int contentNodeId;
     }
-
 
     // 방장이 변경할 방 이름과 정원입니다.
     [Serializable]
@@ -319,7 +297,6 @@ namespace SmartTraining
         public int maxUsers;
     }
 
-
     // targetUserId는 요청자 본인이 아니라 위임·강퇴할 상대입니다. 서버가 요청자의 방장 권한과 대상 소속을 확인합니다.
     [Serializable]
     public class RoomParticipantRequest
@@ -329,7 +306,6 @@ namespace SmartTraining
         public string targetUserId;
     }
 
-
     // 방장의 신규 입장 잠금 설정입니다.
     [Serializable]
     public class SetRoomEntryLockRequest
@@ -338,7 +314,6 @@ namespace SmartTraining
         public string roomId;
         public bool isEntryLocked;
     }
-
 
     [Serializable]
     public sealed class LobbyChatMessage

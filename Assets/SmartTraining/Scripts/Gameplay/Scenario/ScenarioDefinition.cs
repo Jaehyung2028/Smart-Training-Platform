@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -15,7 +15,6 @@ namespace SmartTraining
         Saw,
         Chop
     }
-
 
     // 단계 하나는 필요한 공구와 작업 대상의 조합입니다. 공구 선택은 별도 단계가 아닙니다.
     // 진행 상태가 아닌 콘텐츠 원본입니다. 참가자별 상태를 이 에셋에 저장하지 않습니다.
@@ -50,7 +49,6 @@ namespace SmartTraining
 
             public string Title => title;
         }
-
 
         [Serializable]
         public sealed class Step
@@ -91,7 +89,6 @@ namespace SmartTraining
             public string TargetId => targetId;
         }
 
-
         [SerializeField]
         private string id = "";
         [SerializeField]
@@ -102,7 +99,6 @@ namespace SmartTraining
         private Tool[] tools = Array.Empty<Tool>();
 
         public string Id => id;
-
 
         public ScenarioRole Roles
         {
@@ -121,7 +117,6 @@ namespace SmartTraining
             }
         }
 
-
         public bool RequiresRoles => Roles != ScenarioRole.None;
 
         public string Title => title;
@@ -129,7 +124,6 @@ namespace SmartTraining
         public IReadOnlyList<Step> Steps => steps ?? Array.Empty<Step>();
 
         public IReadOnlyList<Tool> Tools => tools ?? Array.Empty<Tool>();
-
 
         public Tool GetTool(string toolId)
         {
@@ -144,7 +138,6 @@ namespace SmartTraining
             return null;
         }
 
-
         public bool HasTool(string toolId)
         {
             foreach (var tool in Tools)
@@ -157,7 +150,6 @@ namespace SmartTraining
 
             return false;
         }
-
 
         public string GetToolTitle(string toolId)
         {
@@ -172,7 +164,6 @@ namespace SmartTraining
             return "없음";
         }
 
-
         public bool TryValidate(out string message)
         {
             if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(title) || Steps.Count == 0)
@@ -184,9 +175,7 @@ namespace SmartTraining
             var toolIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var tool in Tools)
             {
-                if (tool == null ||
-                    string.IsNullOrWhiteSpace(tool.Id) ||
-                    string.IsNullOrWhiteSpace(tool.Title) ||
+                if (tool == null || string.IsNullOrWhiteSpace(tool.Id) || string.IsNullOrWhiteSpace(tool.Title) ||
                     System.Text.Encoding.UTF8.GetByteCount(tool.Id) > 60 ||
                     !toolIds.Add(tool.Id))
                 {
@@ -198,19 +187,15 @@ namespace SmartTraining
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (var step in Steps)
             {
-                if (step == null ||
-                    string.IsNullOrWhiteSpace(step.Id) ||
-                    !ids.Add(step.Id) ||
+                if (step == null || string.IsNullOrWhiteSpace(step.Id) || !ids.Add(step.Id) ||
                     string.IsNullOrWhiteSpace(step.Title) ||
                     string.IsNullOrWhiteSpace(step.Instruction) ||
                     string.IsNullOrWhiteSpace(step.TargetId) ||
-                    (step.RequiresTool &&
-                    !toolIds.Contains(step.ToolId)) ||
+                    (step.RequiresTool && !toolIds.Contains(step.ToolId)) ||
                     !Enum.IsDefined(typeof(ScenarioAction), step.Action) ||
                     !Enum.IsDefined(typeof(ScenarioRole), step.RequiredRole) ||
                     (step.Action != ScenarioAction.Check &&
-                    (float.IsNaN(step.DurationSeconds) ||
-                    float.IsInfinity(step.DurationSeconds) ||
+                    (float.IsNaN(step.DurationSeconds) || float.IsInfinity(step.DurationSeconds) ||
                     step.DurationSeconds < .25f ||
                     step.DurationSeconds > 10)))
                 {

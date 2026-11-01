@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -14,7 +14,6 @@ namespace SmartTraining
             public UnityEngine.Object value;
         }
 
-
         [SerializeField]
         private Entry[] entries = Array.Empty<Entry>();
         [SerializeField]
@@ -26,11 +25,10 @@ namespace SmartTraining
 
         public string InstanceName => instanceName;
 
-
         private Dictionary<string, UnityEngine.Object> lookup;
 
         public T Get<T>(string key)
-            where T : UnityEngine.Object
+        where T : UnityEngine.Object
         {
             if (lookup == null)
             {

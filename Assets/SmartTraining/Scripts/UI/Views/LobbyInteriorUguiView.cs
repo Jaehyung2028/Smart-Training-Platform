@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using System;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -65,7 +65,6 @@ namespace SmartTraining
             // 생성 창 내부가 아닌 화면 최상위에 띄워 넓은 별도 창에서 트리를 탐색합니다.
             contentTree = new ContentTreePopup(
                 transform,
-                createContent.GetComponentInChildren<Text>().font,
                 content => screen.UiSelectContent(content.rootContent, content.id)
             );
             createContent.onClick.AddListener(() =>
@@ -116,7 +115,6 @@ namespace SmartTraining
             Refresh();
         }
 
-
         // 현재 콘텐츠 선택을 준비하고 방 생성 입력 창을 엽니다.
         private void OpenCreate()
         {
@@ -134,7 +132,6 @@ namespace SmartTraining
             EventSystem.current?.SetSelectedGameObject(createName.gameObject);
         }
 
-
         // 처리 중이 아니면 생성 창과 트리 창을 닫고 비밀번호 입력을 지웁니다.
         private void CloseCreate()
         {
@@ -150,10 +147,15 @@ namespace SmartTraining
             EventSystem.current?.SetSelectedGameObject(null);
         }
 
+        private void EnsureComponents()
+        {
+            UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
+        }
 
-        private void EnsureComponents() => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
-
-        private void LateUpdate() => Refresh();
+        private void LateUpdate()
+        {
+            Refresh();
+        }
 
         internal void RefreshState()
         {
@@ -162,7 +164,6 @@ namespace SmartTraining
                 Refresh();
             }
         }
-
 
         // 로그아웃·로비 변경 때 임시 입력과 생성된 목록 행을 정리합니다.
         internal void ResetTransientState()
@@ -185,7 +186,6 @@ namespace SmartTraining
                 chatInput,
                 search
             }
-
             )
             {
                 field.SetTextWithoutNotify("");
@@ -196,7 +196,6 @@ namespace SmartTraining
             chatList?.Clear();
             roomDetail.text = progress.text = createStatus.text = "";
         }
-
 
         // Controller 상태를 화면에 반영합니다. 처리 중 입력과 모달 뒤쪽 조작도 제한합니다.
         private void Refresh()
@@ -228,7 +227,6 @@ namespace SmartTraining
                     joinPassword,
                     reconnectPassword
                 }
-
                 )
                 {
                     field.SetTextWithoutNotify("");
@@ -293,7 +291,6 @@ namespace SmartTraining
                 resetFilters,
                 notifications
             }
-
             )
             {
                 button.interactable = !busy;
@@ -319,10 +316,7 @@ namespace SmartTraining
             progress.text = screen.UiRoomProgress;
             cancelJoin.interactable = screen.UiCanCancelRoom;
             createStatus.text = screen.UiStatus;
-            var content = Array.Find(
-                screen.UiContents,
-                x => x.rootContent == screen.UiContentId && x.id == screen.UiContentNodeId
-            );
+            var content = Array.Find(screen.UiContents, x => x.rootContent == screen.UiContentId && x.id == screen.UiContentNodeId);
             createContent.GetComponentInChildren<Text>().text = "콘텐츠 선택: " + (content == null ? "없음" : (content.depth > 0 ? "하위 콘텐츠 · " : "") + content.title);
             bool choosingContent = contentTree?.IsOpen == true;
             foreach (var field in new[]
@@ -331,18 +325,15 @@ namespace SmartTraining
                 createCapacity,
                 createPassword
             }
-
             )
             {
                 field.interactable = !busy && !choosingContent;
             }
 
             createContent.interactable = closeCreate.interactable = !busy && !choosingContent;
-            submitCreate.interactable = screen.UiCanUseRooms &&
-                content != null &&
-                (content.children == null ||
-                content.children.Length == 0) &&
-                !choosingContent;
+            submitCreate.interactable = screen.UiCanUseRooms && content != null &&
+            (content.children == null || content.children.Length == 0) &&
+            !choosingContent;
             if (Time.realtimeSinceStartup < nextLists)
             {
                 return;
@@ -353,7 +344,6 @@ namespace SmartTraining
             UpdateParticipants();
             UpdateChat();
         }
-
 
         // 현재 방 목록과 행 ID를 비교해 필요한 행을 만들고 사라진 행을 제거합니다.
         private void UpdateRooms()
@@ -383,7 +373,6 @@ namespace SmartTraining
             }
         }
 
-
         // 참가자 소속과 연결 상태를 참가자 행에 반영합니다.
         private void UpdateParticipants()
         {
@@ -409,7 +398,6 @@ namespace SmartTraining
             }
         }
 
-
         private void UpdateChat()
         {
             chatList ??= new ChatMessageListView(chatScroll, () => Instantiate(chatTemplate, chatContent), chatTemplate.color);
@@ -417,7 +405,6 @@ namespace SmartTraining
             emptyChat.gameObject.SetActive(displayed.Count == 0);
             chatList.Refresh(displayed, screen.UiSelfId, context);
         }
-
 
         private void OnDestroy()
         {

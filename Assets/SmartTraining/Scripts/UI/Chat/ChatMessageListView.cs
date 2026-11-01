@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.Pool;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -23,27 +23,34 @@ namespace SmartTraining
             this.defaultColor = defaultColor;
             this.ownColor = ownColor ?? ChatMessagePresentation.OwnMessageColor;
             // 수신 이력 상한 100개에 맞춰 대기 행도 최대 100개만 유지합니다.
-            pool = new ObjectPool<Text>(createRow, row =>
-            {
+            pool = new ObjectPool<Text>(
+                createRow,
+                row =>
+                {
                 // 새 메시지는 끝에 추가됩니다. 재사용 시에만 순서를 옮겨 매 프레임 계층 조회를 피합니다.
-                row.transform.SetAsLastSibling();
-                row.gameObject.SetActive(true);
-            }, row =>
-            {
-                if (row != null)
+                    row.transform.SetAsLastSibling();
+                    row.gameObject.SetActive(true);
+                },
+                row =>
                 {
-                    row.text = "";
-                    row.gameObject.SetActive(false);
-                }
-            }, row =>
-            {
-                if (row != null)
+                    if (row != null)
+                    {
+                        row.text = "";
+                        row.gameObject.SetActive(false);
+                    }
+                },
+                row =>
                 {
-                    UnityEngine.Object.Destroy(row.gameObject);
-                }
-            }, true, 8, 100);
+                    if (row != null)
+                    {
+                        UnityEngine.Object.Destroy(row.gameObject);
+                    }
+                },
+                true,
+                8,
+                100
+            );
         }
-
 
         public void Clear()
         {
@@ -58,7 +65,6 @@ namespace SmartTraining
             context = null;
             displayedUserId = null;
         }
-
 
         public void Refresh(IReadOnlyList<LobbyChatMessage> messages, string localUserId, string currentContext)
         {
@@ -108,7 +114,6 @@ namespace SmartTraining
                 {
                     ChatMessagePresentation.SetChatMessage(row, message, localUserId, defaultColor, ownColor);
                 }
-
             }
 
             displayedUserId = localUserId;
@@ -119,7 +124,6 @@ namespace SmartTraining
                 scroll.verticalNormalizedPosition = 0;
             }
         }
-
 
         public void Dispose()
         {

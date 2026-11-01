@@ -1,7 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -10,15 +10,30 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static string State(ApiLobbyScreen screen) => Get(screen, "serverConnectionState").ToString();
+        private static string State(ApiLobbyScreen screen)
+        {
+            return Get(screen, "serverConnectionState").ToString();
+        }
 
-        private static string StatusText(ApiLobbyScreen screen) => (string)typeof(ApiLobbyScreen).GetMethod("ServerConnectionStatusText", Flags).Invoke(screen, null);
+        private static string StatusText(ApiLobbyScreen screen)
+        {
+            return (string)typeof(ApiLobbyScreen).GetMethod("ServerConnectionStatusText", Flags).Invoke(screen, null);
+        }
 
-        private static int ChatCount(ApiLobbyScreen screen, string field) => ((List<LobbyChatMessage>)Get(screen, field)).Count;
+        private static int ChatCount(ApiLobbyScreen screen, string field)
+        {
+            return ((List<LobbyChatMessage>)Get(screen, field)).Count;
+        }
 
         private static void Run(ApiLobbyScreen screen, string method)
         {
@@ -26,7 +41,11 @@ namespace SmartTraining.Editor
             typeof(ApiLobbyScreen).GetMethod("Run", Flags).Invoke(screen, new object[] { routine });
         }
 
-        private static bool Idle(ApiLobbyScreen screen, TrainingApiClient api) => !(bool)Get(screen, "busy") && typeof(TrainingApiClient).GetField("activeRequest", Flags).GetValue(api) == null;
+        private static bool Idle(ApiLobbyScreen screen, TrainingApiClient api)
+        {
+            return !(bool)Get(screen, "busy") &&
+            typeof(TrainingApiClient).GetField("activeRequest", Flags).GetValue(api) == null;
+        }
 
         private static IEnumerator Wait(Func<bool> condition, string name)
         {
@@ -88,7 +107,9 @@ namespace SmartTraining.Editor
                 Set(screen, "networkLobbyId", lobby);
                 Set(screen, "selectedLobbyId", lobby);
                 yield return Wait(
-                    () => State(screen) == "Connected" && (bool)typeof(ApiLobbyScreen).GetMethod("RoomChatIsBound", Flags).Invoke(screen, null) && Idle(screen, user),
+                    () => State(screen) == "Connected" &&
+                        (bool)typeof(ApiLobbyScreen).GetMethod("RoomChatIsBound", Flags).Invoke(screen, null) &&
+                        Idle(screen, user),
                     "connection banner did not reach connected state"
                 );
                 Check(
@@ -131,7 +152,8 @@ namespace SmartTraining.Editor
                     "notification transport failure displays retry countdown and attempt count"
                 );
                 Check(
-                    user.IsLoggedIn && network.IsConnected && ChatCount(screen, "chatMessages") == 1 && ChatCount(screen, "roomChatMessages") == 1,
+                    user.IsLoggedIn && network.IsConnected && ChatCount(screen, "chatMessages") == 1 &&
+                    ChatCount(screen, "roomChatMessages") == 1,
                     "transient notification loss preserves login Netcode and chat display"
                 );
                 while (!Idle(screen, user))
@@ -141,21 +163,23 @@ namespace SmartTraining.Editor
 
                 Run(screen, "RetryLiveConnection");
                 yield return Wait(
-                    () => State(screen) == "Connected" && Get(screen, "lobbyUpdates") != previous && (bool)typeof(ApiLobbyScreen).GetMethod("RoomChatIsBound", Flags).Invoke(screen, null) && Idle(screen, user),
+                    () => State(screen) == "Connected" && Get(screen, "lobbyUpdates") != previous &&
+                        (bool)typeof(ApiLobbyScreen).GetMethod("RoomChatIsBound", Flags).Invoke(screen, null) &&
+                        Idle(screen, user),
                     "manual reconnect did not restore room subscription"
                 );
                 Check(
-                    (int)Get(screen, "serverReconnectAttempts") == 0 && network.IsConnected && ((LobbyParticipant[])Get(screen, "lobbyParticipants")).Length == 1,
+                    (int)Get(screen, "serverReconnectAttempts") == 0 && network.IsConnected &&
+                    ((LobbyParticipant[])Get(screen, "lobbyParticipants")).Length == 1,
                     "manual reconnect restores current snapshot and resets retry count"
                 );
-                // Revoke the same server session from an independent API client. The UI
-                // client still has its cached token, just as after an in-memory server restart.
+                // 다른 API 클라이언트로 세션을 만료시킵니다.
+                // 화면 쪽에는 이전 토큰이 남아 있는 상태를 재현합니다.
                 foreach (var field in new[]
                 {
                     "accessToken",
                     "expiresAt"
                 }
-
                 )
                 {
                     typeof(TrainingApiClient).GetField(field, Flags).SetValue(revoker, typeof(TrainingApiClient).GetField(field, Flags).GetValue(user));
@@ -174,15 +198,21 @@ namespace SmartTraining.Editor
                 );
                 Check(StatusText(screen).Contains("다시 로그인"), "auth session rejection displays explicit login guidance");
                 Check(
-                    ((LobbyParticipant[])Get(screen, "lobbyParticipants")).Length == 0 && ((RoomSummary[])Get(screen, "rooms")).Length == 0 && ChatCount(screen, "chatMessages") == 0 && ChatCount(screen, "roomChatMessages") == 0 && (string)Get(screen, "selectedLobbyId") == "",
+                    ((LobbyParticipant[])Get(screen, "lobbyParticipants")).Length == 0 &&
+                    ((RoomSummary[])Get(screen, "rooms")).Length == 0 &&
+                    ChatCount(screen, "chatMessages") == 0 &&
+                    ChatCount(screen, "roomChatMessages") == 0 &&
+                    (string)Get(screen, "selectedLobbyId") == "",
                     "auth session rejection clears old room participant and chat identities"
                 );
                 Check(
-                    (string)Get(screen, "networkRoomId") == "" && (string)Get(screen, "reconnectRoomId") == "" && Get(screen, "lobbyUpdates") == null,
+                    (string)Get(screen, "networkRoomId") == "" && (string)Get(screen, "reconnectRoomId") == "" &&
+                    Get(screen, "lobbyUpdates") == null,
                     "auth session rejection removes stale room reconnect target and notification connection"
                 );
                 Check(
-                    (string)Get(screen, "editRoomName") == "" && (string)Get(screen, "editRoomCapacity") == "" && (string)Get(screen, "editRoomPassword") == "",
+                    (string)Get(screen, "editRoomName") == "" && (string)Get(screen, "editRoomCapacity") == "" &&
+                    (string)Get(screen, "editRoomPassword") == "",
                     "auth session rejection clears old room editor and password inputs"
                 );
                 while (!Idle(screen, user))
@@ -212,7 +242,8 @@ namespace SmartTraining.Editor
                     "fresh login did not restore notification connection"
                 );
                 Check(
-                    user.User.currentRoomId == "" && user.User.currentLobbyId == "" && StatusText(screen).Contains("연결됨"),
+                    user.User.currentRoomId == "" && user.User.currentLobbyId == "" &&
+                    StatusText(screen).Contains("연결됨"),
                     "fresh login restores global notifications without reusing old membership"
                 );
                 while (!Idle(screen, user))
@@ -254,7 +285,9 @@ namespace SmartTraining.Editor
                 yield return Wait(() => Idle(screen, user), "room join progress did not finish");
                 var joinedNetwork = (RoomNetworkClient)Get(screen, "network");
                 Check(
-                    joinedNetwork?.IsConnected == true && joinedNetwork.LocalPlayer != null && user.User.currentRoomId == progressRoom && (string)Get(screen, "roomJoinProgress") == "",
+                    joinedNetwork?.IsConnected == true && joinedNetwork.LocalPlayer != null &&
+                    user.User.currentRoomId == progressRoom &&
+                    (string)Get(screen, "roomJoinProgress") == "",
                     "room join progress clears only after server confirmation and player readiness"
                 );
                 var leave = (IEnumerator)typeof(ApiLobbyScreen).GetMethod("LeaveRoom", Flags).Invoke(screen, new object[] { "test leave" });
@@ -264,7 +297,8 @@ namespace SmartTraining.Editor
                 typeof(ApiLobbyScreen).GetMethod("Run", Flags).Invoke(screen, new object[] { join });
                 yield return Wait(() => Idle(screen, user), "failed room join progress did not finish");
                 Check(
-                    (string)Get(screen, "roomJoinProgress") == "" && Get(screen, "network") == null && user.User.pendingRoomId == "",
+                    (string)Get(screen, "roomJoinProgress") == "" && Get(screen, "network") == null &&
+                    user.User.pendingRoomId == "",
                     "failed reservation clears progress and permits another action"
                 );
             }

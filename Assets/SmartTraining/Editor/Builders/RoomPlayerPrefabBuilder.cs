@@ -1,6 +1,6 @@
 using System;
-using UnityEditor;
 using Unity.Netcode.Components;
+using UnityEditor;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -16,10 +16,7 @@ namespace SmartTraining.Editor
             var body = prefab != null ? prefab.GetComponent<Rigidbody>() : null;
             var physics = prefab != null ? prefab.GetComponent<NetworkRigidbody>() : null;
             var capsule = prefab != null ? prefab.GetComponent<CapsuleCollider>() : null;
-            if (body == null ||
-                physics == null ||
-                capsule == null ||
-                capsule.isTrigger ||
+            if (body == null || physics == null || capsule == null || capsule.isTrigger ||
                 !physics.AutoUpdateKinematicState ||
                 !physics.UseRigidBodyForMotion ||
                 prefab?.GetComponent<RoomPlayer>() == null ||

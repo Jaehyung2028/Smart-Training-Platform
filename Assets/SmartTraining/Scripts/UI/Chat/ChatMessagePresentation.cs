@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -22,7 +22,6 @@ namespace SmartTraining
             label.text = ChatLabel(message);
             label.color = !string.IsNullOrEmpty(localUserId) && message.userId == localUserId ? (ownColor ?? OwnMessageColor) : defaultColor;
         }
-
 
         internal static string ChatLabel(LobbyChatMessage message)
         {

@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -24,7 +24,6 @@ namespace SmartTraining
             throw new InvalidOperationException(parent.name + " 아래에 UI 프리팹을 미리 배치해주세요: " + name);
         }
 
-
         public static UiPrefabReferences Instantiate(string name, Transform parent)
         {
             if (!templates.TryGetValue(name, out var prefab) || prefab == null)
@@ -42,7 +41,6 @@ namespace SmartTraining
             instance.name = string.IsNullOrEmpty(prefab.InstanceName) ? prefab.name : prefab.InstanceName;
             return instance;
         }
-
 
         // 편집기 검사에서는 즉시 정리하고 플레이 중에는 프레임 종료 시 정리합니다.
         public static void Destroy(UnityEngine.Object target)

@@ -1,30 +1,23 @@
-﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading;
+using System;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace SmartTraining
 {
-    // SignalR 프로토콜·핑·메시지 분할·요청 대응은 Microsoft 클라이언트가 처리합니다.
-    // 이 클래스에는 프로젝트의 시간 제한과 Unity 메인 스레드로 이벤트를 전달하는 역할만 남깁니다.
+    // SignalR 호출의 시간 제한과 Unity 메인 스레드의 이벤트 전달을 관리합니다.
     public sealed class RoomHubConnection : IDisposable
     {
         private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
-
         private readonly CancellationTokenSource lifetime = new();
-
         private readonly ConcurrentQueue<Action> callbacks = new();
-
         private HubConnection connection;
-
         private volatile bool disposed;
-
         private string failure;
-
         private int shutdownStarted;
 
         public string Failure => failure;
@@ -51,14 +44,16 @@ namespace SmartTraining
                 throw new InvalidOperationException("이미 연결을 시작한 RoomHub입니다.");
             }
 
-            connection = new HubConnectionBuilder()
-                .WithUrl(baseUrl.TrimEnd('/') + hubPath, options =>
+            connection = new HubConnectionBuilder().WithUrl(
+                baseUrl.TrimEnd('/') + hubPath,
+                options =>
                 {
-                    // 기존 서버와 같은 WebSocket 경로를 사용합니다. 토큰 헤더도 라이브러리가 처리합니다.
+                    // WebSocket 연결과 토큰 헤더는 SignalR 클라이언트가 처리합니다.
                     options.Transports = HttpTransportType.WebSockets;
                     options.SkipNegotiation = true;
                     options.AccessTokenProvider = () => Task.FromResult(accessToken);
-                })
+                }
+            )
                 .AddJsonProtocol(options => options.PayloadSerializerOptions = TrainingJson.Options)
                 .Build();
             connection.HandshakeTimeout = RequestTimeout;
@@ -115,13 +110,15 @@ namespace SmartTraining
                 operation.CancelAfter(RequestTimeout);
                 try
                 {
-                    // 요청 ID와 응답 대기 사전을 직접 만들지 않습니다. void 응답은 기존 공통 성공 결과로 맞춥니다.
-                    return await connection.InvokeCoreAsync<RoomHubResult>(target, arguments.Cast<object>().ToArray(), operation.Token)
-                        ?? new RoomHubResult { success = true };
+                    // 본문 없는 Hub 응답도 기존 호출부가 사용하는 성공 결과로 맞춥니다.
+                    return await connection.InvokeCoreAsync<RoomHubResult>(target, arguments.Cast<object>().ToArray(), operation.Token) ?? new RoomHubResult
+                    {
+                        success = true
+                    };
                 }
                 catch (OperationCanceledException) when (!lifetime.IsCancellationRequested)
                 {
-                    // 전송 후 시간 초과는 서버 처리 여부가 불명확하므로 기존과 같이 연결을 닫고 재조회합니다.
+                    // 응답을 받기 전에 시간이 초과되면 연결을 닫고 서버 상태를 다시 조회합니다.
                     Fail("RoomHub 요청 시간이 초과되었습니다.");
                     throw new TimeoutException(Failure);
                 }

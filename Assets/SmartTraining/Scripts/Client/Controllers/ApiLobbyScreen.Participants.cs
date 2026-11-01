@@ -1,16 +1,13 @@
-using System;
 using System.Collections;
+using System;
 
 namespace SmartTraining
 {
     public sealed partial class ApiLobbyScreen
     {
         private LobbyParticipant[] lobbyParticipants = Array.Empty<LobbyParticipant>();
-
         private string participantsLobbyId = "";
-
         private TrainingApiClient participantsApi;
-
         private bool participantsLoaded;
 
         private void ClearParticipants()
@@ -45,30 +42,30 @@ namespace SmartTraining
             yield return source.GetLobbyParticipants(
                 lobby,
                 items =>
-            {
-                if (api != source || api.User.currentLobbyId != lobby)
                 {
-                    return;
-                }
+                    if (api != source || api.User.currentLobbyId != lobby)
+                    {
+                        return;
+                    }
 
-                SyncParticipantsContext();
-                lobbyParticipants = items;
-                participantsLoaded = true;
-            },
+                    SyncParticipantsContext();
+                    lobbyParticipants = items;
+                    participantsLoaded = true;
+                },
                 message =>
-            {
-                if (api != source || api.User?.currentLobbyId != lobby)
                 {
-                    return;
-                }
+                    if (api != source || api.User?.currentLobbyId != lobby)
+                    {
+                        return;
+                    }
 
-                ClearParticipants();
-                ScheduleLiveRetry(message);
-                if (api?.IsLoggedIn == true)
-                {
-                    Failure(message);
+                    ClearParticipants();
+                    ScheduleLiveRetry(message);
+                    if (api?.IsLoggedIn == true)
+                    {
+                        Failure(message);
+                    }
                 }
-            }
             );
         }
 

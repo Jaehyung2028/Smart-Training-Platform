@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace SmartTraining
 {
@@ -24,14 +24,10 @@ namespace SmartTraining
             return result;
         }
 
-
         // 역할당 한 명을 유지하며, 비어 있는 역할만 추가로 겸임할 수 있습니다.
         public bool TrySelectRole(ulong participantId, ScenarioRole role, int expectedRunRevision, out string message)
         {
-            if (expectedRunRevision != RunRevision ||
-                IsComplete ||
-                (IsWorking &&
-                WorkClientId == participantId) ||
+            if (expectedRunRevision != RunRevision || IsComplete || (IsWorking && WorkClientId == participantId) ||
                 role == ScenarioRole.None ||
                 !Enum.IsDefined(typeof(ScenarioRole), role) ||
                 (definition.Roles & role) != role)
@@ -50,7 +46,6 @@ namespace SmartTraining
             message = "역할을 추가했습니다: " + ScenarioRoles.Label(role);
             return true;
         }
-
 
         public bool IsWorking { get; private set; }
 
@@ -72,7 +67,6 @@ namespace SmartTraining
 
         public bool IsComplete => CompletedSteps >= definition.Steps.Count;
 
-
         public ScenarioProgress(ScenarioDefinition definition)
         {
             if (definition == null || !definition.TryValidate(out _))
@@ -83,12 +77,10 @@ namespace SmartTraining
             this.definition = definition;
         }
 
-
         public string GetSelectedTool(ulong participantId)
         {
             return selectedTools.TryGetValue(participantId, out var tool) ? tool : "";
         }
-
 
         // 다른 사람의 선택에는 영향을 주지 않습니다. 공구 선택으로 공동 단계 버전도 변경하지 않습니다.
         public bool TrySelectTool(ulong participantId, string toolId, int expectedRunRevision, out string message)
@@ -124,25 +116,16 @@ namespace SmartTraining
             return true;
         }
 
-
         // 호출한 참가자 자신의 공구만 확인합니다. 클라이언트가 정답 공구를 요청에 붙여 보낼 수 없습니다.
         public bool TryInteract(ulong participantId, string objectId, int expectedRevision, out string message)
         {
             return TryInteract(participantId, objectId, expectedRevision, 0, out message);
         }
 
-
-        public bool TryInteract(
-            ulong participantId,
-            string objectId,
-            int expectedRevision,
-            double serverTime,
-            out string message
-        )
+        public bool TryInteract(ulong participantId, string objectId, int expectedRevision, double serverTime, out string message)
         {
             return TryInteract(participantId, objectId, expectedRevision, serverTime, out message, out _);
         }
-
 
         public bool TryInteract(
             ulong participantId,
@@ -179,7 +162,8 @@ namespace SmartTraining
             }
 
             var step = definition.Steps[CompletedSteps];
-            if (step.RequiredRole != ScenarioRole.None && (GetRoles(participantId) & step.RequiredRole) != step.RequiredRole)
+            if (step.RequiredRole != ScenarioRole.None &&
+                (GetRoles(participantId) & step.RequiredRole) != step.RequiredRole)
             {
                 message = "이 단계는 " + ScenarioRoles.Label(step.RequiredRole) + "이 수행해야 합니다.";
                 return false;
@@ -235,13 +219,10 @@ namespace SmartTraining
             return true;
         }
 
-
         // 서버 시계로만 완료합니다. 프레임 지연으로 여러 번 호출돼도 한 번만 다음 단계로 넘어갑니다.
         public bool TryCompleteWork(double serverTime)
         {
-            if (!IsWorking ||
-                double.IsNaN(serverTime) ||
-                double.IsInfinity(serverTime) ||
+            if (!IsWorking || double.IsNaN(serverTime) || double.IsInfinity(serverTime) ||
                 serverTime < WorkStartedAt + WorkDuration)
             {
                 return false;
@@ -252,7 +233,6 @@ namespace SmartTraining
             Revision++;
             return true;
         }
-
 
         // 실제 송신자와 현재 작업 버전을 확인합니다. 취소는 완료 수·공구 선택을 바꾸지 않습니다.
         public bool TryCancelWork(ulong participantId, int expectedRevision, double serverTime, out string message)
@@ -275,7 +255,8 @@ namespace SmartTraining
                 return false;
             }
 
-            if (double.IsNaN(serverTime) || double.IsInfinity(serverTime) || serverTime >= WorkStartedAt + WorkDuration)
+            if (double.IsNaN(serverTime) || double.IsInfinity(serverTime) ||
+                serverTime >= WorkStartedAt + WorkDuration)
             {
                 message = "이미 완료된 작업은 취소할 수 없습니다.";
                 return false;
@@ -287,7 +268,6 @@ namespace SmartTraining
             return true;
         }
 
-
         private void ClearWork()
         {
             IsWorking = false;
@@ -295,7 +275,6 @@ namespace SmartTraining
             WorkStartedAt = 0;
             WorkDuration = 0;
         }
-
 
         public bool TryReset(int expectedRevision)
         {
@@ -312,7 +291,6 @@ namespace SmartTraining
             RunRevision++;
             return true;
         }
-
 
         public void RemoveParticipant(ulong participantId)
         {

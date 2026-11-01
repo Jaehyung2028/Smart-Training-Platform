@@ -26,6 +26,7 @@ namespace SmartTraining
             {
                 return Mathf.Clamp01(Amount);
             }
+
             double elapsed = Math.Max(0, serverTime - StartedAt);
             return Mathf.Clamp01(Amount + Direction * (float)(elapsed / Duration));
         }
@@ -36,7 +37,8 @@ namespace SmartTraining
             return (Direction > 0 && amount >= 1) || (Direction < 0 && amount <= 0) ? 0 : Direction;
         }
 
-        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer)
+        where T : IReaderWriter
         {
             serializer.SerializeValue(ref Amount);
             serializer.SerializeValue(ref Direction);
@@ -46,8 +48,8 @@ namespace SmartTraining
 
         public bool Equals(ModelPlaybackState other)
         {
-            return Amount.Equals(other.Amount) && Direction == other.Direction &&
-                StartedAt.Equals(other.StartedAt) && Duration.Equals(other.Duration);
+            return Amount.Equals(other.Amount) && Direction == other.Direction && StartedAt.Equals(other.StartedAt) &&
+            Duration.Equals(other.Duration);
         }
     }
 }

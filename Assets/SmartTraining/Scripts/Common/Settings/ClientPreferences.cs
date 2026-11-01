@@ -16,13 +16,11 @@ namespace SmartTraining
 
         public bool InvertY { get; set; }
 
-
         // 기존 저장 키는 유지합니다. 설정을 사용하는 씬과 관계없이 이 PC의 음량에 적용합니다.
         public void ApplyAudioVolume()
         {
             AudioListener.volume = Volume;
         }
-
 
         public void Load()
         {
@@ -32,7 +30,6 @@ namespace SmartTraining
             Volume = ReadFloat("Volume", 1f, 0f, 1f);
             InvertY = PlayerPrefs.GetInt(Prefix + "InvertY", 0) == 1;
         }
-
 
         // 저장 버튼에서만 호출합니다. 저장 전 미리보기 값은 종료 시 자동 저장하지 않습니다.
         public void Save()
@@ -44,7 +41,6 @@ namespace SmartTraining
             PlayerPrefs.SetInt(Prefix + "InvertY", InvertY ? 1 : 0);
             PlayerPrefs.Save();
         }
-
 
         // 설정 창을 연 시점의 값을 보관합니다. 기본값 복원도 저장 전까지는 취소할 수 있습니다.
         public void BeginEdit()
@@ -63,7 +59,6 @@ namespace SmartTraining
             };
         }
 
-
         public void CancelEdit()
         {
             if (original == null)
@@ -78,7 +73,6 @@ namespace SmartTraining
             original = null;
         }
 
-
         public void Reset()
         {
             Sensitivity = 1f;
@@ -86,7 +80,6 @@ namespace SmartTraining
             Volume = 1f;
             InvertY = false;
         }
-
 
         private static float ReadFloat(string key, float fallback, float minimum, float maximum)
         {

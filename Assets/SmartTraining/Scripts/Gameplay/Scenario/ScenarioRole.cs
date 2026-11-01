@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace SmartTraining
 {
@@ -13,7 +13,6 @@ namespace SmartTraining
         SafetyOfficer = 4,
         Coordinator = 8
     }
-
 
     public static class ScenarioRoles
     {
@@ -38,7 +37,6 @@ namespace SmartTraining
             return result;
         }
 
-
         public static IEnumerable<ScenarioRole> Enumerate(ScenarioRole roles)
         {
             foreach (ScenarioRole role in individualRoles)
@@ -50,7 +48,6 @@ namespace SmartTraining
             }
         }
 
-
         // 4개 역할의 16가지 조합을 재사용해 HUD·이름표의 매 프레임 문자열 할당을 줄입니다.
         public static string Label(ScenarioRole roles, string separator = " · ")
         {
@@ -58,20 +55,19 @@ namespace SmartTraining
             return separator == " · " ? inlineLabels[index] : separator == "\n" ? multilineLabels[index] : BuildLabel(roles, separator);
         }
 
-
         private static string BuildLabel(ScenarioRole roles, string separator)
         {
             var labels = new List<string>();
             foreach (var role in Enumerate(roles))
             {
                 labels.Add(role switch
-                {
-                    ScenarioRole.Inspector => "점검 담당",
-                    ScenarioRole.Technician => "정비 담당",
-                    ScenarioRole.SafetyOfficer => "안전 확인 담당",
-                    ScenarioRole.Coordinator => "진행 담당",
-                    _ => "미선택"
-                });
+                    {
+                        ScenarioRole.Inspector => "점검 담당",
+                        ScenarioRole.Technician => "정비 담당",
+                        ScenarioRole.SafetyOfficer => "안전 확인 담당",
+                        ScenarioRole.Coordinator => "진행 담당",
+                        _ => "미선택"
+                    });
             }
 
             return labels.Count > 0 ? string.Join(separator, labels) : "미선택";

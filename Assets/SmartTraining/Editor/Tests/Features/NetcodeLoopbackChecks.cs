@@ -1,9 +1,9 @@
-using System;
 using System.Collections;
-using System.Net;
 using System.Net.Sockets;
-using Unity.Netcode;
+using System.Net;
+using System;
 using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -37,14 +37,14 @@ namespace SmartTraining.Editor
                 NetworkTransport = transport,
                 EnableSceneManagement = false,
                 ConnectionApproval = true
-
             };
             RoomPlayerPrefab.Register(server);
             bool approvedPayload = false, reject = false;
             server.ConnectionApprovalCallback = (request, response) =>
             {
                 var data = JsonUtility.FromJson<RoomConnectionData>(System.Text.Encoding.UTF8.GetString(request.Payload));
-                approvedPayload = data.roomId == "netcode-test" && data.userId == "test-user" && data.admissionToken == "test-admission";
+                approvedPayload = data.roomId == "netcode-test" && data.userId == "test-user" &&
+                data.admissionToken == "test-admission";
                 response.Approved = approvedPayload && !reject;
                 response.CreatePlayerObject = false;
                 response.Pending = false;
@@ -77,16 +77,14 @@ namespace SmartTraining.Editor
                         lobbyId = "test-lobby",
                         ipAddress = "127.0.0.1",
                         port = port
-
                     }
-
                 };
                 yield return client.Connect(
                     "test-user",
                     reservation,
                     () =>
-                {
-                },
+                    {
+                    },
                     message => throw new Exception(message)
                 );
                 Check(client.IsConnected && approvedPayload, "Netcode UDP connects with admission payload");

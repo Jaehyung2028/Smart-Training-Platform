@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -14,10 +14,8 @@ namespace SmartTraining
 
         public GameObject Root { get; }
 
-
         public ClientSettingsPanel(
             Transform parent,
-            Font font,
             ClientPreferences preferences,
             Action changed,
             Action save,
@@ -66,13 +64,11 @@ namespace SmartTraining
             Root.SetActive(false);
         }
 
-
         private void Apply()
         {
             changed();
             Refresh();
         }
-
 
         public void Refresh()
         {

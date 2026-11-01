@@ -1,16 +1,13 @@
-using System;
 using System.Linq;
+using System;
 
 namespace SmartTraining
 {
     public sealed partial class ApiLobbyScreen
     {
         private readonly RoomNoticeTracker roomNotices = new RoomNoticeTracker();
-
         private RoomNetworkClient noticeNetwork;
-
         private TrainingApiClient noticeApi;
-
         private string noticeRoomId = "", noticeUserId = "";
 
         private void ClearRoomNotices()
@@ -24,9 +21,7 @@ namespace SmartTraining
         private void UpdateRoomNotices()
         {
             var local = network?.IsConnected == true ? network.LocalPlayer : null;
-            if (api?.IsLoggedIn != true ||
-                local == null ||
-                local.UserId != api.User.id ||
+            if (api?.IsLoggedIn != true || local == null || local.UserId != api.User.id ||
                 string.IsNullOrEmpty(networkRoomId) ||
                 api.User.currentRoomId != networkRoomId)
             {
@@ -34,9 +29,7 @@ namespace SmartTraining
                 return;
             }
 
-            if (noticeNetwork != network ||
-                noticeApi != api ||
-                noticeRoomId != networkRoomId ||
+            if (noticeNetwork != network || noticeApi != api || noticeRoomId != networkRoomId ||
                 noticeUserId != local.UserId)
             {
                 ClearRoomNotices();
@@ -48,9 +41,7 @@ namespace SmartTraining
 
             var players = network.Players;
             if (players.Length == 0 ||
-                players.Any(p => !p.IsSpawned ||
-                string.IsNullOrEmpty(p.UserId) ||
-                string.IsNullOrEmpty(p.UserName)))
+                players.Any(p => !p.IsSpawned || string.IsNullOrEmpty(p.UserId) || string.IsNullOrEmpty(p.UserName)))
             {
                 return;
             }

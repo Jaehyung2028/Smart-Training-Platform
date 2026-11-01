@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using System.Linq;
+using System;
 
 namespace SmartTraining.Editor
 {
@@ -16,15 +16,21 @@ namespace SmartTraining.Editor
         {
             yield return api.GetLobbies(
                 items =>
-            {
-                var selected = items?.Where(item => item.id != excludedLobbyId && !item.isMaintenance && item.shutdownState != "scheduled" && item.shutdownState != "completed" && item.userCount == 0 && item.roomCount == 0).OrderByDescending(item => item.id == "sample-training").ThenBy(item => item.id, StringComparer.Ordinal).FirstOrDefault();
-                if (selected == null)
                 {
-                    throw new InvalidOperationException("검사에 사용할 빈 카탈로그 로비가 없습니다. 로비 목록과 기존 접속자를 확인해주세요.");
-                }
+                    var selected = items?.Where(item => item.id != excludedLobbyId && !item.isMaintenance && item.shutdownState != "scheduled" &&
+                        item.shutdownState != "completed" &&
+                        item.userCount == 0 &&
+                        item.roomCount == 0)
+                        .OrderByDescending(item => item.id == "sample-training")
+                        .ThenBy(item => item.id, StringComparer.Ordinal)
+                        .FirstOrDefault();
+                    if (selected == null)
+                    {
+                        throw new InvalidOperationException("검사에 사용할 빈 카탈로그 로비가 없습니다. 로비 목록과 기존 접속자를 확인해주세요.");
+                    }
 
-                success(selected.id);
-            },
+                    success(selected.id);
+                },
                 failure
             );
         }

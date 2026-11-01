@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using System;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -20,7 +20,7 @@ namespace SmartTraining
         private int displayedRun = -1, displayedRows = -1;
         private bool canUse, canReturn;
 
-        public ScenarioResultPanel(Transform parent, Font font, Action returnAction)
+        public ScenarioResultPanel(Transform parent, Action returnAction)
         {
             var view = UiPrefab.Bind("ScenarioResultPanel", parent);
             root = view.Get<GameObject>("root");
@@ -49,7 +49,6 @@ namespace SmartTraining
             });
             root.SetActive(false);
         }
-
 
         public void Refresh(ScenarioContent current, bool visible, bool canInteract, bool canReturn)
         {
@@ -92,7 +91,6 @@ namespace SmartTraining
             }
         }
 
-
         private void Rebuild(ScenarioStepOutcome[] outcomes)
         {
             foreach (var row in rows)
@@ -113,7 +111,6 @@ namespace SmartTraining
                 rows.Add(row);
             }
         }
-
 
         private static string Duration(double seconds)
         {

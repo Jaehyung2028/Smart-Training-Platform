@@ -1,21 +1,17 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
     public sealed class UguiSceneWindow : EditorWindow
     {
         private UguiSceneLayout layout;
-
         private readonly List<string> errors = new();
-
         private string message = "";
-
         private Vector2 scroll;
-
         private static readonly string[] labels =
         {
             "로그인",

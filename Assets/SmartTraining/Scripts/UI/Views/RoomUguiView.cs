@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using System;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -47,7 +47,7 @@ namespace SmartTraining
 
             UguiViewUtility.EnsureEventSystem(transform);
             runtimeFont = UguiViewUtility.ApplyFont(gameObject, fontOverride);
-            contentTree = new ContentTreePopup(transform, runtimeFont, content => screen.UiChangeRoomContent(content));
+            contentTree = new ContentTreePopup(transform, content => screen.UiChangeRoomContent(content));
             changeContent.onClick.AddListener(() =>
             {
                 if (screen.UiRoomCanEdit)
@@ -114,7 +114,6 @@ namespace SmartTraining
             Refresh();
         }
 
-
         private void OpenSettings()
         {
             if (!screen.UiRoomCanManage)
@@ -129,7 +128,6 @@ namespace SmartTraining
             passwordInput.SetTextWithoutNotify("");
         }
 
-
         private void CloseSettings()
         {
             if (screen.UiProcessing)
@@ -143,10 +141,15 @@ namespace SmartTraining
             UguiViewUtility.ClearSelection(transform);
         }
 
+        private void EnsureComponents()
+        {
+            UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
+        }
 
-        private void EnsureComponents() => UguiViewUtility.EnsureComponents(this, ref canvas, ref interaction, ref raycaster);
-
-        private void LateUpdate() => Refresh();
+        private void LateUpdate()
+        {
+            Refresh();
+        }
 
         internal void RefreshState()
         {
@@ -155,7 +158,6 @@ namespace SmartTraining
                 Refresh();
             }
         }
-
 
         internal void ResetTransientState()
         {
@@ -170,7 +172,6 @@ namespace SmartTraining
                 passwordInput,
                 chatInput
             }
-
             )
             {
                 field.SetTextWithoutNotify("");
@@ -186,7 +187,6 @@ namespace SmartTraining
             showLobbyParticipants = false;
             wasVisible = false;
         }
-
 
         private void Refresh()
         {
@@ -288,10 +288,7 @@ namespace SmartTraining
             savePassword.interactable = screen.UiRoomCanManage && screen.UiEditRoomPassword.Length > 0;
             passwordInput.SetTextWithoutNotify(screen.UiEditRoomPassword);
             passwordStatus.text = screen.UiRoomPasswordStatus;
-            Caption(
-                entryLock,
-                screen.UiLocalPlayer?.RoomEntryLocked == true ? "새 참가자 입장 열기" : "새 참가자 입장 잠그기"
-            );
+            Caption(entryLock, screen.UiLocalPlayer?.RoomEntryLocked == true ? "새 참가자 입장 열기" : "새 참가자 입장 잠그기");
             closeSettings.interactable = !screen.UiProcessing;
             settingsStatus.text = (screen.UiLocalPlayer?.RoomIsRunning == true ? "진행 중에는 방 이름·최대 인원을 변경할 수 없습니다.\n" : "") + screen.UiStatus;
             UpdateParticipantActions();
@@ -306,8 +303,10 @@ namespace SmartTraining
             UpdateChat();
         }
 
-
-        private static void Caption(Button button, string text) => button.GetComponentInChildren<Text>().text = text;
+        private static void Caption(Button button, string text)
+        {
+            button.GetComponentInChildren<Text>().text = text;
+        }
 
         private void UpdateParticipants()
         {
@@ -338,10 +337,7 @@ namespace SmartTraining
                 {
                     if (showLobbyParticipants)
                     {
-                        card.RenderLobby(
-                            screen.UiParticipantLabel(Array.Find(screen.UiParticipants, p => p.userId == id)),
-                            id == screen.UiSelfId
-                        );
+                        card.RenderLobby(screen.UiParticipantLabel(Array.Find(screen.UiParticipants, p => p.userId == id)), id == screen.UiSelfId);
                     }
                     else
                     {
@@ -355,12 +351,12 @@ namespace SmartTraining
             }
         }
 
-
         private void UpdateParticipantActions()
         {
             foreach (var entry in rows)
             {
-                bool manage = !showLobbyParticipants && screen.UiLocalPlayer?.IsRoomMaster == true && entry.Key != screen.UiSelfId;
+                bool manage = !showLobbyParticipants && screen.UiLocalPlayer?.IsRoomMaster == true &&
+                entry.Key != screen.UiSelfId;
                 entry.Value.Find("Actions").gameObject.SetActive(manage);
                 foreach (var button in entry.Value.GetComponentsInChildren<Button>())
                 {
@@ -369,7 +365,6 @@ namespace SmartTraining
             }
         }
 
-
         private void UpdateChat()
         {
             chatList ??= new ChatMessageListView(chatScroll, () => Instantiate(chatTemplate, chatContent), chatTemplate.color);
@@ -377,7 +372,6 @@ namespace SmartTraining
             emptyChat.gameObject.SetActive(displayed.Count == 0);
             chatList.Refresh(displayed, screen.UiSelfId, context + "|" + screen.UiRoomChatChannel);
         }
-
 
         private void OnDestroy()
         {

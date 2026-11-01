@@ -1,12 +1,12 @@
-using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System;
 using Newtonsoft.Json.Linq;
-using UnityEditor;
 using UnityEditor.AddressableAssets;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.Video;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
@@ -22,15 +22,14 @@ namespace SmartTraining.Editor
             Require(catalog.Count == 3, "교육과정 3개");
             var leaves = catalog.Descendants().OfType<JObject>().Where(item => item["children"] is JArray children && children.Count == 0).ToArray();
             Require(leaves.Length == 12, "실행 콘텐츠 12개");
-            Require(
-                leaves.Select(item => (string)item["assetId"]).Distinct().Count() == 12,
-                "샘플마다 독립된 주소"
-            );
+            Require(leaves.Select(item => (string)item["assetId"]).Distinct().Count() == 12, "샘플마다 독립된 주소");
             var cooperativeAddresses = new HashSet<string>();
             foreach (var item in leaves)
             {
                 string address = (string)item["assetId"];
-                var entry = AddressableAssetSettingsDefaultObject.Settings.groups.Where(group => group != null).SelectMany(group => group.entries).SingleOrDefault(candidate => candidate.address == address);
+                var entry = AddressableAssetSettingsDefaultObject.Settings.groups.Where(group => group != null)
+                    .SelectMany(group => group.entries)
+                    .SingleOrDefault(candidate => candidate.address == address);
                 Require(entry != null, "주소 등록: " + address);
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(entry.AssetPath);
                 Require(prefab != null, "프리팹 존재: " + address);
@@ -45,10 +44,7 @@ namespace SmartTraining.Editor
                             break;
                         case "video":
                             var video = new SerializedObject(instance.GetComponent<VideoContentPlayer>());
-                            Require(
-                                video.FindProperty("clip").objectReferenceValue is VideoClip clip && clip.length > 0,
-                                "영상 클립: " + address
-                            );
+                            Require(video.FindProperty("clip").objectReferenceValue is VideoClip clip && clip.length > 0, "영상 클립: " + address);
                             Require(
                                 video.FindProperty("subtitleFile").objectReferenceValue is TextAsset subtitles &&
                                 subtitles.text.Contains("-->"),
@@ -74,21 +70,12 @@ namespace SmartTraining.Editor
                             foreach (var step in definition.Steps)
                             {
                                 ulong actor = step.RequiredRole == ScenarioRole.None ? 1ul : (ulong)step.RequiredRole;
-                                if (step.RequiresTool)
-                                {
-                                    Require(progress.TrySelectTool(actor, step.ToolId, progress.RunRevision, out _), "공구 선택");
-                                }
-
                                 Require(
-                                    progress.TryInteract(
-                                    actor,
-                                    step.TargetId,
-                                    progress.Revision,
-                                    workTime,
-                                    out _
-                                ),
-                                    "단계 완료: " + step.Title
+                                    progress.TrySelectTool(actor, step.ToolId, progress.RunRevision, out _),
+                                    step.RequiresTool ? "공구 선택" : "공구 선택 해제"
                                 );
+
+                                Require(progress.TryInteract(actor, step.TargetId, progress.Revision, workTime, out _), "단계 완료: " + step.Title);
                                 if (progress.IsWorking)
                                 {
                                     Require(progress.TryCompleteWork(workTime + step.DurationSeconds + .1), "작업 시간 완료");
@@ -117,7 +104,6 @@ namespace SmartTraining.Editor
 
             Debug.Log("ALL COURSE SAMPLE CHECKS PASSED (3 courses / 12 contents)");
         }
-
 
         private static void Require(bool success, string message)
         {

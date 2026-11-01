@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -18,7 +18,6 @@ namespace SmartTraining
             public Quaternion ReturnRotation;
         }
 
-
         private readonly Dictionary<ulong, Equipment> views = new();
         private readonly HashSet<ulong> active = new();
         private readonly List<ulong> removed = new();
@@ -27,7 +26,6 @@ namespace SmartTraining
         {
             this.rigPrefab = rigPrefab;
         }
-
 
         public void Refresh(
             SharedScenario shared,
@@ -86,7 +84,6 @@ namespace SmartTraining
             }
         }
 
-
         private static void RefreshPose(
             Equipment equipment,
             SharedScenario shared,
@@ -102,11 +99,8 @@ namespace SmartTraining
             double now = shared.NetworkManager.ServerTime.Time;
             var state = shared.State;
             var step = state.CompletedSteps < definition.Steps.Count ? definition.Steps[state.CompletedSteps] : null;
-            bool working = state.IsWorking &&
-                state.WorkClientId == player.OwnerClientId &&
-                tool.AnimateWork &&
-                step != null &&
-                objects.ContainsKey(step.TargetId);
+            bool working = state.IsWorking && state.WorkClientId == player.OwnerClientId && tool.AnimateWork && step != null &&
+            objects.ContainsKey(step.TargetId);
             // 취소 시에는 이전 월드 자세에서 짧게 되돌립니다. 대기 복귀·초기화의 제거 처리는 그대로 유지합니다.
             if (equipment.WasWorking && !working)
             {
@@ -135,13 +129,7 @@ namespace SmartTraining
                 ScenarioWorkMotion.ToolPose(step.Action, shared.WorkProgress, out var offset, out var rotation);
                 Vector3 contactPoint = anchor.position + anchor.rotation * offset;
                 Quaternion targetRotation = anchor.rotation * rotation * tool.WorkRotation;
-                view.GetContactPose(
-                    tool.WorkContactPoint,
-                    contactPoint,
-                    targetRotation,
-                    out var contactPosition,
-                    out var contactRotation
-                );
+                view.GetContactPose(tool.WorkContactPoint, contactPoint, targetRotation, out var contactPosition, out var contactRotation);
                 float weight = ScenarioWorkMotion.ContactWeight(shared.WorkProgress);
                 view.SetPose(
                     Vector3.Lerp(restPosition, contactPosition, weight),
@@ -150,18 +138,13 @@ namespace SmartTraining
             }
             else if (now < equipment.ReturnStartedAt + ScenarioWorkMotion.CancelReturnSeconds)
             {
-                float weight = Mathf.SmoothStep(
-                    0,
-                    1,
-                    (float)((now - equipment.ReturnStartedAt) / ScenarioWorkMotion.CancelReturnSeconds)
-                );
+                float weight = Mathf.SmoothStep(0, 1, (float)((now - equipment.ReturnStartedAt) / ScenarioWorkMotion.CancelReturnSeconds));
                 view.SetPose(
                     Vector3.Lerp(equipment.ReturnPosition, restPosition, weight),
                     Quaternion.Slerp(equipment.ReturnRotation, restRotation, weight)
                 );
             }
         }
-
 
         public void Dispose()
         {

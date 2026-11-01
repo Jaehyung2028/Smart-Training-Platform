@@ -13,13 +13,9 @@ namespace SmartTraining
         }
 
         private RoomAction pendingRoomAction;
-
         private RoomNetworkClient actionNetwork;
-
         private TrainingApiClient actionApi;
-
         private string actionLobbyId = "", actionRoomId = "", actionTargetId = "", actionTargetName = "";
-
         private ulong actionOwnerId, actionTargetOwnerId;
 
         private bool HasPendingRoomAction => pendingRoomAction != RoomAction.None;
@@ -41,10 +37,7 @@ namespace SmartTraining
             }
 
             var local = network?.LocalPlayer;
-            if (api?.IsLoggedIn != true ||
-                network?.IsConnected != true ||
-                local == null ||
-                !local.IsRoomMaster ||
+            if (api?.IsLoggedIn != true || network?.IsConnected != true || local == null || !local.IsRoomMaster ||
                 local.UserId != api.User.id ||
                 string.IsNullOrEmpty(networkRoomId) ||
                 string.IsNullOrEmpty(networkLobbyId))
@@ -81,7 +74,14 @@ namespace SmartTraining
             }
 
             var local = network?.LocalPlayer;
-            bool valid = network == actionNetwork && api == actionApi && api?.IsLoggedIn == true && network?.IsConnected == true && local != null && local.IsRoomMaster && local.UserId == api.User.id && local.OwnerClientId == actionOwnerId && networkLobbyId == actionLobbyId && networkRoomId == actionRoomId;
+            bool valid = network == actionNetwork && api == actionApi && api?.IsLoggedIn == true &&
+            network?.IsConnected == true &&
+            local != null &&
+            local.IsRoomMaster &&
+            local.UserId == api.User.id &&
+            local.OwnerClientId == actionOwnerId &&
+            networkLobbyId == actionLobbyId &&
+            networkRoomId == actionRoomId;
             if (valid && pendingRoomAction != RoomAction.Close)
             {
                 valid = Array.Exists(network.Players, p => p.UserId == actionTargetId && p.OwnerClientId == actionTargetOwnerId);

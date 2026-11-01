@@ -1,9 +1,9 @@
-using System;
 using System.Linq;
-using UnityEditor;
+using System;
 using UnityEditor.SceneManagement;
-using UnityEngine;
+using UnityEditor;
 using UnityEngine.SceneManagement;
+using UnityEngine;
 
 namespace SmartTraining.Editor
 {
@@ -15,7 +15,6 @@ namespace SmartTraining.Editor
         {
             Install(SceneManager.GetActiveScene());
         }
-
 
         public static ContentSceneLayout Install(Scene scene)
         {
@@ -61,7 +60,6 @@ namespace SmartTraining.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             return layout;
         }
-
 
         private static void EnsurePrefab(SerializedObject layout, string property, string path, Transform parent)
         {

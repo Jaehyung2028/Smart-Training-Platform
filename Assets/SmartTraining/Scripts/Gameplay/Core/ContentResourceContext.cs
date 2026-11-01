@@ -1,5 +1,5 @@
-﻿using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -18,7 +18,8 @@ namespace SmartTraining
             ContentType = contentType;
         }
 
-        public IEnumerator LoadAdditional<T>(string assetId, Action<T> loaded, Action<string> failed) where T : UnityEngine.Object
+        public IEnumerator LoadAdditional<T>(string assetId, Action<T> loaded, Action<string> failed)
+        where T : UnityEngine.Object
         {
             if (assets == null)
             {

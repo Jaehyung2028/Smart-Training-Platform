@@ -1,7 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -10,11 +10,20 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static IEnumerator Call(ApiLobbyScreen screen, string method, params object[] args) => (IEnumerator)typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, args);
+        private static IEnumerator Call(ApiLobbyScreen screen, string method, params object[] args)
+        {
+            return (IEnumerator)typeof(ApiLobbyScreen).GetMethod(method, Flags).Invoke(screen, args);
+        }
 
         private static void Check(bool ok, string name)
         {
@@ -26,9 +35,15 @@ namespace SmartTraining.Editor
             Debug.Log("ROOM PASS: " + name);
         }
 
-        private static List<LobbyChatMessage> Messages(ApiLobbyScreen screen, bool room = true) => (List<LobbyChatMessage>)Get(screen, room ? "roomChatMessages" : "chatMessages");
+        private static List<LobbyChatMessage> Messages(ApiLobbyScreen screen, bool room = true)
+        {
+            return (List<LobbyChatMessage>)Get(screen, room ? "roomChatMessages" : "chatMessages");
+        }
 
-        private static RoomHubConnection Connection(ApiLobbyScreen screen) => (RoomHubConnection)Get(screen, "lobbyUpdates");
+        private static RoomHubConnection Connection(ApiLobbyScreen screen)
+        {
+            return (RoomHubConnection)Get(screen, "lobbyUpdates");
+        }
 
         private static ApiLobbyScreen Screen(TrainingApiClient api, RoomNetworkClient network, string lobby, string room)
         {
@@ -104,11 +119,13 @@ namespace SmartTraining.Editor
                 yield return Call(a, "SendRoomChat");
                 yield return Pump(a, b, c, .3);
                 Check(
-                    Messages(a).Count == 1 && Messages(b).Count == 1 && Messages(c).Count == 0 && Messages(c, false).Count == 0,
+                    Messages(a).Count == 1 && Messages(b).Count == 1 && Messages(c).Count == 0 &&
+                    Messages(c, false).Count == 0,
                     "room chat reaches sender and participant while excluding same-lobby observer"
                 );
                 Check(
-                    Messages(b)[0].roomId == room && Messages(b)[0].nickname == first.User.name && Messages(b)[0].text == "방 참가자만 🙂",
+                    Messages(b)[0].roomId == room && Messages(b)[0].nickname == first.User.name &&
+                    Messages(b)[0].text == "방 참가자만 🙂",
                     "room chat wire carries authoritative room identity and unicode"
                 );
                 Check(
@@ -159,7 +176,8 @@ namespace SmartTraining.Editor
                 }, fail);
                 typeof(ApiLobbyScreen).GetMethod("SyncChatLobby", Flags).Invoke(b, null);
                 Check(
-                    !other.IsConnected && Messages(b).Count == 0 && (string)Get(b, "chatInput") == "" && Messages(b, false).Count == 1,
+                    !other.IsConnected && Messages(b).Count == 0 && (string)Get(b, "chatInput") == "" &&
+                    Messages(b, false).Count == 1,
                     "kick clears room chat and retains lobby messages"
                 );
                 var stale = Connection(b).Invoke("SendRoomChat", room, oldToken, "stale");
@@ -190,10 +208,12 @@ namespace SmartTraining.Editor
                 yield return Call(b, "SendRoomChat");
                 yield return Pump(a, b, c, .3);
                 Check(
-                    Messages(a).Exists(item => item.text == "재접속 방 채팅") && Messages(b).Count == 1 && Messages(c).Count == 1,
+                    Messages(a).Exists(item => item.text == "재접속 방 채팅") && Messages(b).Count == 1 &&
+                    Messages(c).Count == 1,
                     "fresh room admission restores chat after kick and reconnect"
                 );
-                var delayed = JsonUtility.ToJson(new LobbyChatMessage {
+                var delayed = JsonUtility.ToJson(new LobbyChatMessage
+                    {
                         id = Guid.NewGuid().ToString("N"),
                         lobbyId = lobby,
                         roomId = room,
@@ -216,7 +236,6 @@ namespace SmartTraining.Editor
                     roomId = room,
                     sequence = floor + 1,
                     text = "before subscription reply"
-
                 };
                 var receive = typeof(ApiLobbyScreen).GetMethod("ReceiveRoomChat", Flags);
                 receive.Invoke(b, new object[] { Connection(b), delayed, room });
@@ -233,7 +252,9 @@ namespace SmartTraining.Editor
                 typeof(ApiLobbyScreen).GetMethod("DisposeLobbyUpdates", Flags).Invoke(a, null);
                 a.enabled = true;
                 deadline = Time.realtimeSinceStartupAsDouble + 20;
-                while (!(bool)typeof(ApiLobbyScreen).GetMethod("RoomChatIsBound", Flags).Invoke(a, null) || (bool)Get(a, "busy") || (bool)Get(a, "roomsDirty"))
+                while (!(bool)typeof(ApiLobbyScreen).GetMethod("RoomChatIsBound", Flags).Invoke(a, null) ||
+                    (bool)Get(a, "busy") ||
+                    (bool)Get(a, "roomsDirty"))
                 {
                     if (Time.realtimeSinceStartupAsDouble > deadline)
                     {
@@ -266,7 +287,6 @@ namespace SmartTraining.Editor
                     b,
                     c
                 }
-
                 )
                 {
                     if (screen != null)

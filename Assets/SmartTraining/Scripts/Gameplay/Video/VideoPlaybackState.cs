@@ -30,7 +30,8 @@ namespace SmartTraining
             return Playing && Duration > 0 && Evaluate(serverTime) < Duration;
         }
 
-        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer)
+        where T : IReaderWriter
         {
             serializer.SerializeValue(ref Position);
             serializer.SerializeValue(ref StartedAt);
@@ -41,7 +42,8 @@ namespace SmartTraining
         public bool Equals(VideoPlaybackState other)
         {
             return Position.Equals(other.Position) && StartedAt.Equals(other.StartedAt) &&
-                Duration.Equals(other.Duration) && Playing == other.Playing;
+            Duration.Equals(other.Duration) &&
+            Playing == other.Playing;
         }
     }
 }

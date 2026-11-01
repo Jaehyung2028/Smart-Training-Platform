@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -31,10 +31,7 @@ namespace SmartTraining.Editor
             Check(!progress.TryInteract(1, "bolt-b", 0, 10, out _), "잘못된 대상 거절");
             Check(!progress.TryInteract(1, "bolt-a", 0, double.NaN, out _), "잘못된 시각 거절");
             Check(progress.TryInteract(1, "bolt-a", 0, 10, out _), "풀기 시작");
-            Check(
-                progress.IsWorking && progress.CompletedSteps == 0 && progress.Revision == 1,
-                "시작만으로 완료되지 않음"
-            );
+            Check(progress.IsWorking && progress.CompletedSteps == 0 && progress.Revision == 1, "시작만으로 완료되지 않음");
             Check(!progress.TryInteract(2, "bolt-a", 1, 10.5, out _), "작업 중 중복 요청 거절");
             Check(
                 !progress.TryCompleteWork(11.49) && !progress.TryCompleteWork(double.PositiveInfinity),
@@ -44,23 +41,11 @@ namespace SmartTraining.Editor
                 Mathf.Approximately(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 0, true, .5f), .5f),
                 "중간 회전·이동 자세"
             );
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-b", 0, true, .5f) == 0,
-                "다른 대상은 움직이지 않음"
-            );
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-b", 0, true, .5f) == 0, "다른 대상은 움직이지 않음");
             progress.RemoveParticipant(1);
-            Check(
-                progress.GetSelectedTool(1) == "" && progress.TryCompleteWork(11.5),
-                "시작 참가자 퇴장 후 공동 작업 완료"
-            );
-            Check(
-                !progress.TryCompleteWork(12) && progress.CompletedSteps == 1 && progress.Revision == 2,
-                "한 번만 완료"
-            );
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, false, 0) == 1,
-                "분리 자세 유지"
-            );
+            Check(progress.GetSelectedTool(1) == "" && progress.TryCompleteWork(11.5), "시작 참가자 퇴장 후 공동 작업 완료");
+            Check(!progress.TryCompleteWork(12) && progress.CompletedSteps == 1 && progress.Revision == 2, "한 번만 완료");
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, false, 0) == 1, "분리 자세 유지");
             Check(!progress.TryInteract(2, "bolt-a", 2, 12, out _), "다른 참가자의 공구를 공유하지 않음");
             Check(
                 progress.TrySelectTool(2, "spanner", 0, out _) && progress.TryInteract(2, "bolt-a", 2, 12, out _),
@@ -71,25 +56,17 @@ namespace SmartTraining.Editor
                 "역방향 체결 자세"
             );
             Check(progress.TryCompleteWork(13.5) && progress.CompletedSteps == 2, "체결 완료");
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 2, false, 0) == 0,
-                "원래 자세 복구"
-            );
-            Check(
-                progress.TryInteract(3, "bolt-a", 4, 14, out _) && progress.IsComplete,
-                "공구 없는 확인 단계"
-            );
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 2, false, 0) == 0, "원래 자세 복구");
+            Check(progress.TryInteract(3, "bolt-a", 4, 14, out _) && progress.IsComplete, "공구 없는 확인 단계");
             Check(progress.TryReset(5) && progress.RunRevision == 1, "실습 초기화");
             Check(
                 progress.TrySelectTool(2, "spanner", 1, out _) && progress.TryInteract(2, "bolt-a", 6, 20, out _),
                 "다음 작업 시작"
             );
+            Check(progress.TryReset(7) && !progress.IsWorking && !progress.TryCompleteWork(100), "작업 중 초기화하면 늦은 완료 취소");
             Check(
-                progress.TryReset(7) && !progress.IsWorking && !progress.TryCompleteWork(100),
-                "작업 중 초기화하면 늦은 완료 취소"
-            );
-            Check(
-                !progress.TrySelectTool(2, "spanner", 1, out _) && !progress.TryInteract(2, "bolt-a", 7, 101, out _),
+                !progress.TrySelectTool(2, "spanner", 1, out _) &&
+                !progress.TryInteract(2, "bolt-a", 7, 101, out _),
                 "이전 실행 요청 거절"
             );
             Check(progress.CompletedSteps == 0 && progress.GetSelectedTool(2) == "", "진행과 공구 초기화");
@@ -102,40 +79,27 @@ namespace SmartTraining.Editor
             Debug.Log($"SCENARIO WORK CHECKS PASSED ({checks})");
         }
 
-
         private static void CheckToolActions(ScenarioDefinition definition)
         {
             Check(
-                definition.Steps.Count == 9 &&
-                definition.Steps[2].ToolId == "screwdriver" &&
+                definition.Steps.Count == 9 && definition.Steps[2].ToolId == "screwdriver" &&
                 definition.Steps[4].Action == ScenarioAction.Strike &&
                 !definition.Steps[5].RequiresTool,
                 "공구·점검 혼합 9단계 원본"
             );
-            Check(
-                definition.GetTool("screwdriver").AnimateWork && definition.GetTool("hammer").AnimateWork,
-                "드라이버·망치 작업 설정"
-            );
-            Check(
-                ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .3f) == 0,
-                "들어 올리는 중 핀 이동 없음"
-            );
-            Check(
-                Mathf.Approximately(ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .4f), 1f / 3),
-                "첫 타격에서 1/3 이동"
-            );
+            Check(definition.GetTool("screwdriver").AnimateWork && definition.GetTool("hammer").AnimateWork, "드라이버·망치 작업 설정");
+            Check(ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .3f) == 0, "들어 올리는 중 핀 이동 없음");
+            Check(Mathf.Approximately(ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .4f), 1f / 3), "첫 타격에서 1/3 이동");
             Check(
                 Mathf.Approximately(ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .6f), 2f / 3),
                 "두 번째 타격에서 2/3 이동"
             );
             Check(
-                ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .8f) == 1 && ScenarioWorkMotion.HammerLift(.8f) == 0,
+                ScenarioWorkMotion.TargetProgress(ScenarioAction.Strike, .8f) == 1 &&
+                ScenarioWorkMotion.HammerLift(.8f) == 0,
                 "세 번째 타격 후 복귀"
             );
-            Check(
-                ScenarioWorkMotion.HammerLift(.3f) > .99f && ScenarioWorkMotion.HammerLift(.4f) < .001f,
-                "망치 들기와 타격 시점 일치"
-            );
+            Check(ScenarioWorkMotion.HammerLift(.3f) > .99f && ScenarioWorkMotion.HammerLift(.4f) < .001f, "망치 들기와 타격 시점 일치");
             var progress = new ScenarioProgress(definition);
             double time = 10;
             for (int index = 0; index < definition.Steps.Count - 1; index++)
@@ -155,14 +119,8 @@ namespace SmartTraining.Editor
                 if (step.Action == ScenarioAction.Strike)
                 {
                     int revision = progress.Revision;
-                    Check(
-                        progress.TryCancelWork(1, revision, time + 1.2, out _) && progress.CompletedSteps == 4,
-                        "타격 취소는 완료 수 유지"
-                    );
-                    Check(
-                        ScenarioObjectPose.Evaluate(definition.Steps, "pin-a", 4, false, 0) == 0,
-                        "타격 취소 시 핀 원위치"
-                    );
+                    Check(progress.TryCancelWork(1, revision, time + 1.2, out _) && progress.CompletedSteps == 4, "타격 취소는 완료 수 유지");
+                    Check(ScenarioObjectPose.Evaluate(definition.Steps, "pin-a", 4, false, 0) == 0, "타격 취소 시 핀 원위치");
                     Check(progress.TryInteract(1, step.TargetId, progress.Revision, time, out _), "타격 재시작");
                 }
 
@@ -171,22 +129,12 @@ namespace SmartTraining.Editor
             }
 
             Check(
-                progress.TryInteract(
-                2,
-                definition.Steps[definition.Steps.Count - 1].TargetId,
-                progress.Revision,
-                time,
-                out _
-            ) &&
+                progress.TryInteract(2, definition.Steps[definition.Steps.Count - 1].TargetId, progress.Revision, time, out _) &&
                 progress.IsComplete,
                 "다른 참가자가 공구 없이 최종 확인"
             );
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "pin-a", 6, false, 0) == 1,
-                "완료한 핀 상태 유지"
-            );
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "pin-a", 6, false, 0) == 1, "완료한 핀 상태 유지");
         }
-
 
         private static void CheckWorkMotion(ScenarioDefinition definition)
         {
@@ -195,19 +143,12 @@ namespace SmartTraining.Editor
                 "접근·복귀 구간에는 볼트 회전 정지"
             );
             Check(
-                ScenarioWorkMotion.ContactWeight(0) == 0 &&
-                ScenarioWorkMotion.ContactWeight(.5f) == 1 &&
+                ScenarioWorkMotion.ContactWeight(0) == 0 && ScenarioWorkMotion.ContactWeight(.5f) == 1 &&
                 ScenarioWorkMotion.ContactWeight(1) == 0,
                 "접근·접촉·복귀 가중치"
             );
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 0, true, .1f) == 0,
-                "손 접근 전 볼트가 움직이지 않음"
-            );
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, true, .9f) == 0,
-                "손 복귀 전 체결 자세 완성"
-            );
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 0, true, .1f) == 0, "손 접근 전 볼트가 움직이지 않음");
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, true, .9f) == 0, "손 복귀 전 체결 자세 완성");
             var rig = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/SmartTraining/Content/Scenarios/Tools/RightHand.prefab").GetComponent<HandheldItemRig>();
             var parent = new GameObject("Contact Pose Check").transform;
             var view = new HeldItemView(rig, "Contact Pose Rig");
@@ -222,22 +163,15 @@ namespace SmartTraining.Editor
                 view.GetContactPose(tool.WorkContactPoint, target, targetRotation, out var position, out var rotation);
                 view.SetPose(position, rotation);
                 var instance = parent.GetComponentInChildren<HandheldItemRig>().Grip.GetChild(0);
-                Check(
-                    Vector3.Distance(instance.TransformPoint(tool.WorkContactPoint), target) < .0001f,
-                    "실제 모델 접촉점이 작업점과 일치"
-                );
+                Check(Vector3.Distance(instance.TransformPoint(tool.WorkContactPoint), target) < .0001f, "실제 모델 접촉점이 작업점과 일치");
                 Check(Quaternion.Angle(instance.rotation, targetRotation) < .01f, "실제 모델 작업 방향 일치");
-                Check(
-                    instance.GetComponentsInChildren<Collider>().All(collider => !collider.enabled),
-                    "공구가 작업 클릭을 가로채지 않음"
-                );
+                Check(instance.GetComponentsInChildren<Collider>().All(collider => !collider.enabled), "공구가 작업 클릭을 가로채지 않음");
             }
             finally
             {
                 UnityEngine.Object.DestroyImmediate(parent.gameObject);
             }
         }
-
 
         private static void CheckCancellation(ScenarioDefinition definition)
         {
@@ -260,57 +194,33 @@ namespace SmartTraining.Editor
             Check(!progress.TryCancelWork(1, 1, double.NaN, out _), "비정상 시각 취소 거절");
             Check(progress.TryCancelWork(1, 1, 10.5, out _), "작업자 본인 취소");
             Check(
-                !progress.IsWorking &&
-                progress.WorkClientId == 0 &&
-                progress.WorkDuration == 0 &&
+                !progress.IsWorking && progress.WorkClientId == 0 && progress.WorkDuration == 0 &&
                 progress.CompletedSteps == 0 &&
                 progress.Revision == 2,
                 "작업만 해제하고 단계 유지"
             );
-            Check(
-                progress.RunRevision == 0 && progress.GetSelectedTool(1) == "spanner",
-                "취소해도 실행 번호와 개인 공구 유지"
-            );
+            Check(progress.RunRevision == 0 && progress.GetSelectedTool(1) == "spanner", "취소해도 실행 번호와 개인 공구 유지");
             Check(!progress.TryCompleteWork(100), "취소한 작업의 늦은 완료 없음");
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 0, false, 0) == 0,
-                "풀기 취소는 원래 자세"
-            );
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 0, false, 0) == 0, "풀기 취소는 원래 자세");
             Check(
                 progress.TryInteract(1, "bolt-a", 2, 20, out _) && !progress.TryCancelWork(1, 1, 20.2, out _),
                 "이전 작업의 취소가 재시작 작업에 영향 없음"
             );
-            Check(
-                !progress.TryCancelWork(1, 3, 21.5, out _) && progress.TryCompleteWork(21.5),
-                "완료 시각에 도착한 취소보다 완료 우선"
-            );
-            Check(
-                !progress.TryCancelWork(1, 4, 21.6, out _) && progress.CompletedSteps == 1,
-                "완료된 작업 취소 불가"
-            );
+            Check(!progress.TryCancelWork(1, 3, 21.5, out _) && progress.TryCompleteWork(21.5), "완료 시각에 도착한 취소보다 완료 우선");
+            Check(!progress.TryCancelWork(1, 4, 21.6, out _) && progress.CompletedSteps == 1, "완료된 작업 취소 불가");
             Check(
                 progress.TrySelectTool(2, "spanner", 0, out _) && progress.TryInteract(2, "bolt-a", 4, 30, out _),
                 "다른 참가자가 체결 작업 시작"
             );
             Check(!progress.TryCancelWork(1, 5, 30.2, out _), "이전 작업자는 새 작업 취소 불가");
-            Check(
-                progress.TryCancelWork(2, 5, 30.5, out _) && progress.CompletedSteps == 1,
-                "체결 취소는 이전 완료 수 유지"
-            );
-            Check(
-                ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, false, 0) == 1,
-                "체결 취소는 분리된 자세로 복구"
-            );
-            Check(
-                progress.TryInteract(2, "bolt-a", 6, 40, out _) && progress.TryReset(7),
-                "작업 중 전체 초기화"
-            );
+            Check(progress.TryCancelWork(2, 5, 30.5, out _) && progress.CompletedSteps == 1, "체결 취소는 이전 완료 수 유지");
+            Check(ScenarioObjectPose.Evaluate(definition.Steps, "bolt-a", 1, false, 0) == 1, "체결 취소는 분리된 자세로 복구");
+            Check(progress.TryInteract(2, "bolt-a", 6, 40, out _) && progress.TryReset(7), "작업 중 전체 초기화");
             Check(
                 !progress.IsWorking && progress.WorkClientId == 0 && !progress.TryCancelWork(2, 7, 40.5, out _),
                 "초기화가 작업자와 이전 취소 요청 해제"
             );
         }
-
 
         private static void Check(bool condition, string name)
         {

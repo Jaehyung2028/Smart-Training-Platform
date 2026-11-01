@@ -33,10 +33,7 @@ namespace SmartTraining.Editor
                 repeat.Sample(index / 10d, 10, true, 5.1 + index / 10d);
             }
 
-            Check(
-                Math.Abs(repeat.WatchedSeconds - first) < .001 && repeat.Percent == 50,
-                "반복 시청 중복 집계 방지"
-            );
+            Check(Math.Abs(repeat.WatchedSeconds - first) < .001 && repeat.Percent == 50, "반복 시청 중복 집계 방지");
             var paused = new VideoWatchCoverage();
             paused.Sample(0, 10, false, 0);
             paused.Sample(5, 10, false, 1);
@@ -61,7 +58,6 @@ namespace SmartTraining.Editor
             Check(prefab.GetComponent<TrainingProgress>() != null, "플레이어의 독립 진행 컴포넌트 연결");
             Debug.Log("LEARNING PROGRESS CHECKS PASSED (7)");
         }
-
 
         private static void Check(bool condition, string message)
         {

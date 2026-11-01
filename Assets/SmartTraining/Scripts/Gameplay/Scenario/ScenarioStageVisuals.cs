@@ -13,7 +13,6 @@ namespace SmartTraining
             public GameObject before, after;
         }
 
-
         [SerializeField]
         private ScenarioContent scenario;
         [SerializeField]

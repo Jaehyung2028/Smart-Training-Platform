@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -9,13 +9,25 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static object Get(ApiLobbyScreen screen, string field) => typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        private static object Get(ApiLobbyScreen screen, string field)
+        {
+            return typeof(ApiLobbyScreen).GetField(field, Flags).GetValue(screen);
+        }
 
-        private static void Set(ApiLobbyScreen screen, string field, object value) => typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string field, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(field, Flags).SetValue(screen, value);
+        }
 
-        private static LobbyParticipant[] Rows(ApiLobbyScreen screen) => (LobbyParticipant[])Get(screen, "lobbyParticipants");
+        private static LobbyParticipant[] Rows(ApiLobbyScreen screen)
+        {
+            return (LobbyParticipant[])Get(screen, "lobbyParticipants");
+        }
 
-        private static LobbyParticipant Row(ApiLobbyScreen screen, string id) => Array.Find(Rows(screen), item => item.userId == id);
+        private static LobbyParticipant Row(ApiLobbyScreen screen, string id)
+        {
+            return Array.Find(Rows(screen), item => item.userId == id);
+        }
 
         private static void Check(bool ok, string name)
         {
@@ -63,11 +75,14 @@ namespace SmartTraining.Editor
                 Set(screen, "api", observer);
                 Set(screen, "selectedLobbyId", lobby);
                 yield return Wait(
-                    () => Row(screen, first.User.id)?.connectionState == "connected" && Row(screen, second.User.id)?.connectionState == "connected" && Row(screen, observer.User.id)?.connectionState == "lobby",
+                    () => Row(screen, first.User.id)?.connectionState == "connected" &&
+                        Row(screen, second.User.id)?.connectionState == "connected" &&
+                        Row(screen, observer.User.id)?.connectionState == "lobby",
                     "initial automatic participant list timed out"
                 );
                 Check(
-                    Rows(screen).Length == 3 && Row(screen, first.User.id).roomId == room && Row(screen, first.User.id).isRoomMaster,
+                    Rows(screen).Length == 3 && Row(screen, first.User.id).roomId == room &&
+                    Row(screen, first.User.id).isRoomMaster,
                     "participants automatically show lobby waiting and connected master"
                 );
                 yield return visitor.Login("lpv-" + Guid.NewGuid().ToString("N").Substring(0, 6), () =>
@@ -96,7 +111,8 @@ namespace SmartTraining.Editor
                     "confirmed participant state did not appear"
                 );
                 Check(
-                    Row(screen, visitor.User.id).roomName == "network-room" && !Row(screen, visitor.User.id).isRoomMaster,
+                    Row(screen, visitor.User.id).roomName == "network-room" &&
+                    !Row(screen, visitor.User.id).isRoomMaster,
                     "actual UDP confirmation changes participant state and room name"
                 );
                 string foreignLobby = null;
@@ -118,7 +134,8 @@ namespace SmartTraining.Editor
                 {
                 }, fail);
                 yield return Wait(
-                    () => Row(screen, second.User.id)?.isRoomMaster == true && Row(screen, first.User.id)?.isRoomMaster == false,
+                    () => Row(screen, second.User.id)?.isRoomMaster == true &&
+                        Row(screen, first.User.id)?.isRoomMaster == false,
                     "participant role update timed out"
                 );
                 Check(
@@ -132,7 +149,10 @@ namespace SmartTraining.Editor
                 var oldConnection = (RoomHubConnection)Get(screen, "lobbyUpdates");
                 oldConnection.Dispose();
                 yield return Wait(
-                    () => Get(screen, "lobbyUpdates") != null && Get(screen, "lobbyUpdates") != oldConnection && !(bool)Get(screen, "liveConnecting") && !(bool)Get(screen, "busy") && (bool)Get(screen, "participantsLoaded"),
+                    () => Get(screen, "lobbyUpdates") != null && Get(screen, "lobbyUpdates") != oldConnection &&
+                        !(bool)Get(screen, "liveConnecting") &&
+                        !(bool)Get(screen, "busy") &&
+                        (bool)Get(screen, "participantsLoaded"),
                     "participant reconnect timed out"
                 );
                 Check(
@@ -140,7 +160,8 @@ namespace SmartTraining.Editor
                     "SignalR reconnect restores participant snapshot automatically"
                 );
                 // Take the screen's operation slot in the same driver step that observes it idle.
-                while ((bool)Get(screen, "busy") || typeof(TrainingApiClient).GetField("activeRequest", Flags).GetValue(observer) != null)
+                while ((bool)Get(screen, "busy") ||
+                    typeof(TrainingApiClient).GetField("activeRequest", Flags).GetValue(observer) != null)
                 {
                     yield return null;
                 }
@@ -150,7 +171,8 @@ namespace SmartTraining.Editor
                 {
                 }, fail);
                 yield return Wait(
-                    () => Rows(screen).Length == 0 && (string)Get(screen, "participantsLobbyId") == "" && Get(screen, "lobbyUpdates") == null,
+                    () => Rows(screen).Length == 0 && (string)Get(screen, "participantsLobbyId") == "" &&
+                        Get(screen, "lobbyUpdates") == null,
                     "logout view cleanup timed out"
                 );
                 Check(!(bool)Get(screen, "participantsLoaded"), "logout clears participant identities and old subscription");

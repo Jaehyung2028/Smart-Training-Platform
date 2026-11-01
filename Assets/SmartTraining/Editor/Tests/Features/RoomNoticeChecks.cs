@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -10,11 +10,20 @@ namespace SmartTraining.Editor
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private static void Set(ApiLobbyScreen screen, string name, object value) => typeof(ApiLobbyScreen).GetField(name, Flags).SetValue(screen, value);
+        private static void Set(ApiLobbyScreen screen, string name, object value)
+        {
+            typeof(ApiLobbyScreen).GetField(name, Flags).SetValue(screen, value);
+        }
 
-        private static RoomNoticeTracker Tracker(ApiLobbyScreen screen) => (RoomNoticeTracker)typeof(ApiLobbyScreen).GetField("roomNotices", Flags).GetValue(screen);
+        private static RoomNoticeTracker Tracker(ApiLobbyScreen screen)
+        {
+            return (RoomNoticeTracker)typeof(ApiLobbyScreen).GetField("roomNotices", Flags).GetValue(screen);
+        }
 
-        private static void Observe(ApiLobbyScreen screen) => typeof(ApiLobbyScreen).GetMethod("UpdateRoomNotices", Flags).Invoke(screen, null);
+        private static void Observe(ApiLobbyScreen screen)
+        {
+            typeof(ApiLobbyScreen).GetMethod("UpdateRoomNotices", Flags).Invoke(screen, null);
+        }
 
         private static void Check(bool value, string name)
         {
@@ -118,7 +127,9 @@ namespace SmartTraining.Editor
         private static IEnumerator WaitRoster(RoomNetworkClient a, RoomNetworkClient b, int count)
         {
             double until = Time.realtimeSinceStartupAsDouble + 10;
-            while (a.Players.Length != count || b.Players.Length != count || a.Players.Any(p => string.IsNullOrEmpty(p.UserId)) || b.Players.Any(p => string.IsNullOrEmpty(p.UserId)))
+            while (a.Players.Length != count || b.Players.Length != count ||
+                a.Players.Any(p => string.IsNullOrEmpty(p.UserId)) ||
+                b.Players.Any(p => string.IsNullOrEmpty(p.UserId)))
             {
                 if (Time.realtimeSinceStartupAsDouble > until)
                 {
@@ -226,7 +237,8 @@ namespace SmartTraining.Editor
                 Observe(a);
                 Observe(b);
                 Check(
-                    Tracker(a).Messages.Last().Text == secondApi.User.name + "님이 방장이 되었습니다." && Tracker(b).Messages.Last().Text == secondApi.User.name + "님이 방장이 되었습니다.",
+                    Tracker(a).Messages.Last().Text == secondApi.User.name + "님이 방장이 되었습니다." &&
+                    Tracker(b).Messages.Last().Text == secondApi.User.name + "님이 방장이 되었습니다.",
                     "manual master transfer produces notice on both clients"
                 );
                 yield return secondApi.TransferRoomMaster(lobby, room, firstApi.User.id, () =>

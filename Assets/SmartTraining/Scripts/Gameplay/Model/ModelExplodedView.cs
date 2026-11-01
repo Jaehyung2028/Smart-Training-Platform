@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -33,6 +33,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             animator = source.Animator;
             clip = source.Clip;
             originalController = animator.runtimeAnimatorController;
@@ -43,10 +44,16 @@ namespace SmartTraining
             {
                 if (transform != source.transform)
                 {
-                    poses.Add(new Pose { Transform = transform, Position = transform.localPosition,
-                        Rotation = transform.localRotation, Scale = transform.localScale });
+                    poses.Add(new Pose
+                        {
+                            Transform = transform,
+                            Position = transform.localPosition,
+                            Rotation = transform.localRotation,
+                            Scale = transform.localScale
+                        });
                 }
             }
+
             // 화면 밖에서도 같은 진행도를 평가하고, 자체 시간 재생과 루트 모션은 사용하지 않습니다.
             animator.runtimeAnimatorController = null;
             animator.enabled = true;
@@ -70,6 +77,7 @@ namespace SmartTraining
             {
                 return;
             }
+
             // 모델 루트는 중앙 배치와 공유 회전에 사용합니다. 클립에 루트 트랙이 들어가도 이 좌표는 보호합니다.
             var root = animator.transform;
             var position = root.localPosition;
@@ -103,10 +111,12 @@ namespace SmartTraining
             {
                 graph.Destroy();
             }
+
             if (animator != null)
             {
                 animator.runtimeAnimatorController = originalController;
             }
+
             RestorePose();
             poses.Clear();
             if (animator != null)

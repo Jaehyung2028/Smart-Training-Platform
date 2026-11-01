@@ -16,8 +16,11 @@ namespace SmartTraining.Editor
             Check(playing.Evaluate(9) == 3, "시작 시각 이전에는 재생 위치를 뒤로 보내지 않습니다.");
             Check(playing.Evaluate(30) == 12 && !playing.IsPlaying(30), "영상 끝에서 위치를 고정하고 정지합니다.");
             Check(new VideoPlaybackState().Evaluate(100) == 0, "메타데이터가 없으면 0초에서 대기합니다.");
-            Check(new VideoPlaybackState(-3, 0, 12, false).Evaluate(0) == 0 &&
-                new VideoPlaybackState(20, 0, 12, false).Evaluate(0) == 12, "구간 이동 범위를 영상 길이 안으로 제한합니다.");
+            Check(
+                new VideoPlaybackState(-3, 0, 12, false).Evaluate(0) == 0 &&
+                new VideoPlaybackState(20, 0, 12, false).Evaluate(0) == 12,
+                "구간 이동 범위를 영상 길이 안으로 제한합니다."
+            );
             Debug.Log("VIDEO CLOCK CHECKS PASSED (6)");
         }
 

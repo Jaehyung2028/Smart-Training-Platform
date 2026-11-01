@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 using UnityEngine;
 
 namespace SmartTraining
@@ -16,11 +16,8 @@ namespace SmartTraining
         }
 
         private ServerConnectionState serverConnectionState;
-
         private int serverReconnectAttempts;
-
         private bool connectionSessionObserved;
-
         private TrainingApiClient connectionOwnerApi;
 
         private void ResetServerConnectionStatus()

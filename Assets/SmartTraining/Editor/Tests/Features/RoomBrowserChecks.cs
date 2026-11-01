@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using System;
 using UnityEngine;
 
 namespace SmartTraining.Editor
@@ -27,7 +27,6 @@ namespace SmartTraining.Editor
                     availableSlots = 3,
                     state = 0,
                     createdAt = "2026-10-01T00:00:00Z"
-
                 },
                 new RoomSummary
                 {
@@ -37,7 +36,6 @@ namespace SmartTraining.Editor
                     state = 3,
                     hasPassword = true,
                     createdAt = "2026-10-03T00:00:00Z"
-
                 },
                 new RoomSummary
                 {
@@ -47,7 +45,6 @@ namespace SmartTraining.Editor
                     state = 3,
                     isEntryLocked = true,
                     createdAt = "2026-10-04T00:00:00Z"
-
                 },
                 new RoomSummary
                 {
@@ -57,7 +54,6 @@ namespace SmartTraining.Editor
                     state = 3,
                     isRunning = true,
                     createdAt = "2026-10-05T00:00:00Z"
-
                 },
                 new RoomSummary
                 {
@@ -68,7 +64,6 @@ namespace SmartTraining.Editor
                     reservedUsers = 1,
                     maxUsers = 2,
                     state = 3
-
                 },
                 new RoomSummary
                 {
@@ -76,7 +71,6 @@ namespace SmartTraining.Editor
                     name = "Alpha 종료",
                     availableSlots = 8,
                     state = 4
-
                 }
             };
             RoomSummary[] Apply(
@@ -84,9 +78,14 @@ namespace SmartTraining.Editor
                 bool available,
                 RoomProtectionFilter protection,
                 RoomSortOrder sort = RoomSortOrder.Newest
-            ) => RoomBrowser.Apply(source, query, available, protection, sort);
+            )
+            {
+                return RoomBrowser.Apply(source, query, available, protection, sort);
+            }
+
             Check(
-                Apply(" ALPHA ", false, RoomProtectionFilter.All).Length == 5 && Apply("훈련", false, RoomProtectionFilter.All).Single().id == "cold",
+                Apply(" ALPHA ", false, RoomProtectionFilter.All).Length == 5 &&
+                Apply("훈련", false, RoomProtectionFilter.All).Single().id == "cold",
                 "room browser matches Korean text and ignores case and surrounding search whitespace"
             );
             Check(
@@ -94,7 +93,8 @@ namespace SmartTraining.Editor
                 "availability excludes reserved full, locked, running and closing rooms while allowing cold server launch"
             );
             Check(
-                Apply("alpha", true, RoomProtectionFilter.Protected).Single().id == "private" && Apply("alpha", true, RoomProtectionFilter.Public).Single().id == "cold",
+                Apply("alpha", true, RoomProtectionFilter.Protected).Single().id == "private" &&
+                Apply("alpha", true, RoomProtectionFilter.Public).Single().id == "cold",
                 "room browser combines name, availability and protection filters"
             );
             Check(

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -10,7 +10,7 @@ namespace SmartTraining
         private readonly GameObject root;
         private readonly Vector2 preferredSize;
         private readonly Text title, progress, currentTitle, instruction, requirement, myTool, actor;
-        private readonly Image requirementBackground;
+        private readonly RectTransform panel;
         private readonly RectTransform progressFill;
         private readonly GameObject workRoot;
         private readonly Text workStatus;
@@ -29,11 +29,12 @@ namespace SmartTraining
         private static readonly Color Accent = new Color32(56, 189, 248, 255);
         private static readonly Color Success = new Color32(74, 222, 128, 255);
 
-        public ScenarioControlPanel(Transform parent, Font font)
+        public ScenarioControlPanel(Transform parent)
         {
             var view = UiPrefab.Bind("ScenarioControlPanel", parent);
             root = view.Get<GameObject>("root");
-            preferredSize = ((RectTransform)root.transform).sizeDelta;
+            panel = (RectTransform)root.transform;
+            preferredSize = panel.sizeDelta;
             title = view.Get<Text>("title");
             progress = view.Get<Text>("progress");
             currentTitle = view.Get<Text>("currentTitle");
@@ -41,7 +42,8 @@ namespace SmartTraining
             requirement = view.Get<Text>("requirement");
             myTool = view.Get<Text>("myTool");
             actor = view.Get<Text>("actor");
-            requirementBackground = view.Get<Image>("requirementBackground");
+            actor.resizeTextMinSize = 10;
+            actor.resizeTextMaxSize = 12;
             progressFill = view.Get<RectTransform>("progressFill");
             workRoot = view.Get<GameObject>("workRoot");
             workStatus = view.Get<Text>("workStatus");
@@ -62,7 +64,6 @@ namespace SmartTraining
             feedbackRoot.SetActive(false);
         }
 
-
         public void Refresh(ScenarioContent scenario, bool visible)
         {
             if (previous != scenario)
@@ -75,14 +76,7 @@ namespace SmartTraining
             }
 
             root.SetActive(visible && scenario != null);
-            if (scenario != null && scenario.FeedbackVersion != lastFeedbackVersion)
-            {
-                lastFeedbackVersion = scenario.FeedbackVersion;
-                feedback.text = scenario.Feedback;
-                feedbackUntil = scenario.Feedback.Length > 0 ? Time.unscaledTime + 4 : 0;
-            }
-
-            feedbackRoot.SetActive(root.activeSelf && Time.unscaledTime < feedbackUntil);
+            RefreshFeedback(scenario);
             if (!root.activeSelf)
             {
                 return;
@@ -93,10 +87,29 @@ namespace SmartTraining
                 RebuildSteps(scenario.Definition);
             }
 
-            title.text = definition.Title;
             int completed = Mathf.Clamp(scenario.CompletedSteps, 0, definition.Steps.Count);
+            title.text = definition.Title;
             progress.text = completed + " / " + definition.Steps.Count + " 완료";
             progressFill.anchorMax = new Vector2(completed / (float)definition.Steps.Count, 1);
+            RefreshGoal(scenario, completed);
+            RefreshWork(scenario, completed);
+            RefreshSteps(scenario, completed);
+        }
+
+        private void RefreshFeedback(ScenarioContent scenario)
+        {
+            if (scenario != null && scenario.FeedbackVersion != lastFeedbackVersion)
+            {
+                lastFeedbackVersion = scenario.FeedbackVersion;
+                feedback.text = scenario.Feedback;
+                feedbackUntil = scenario.Feedback.Length > 0 ? Time.unscaledTime + 4 : 0;
+            }
+
+            feedbackRoot.SetActive(root.activeSelf && Time.unscaledTime < feedbackUntil);
+        }
+
+        private void RefreshGoal(ScenarioContent scenario, int completed)
+        {
             if (!scenario.IsReady)
             {
                 currentTitle.text = "준비 중";
@@ -147,21 +160,26 @@ namespace SmartTraining
             }
 
             currentTitle.color = scenario.IsComplete ? Success : Color.white;
+        }
+
+        private void RefreshWork(ScenarioContent scenario, int completed)
+        {
             actor.text = scenario.LastActor.Length > 0 ? "최근 진행  ·  " + scenario.LastActor : "진행 결과는 참가자 모두에게 공유됩니다.";
             workRoot.SetActive(scenario.IsWorking);
-            root.GetComponent<RectTransform>().sizeDelta = preferredSize + Vector2.up * (scenario.IsWorking ? 60 : 0);
+            panel.sizeDelta = preferredSize + Vector2.up * (scenario.IsWorking ? 60 : 0);
             cancelWork.interactable = scenario.CanCancelWork;
             if (scenario.IsWorking)
             {
                 actor.text = scenario.LastActor + " 님이 ‘" + definition.Steps[completed].Title + "’ 작업 중";
                 actor.resizeTextForBestFit = true;
-                actor.resizeTextMinSize = 10;
-                actor.resizeTextMaxSize = 12;
                 float amount = scenario.WorkProgress;
                 workStatus.text = "작업 진행  " + Mathf.RoundToInt(amount * 100) + "%";
                 workFill.anchorMax = new Vector2(amount, 1);
             }
+        }
 
+        private void RefreshSteps(ScenarioContent scenario, int completed)
+        {
             for (int index = 0; index < rows.Count; index++)
             {
                 bool done = index < completed;
@@ -178,7 +196,6 @@ namespace SmartTraining
                 stepScroll.verticalNormalizedPosition = rows.Count <= 2 ? 1 : 1 - Mathf.Clamp01(completed / (float)(rows.Count - 1));
             }
         }
-
 
         private void RebuildSteps(ScenarioDefinition current)
         {

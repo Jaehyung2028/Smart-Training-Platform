@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Collections;
+using System;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine;
 
 namespace SmartTraining
 {
@@ -12,12 +12,11 @@ namespace SmartTraining
     public sealed class ContentAssetScope : IDisposable
     {
         private readonly List<AsyncOperationHandle> handles = new();
-
         private readonly List<GameObject> instances = new();
-
         private bool disposed;
 
-        public IEnumerator LoadAsset<T>(string assetId, Action<T> loaded, Action<string> failed) where T : UnityEngine.Object
+        public IEnumerator LoadAsset<T>(string assetId, Action<T> loaded, Action<string> failed)
+        where T : UnityEngine.Object
         {
             if (disposed)
             {
@@ -49,12 +48,16 @@ namespace SmartTraining
 
         public IEnumerator Instantiate(string assetId, Transform parent, Action<GameObject> loaded, Action<string> failed)
         {
-            yield return LoadAsset<GameObject>(assetId, prefab =>
-            {
-                var instance = UnityEngine.Object.Instantiate(prefab, parent, false);
-                instances.Add(instance);
-                loaded?.Invoke(instance);
-            }, failed);
+            yield return LoadAsset<GameObject>(
+                assetId,
+                prefab =>
+                {
+                    var instance = UnityEngine.Object.Instantiate(prefab, parent, false);
+                    instances.Add(instance);
+                    loaded?.Invoke(instance);
+                },
+                failed
+            );
         }
 
         public void Dispose()
